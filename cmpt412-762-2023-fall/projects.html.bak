@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>projects</title></head><body>
+    <h1 style="text-align: left;">Computer Vision - CMPT 412 & 762, Fall 2023</h1>
+    <!-- <table style="text-align: left; width: 800px;" border="0" cellpadding="0" cellspacing="0"> -->
+    <!--   <tbody> -->
+    <!--     <tr> -->
+    <!--       <td style="vertical-align: top;"> -->
+    <!--         <h2>Computational Photography, CMPT 469-888, Winter 2018<br> -->
+    <!--           Projects<br> -->
+    <!--         </h2> -->
+    <!--       </td> -->
+    <!--       <td style="vertical-align: top;"> -->
+    <!--         <img style="height: 141px;" src="images/teaser.jpg"> -->
+    <!--       </td> -->
+    <!--     </tr> -->
+    <!--   </tbody> -->
+    <!-- </table> -->
+    
+    <table style="text-align: left;" border="0" cellpadding="10" cellspacing="0">
+      <tbody>
+        <!-- <tr> -->
+        <!--   <td style="vertical-align: top;"> -->
+        <!--     <\!-- <h3><a href="project4.html">Project 4: Scene Recognition with Bag of Words</a></h3> -\-> -->
+        <!--     <h3>Project 4: Scene Recognition with Bag of Words</h3> -->
+        <!--     <a href="https://docs.google.com/document/d/1-Oc415ZugGy-hNdYaytnGwdJ9d5-Ne95fyMmVMA_UEA/edit?usp=sharing">Hand-out</a><br> -->
+        <!--     <a href="project4_package.zip">Code and data package.</a> -->
+        <!--   </td> -->
+        <!--   <td> -->
+        <!--     <img src="images/bag_of_features.gif" width="200"/> -->
+        <!--   </td> -->
+        <!-- </tr> -->
+        <tr>
+          <td style="vertical-align: top;">
+            <h3>Project 1: Digit Recognition with Convolutional Neural Networks</h3>
+            <a href="https://docs.google.com/document/d/1EenyFtq9Hctj7QmNFA7GKigZV9UO4J2HsnRXk8bUoKU/edit?usp=sharing">Hand-out</a><br>
+            <a href="project1_package.zip">Code and data package.</a>
+          </td>
+          <td>
+            <img src="images/cnns1.jpg" width="200"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <h3>Project 2: Image classification and PyTorch Introduction</h3>
+            <a href="https://docs.google.com/document/d/1wfZBMZzd1X7dVZ5SiFtHmSZ86eoEteq1O9YvVW0VQ48/edit?usp=sharing">Hand-out</a><br>
+            <a href="project2_package.zip">Code package.</a>
+          </td>
+          <td>
+            <img src="images/classification.png" width="200"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <h3>Project 3: Detection, semantic segmentation, and instance segmentation</h3>
+            <a href="https://docs.google.com/document/d/1RPjZ2J1ETj0z5tKL952wgFUonQrSS2LokP-OXjFtI2Q/edit?usp=sharing">Hand-out</a><br>
+            Links to code/data are in the hand-out.
+          </td>
+          <td>
+            <img src="images/detection_segmentation.jpg" width="200"/>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <h3>Project 4: Augmented Reality with Planar Homographies</h3>
+            <a href="https://docs.google.com/document/d/1BgEJATbFUqu0JLT9aqVx1LG0BnhaFeHekqdF1iLhTOQ/edit?usp=sharing">Hand-out</a><br>
+            <a href="project4_package.zip">Code and data package.</a>
+            </td>
+          <td>
+            <img src="images/homography.jpg" width="200"/>
+           </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <h3>Project 5: 3D Reconstruction (might update?)<br></h3>
+            <a href="https://docs.google.com/document/d/1Od8mVNhGx9kTO88aFyFbYB3ZxHu-KH_F-AcYqJpKtUs/edit?usp=sharing">Hand-out</a><br>
+            <a href="project5_package.zip">Code and data package.</a>
+          </td>
+          <td>
+            <img src="images/stereo.jpg" width="200"/>
+          </td>
+        </tr>
+        
+        <!-- <tr> -->
+        <!--   <td style="vertical-align: top"> -->
+        <!--     <\!-- <h3><a href="project7.html">Final Project (choice instead of projects 5 & 6) </a></h3> -\-> -->
+        <!--     <h3>Final Project (choice instead of projects 5 & 6) </h3> -->
+        <!--     <a href="https://docs.google.com/document/d/1oCXfjcuc5BL7MQJOUWSjDVMjd0NKSGgID5seaF4OkUM/edit?usp=sharing">Hand-out</a> -->
+        <!--   </td> -->
+        <!--   <td> -->
+        <!--     <img src="images/research.jpg" width="400"/> -->
+        <!--   </td> -->
+        <!-- </tr> -->
+      </tbody>
+    </table>
+   
+    <br>
+    
+    <hr style="width: 100%; height: 2px;"> <a href="index.html" target="_top">Back to the main page</a><br>
+    
+    <br>
+</body></html>
