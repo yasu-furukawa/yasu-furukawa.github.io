@@ -1,0 +1,105 @@
+<h1>How to join my group</h1>
+<h3><img alt="" src="newimages/how_to_join.jpg">
+</h3>
+
+<!-- <font size="+3" color="red"> -->
+<!-- There is no slot available in my research group now,<br> -->
+<!-- except Wash-U undergraduates who are looking for some research oppotunities.<br> -->
+<!--   I am NOT looking for Ph.D students or postdocs this year (2015).</font> -->
+<hr>
+<h2>For students seeking admission to the Ph.D program:<br>
+</h2>
+I am looking for highly motivated
+and hard-working graduate students to work with in my group with an
+ambition to explorer research to change the world. Please apply from <a href="http://cse.wustl.edu/graduateprograms/Pages/default.aspx">our
+department's application website</a>, then mention my name in the
+application.
+<!-- Unfortunately, our group does not have a spot this year (2014-2015). -->
+<br>
+<hr>
+<h2>For current Ph.D students or researchers looking for a postdoc
+position:<br>
+</h2>
+<strike>
+I am also looking for a postdoc with strong research background in 3D
+vision, which usually means multiple first-author papers at premier
+Computer Vision conferences (CVPR, ICCV and ECCV).</strike>
+<hr>
+<h2>For Wash-U undergraduates:</h2>
+I am looking for outstanding undergraduate students who are interested
+in my research. If you would like to know what kinds of research are
+conducted in my lab, please look at our publications, images, and
+videos, which should give you a good idea. In general, you should be
+very good at C++ (Java experience is a good start) with strong math
+skills to be a good researcher/engineer in 3D Computer Vision. If you
+are
+interested, the following is a list of entry projects that should be
+relatively approachable without Computer Vision knowledge. Currently,
+there is only one project, but I will add more in the future. Projects
+have many degrees of freedom and please write code to do something
+interesting/fun/useful, then drop me an email. We will discuss your
+results and further opportunities. Of course, if you have already
+worked on a Computer Vision project from your interests, you can bring
+that in to start discussion.<br>
+<br>
+<h3>Sample entry projects</h3>
+<table style="text-align: left; width: 1024px; height: 28px;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <h3>#1. Analyzing CAD (Computer Aided Design) models<br>
+      </h3>
+      <br>
+Dealing with 3D models and images is a frequent and essential operation
+in 3D Vision. Take a look at a CAD model, which people created by a CAD
+software and shared on the web. Write some code to analyze the model
+file (simple text format), then visualize analyzed information via 3D
+model files. <a href="http://sketchup.google.com/3dwarehouse">Google
+3D Warehouse</a> is a repository of CAD models, and this is <a href="http://sketchup.google.com/3dwarehouse/details?mid=48b79b17de9a35123077e35720b0bc29&amp;prevstart=0">a
+link to a CAD model of Colloseum in Rome</a>, which we are often
+interested in. The model may not be downloadable in a friendly text
+format, and I already converted the model to a friendly text format
+.obj with the texture images, which can be found <a href="col.tgz">here</a>. This
+is <a href="http://sketchup.google.com/3dwarehouse/details?mid=2d1c3d338f8662df87ff49486a939c6f&amp;prevstart=0">a
+link to another Colloseum model in 3D warehouse</a> and <a href="col2.tgz">the
+corresponding OBJ file package</a>.<br>
+      <br>
+OBJ
+format is a text format for 3D graphics and very simple. More details
+about the format can be found <a href="http://www.eg-models.de/formats/Format_Obj.html">here</a>, <a href="http://en.wikipedia.org/wiki/Wavefront_.obj_file">here</a> or <a href="http://www.martinreddy.net/gfx/3d/OBJ.spec">here</a>, for
+example.<br>
+      <br>
+The CAD model in the sketchup format can be opened by <a href="http://www.sketchup.com">the sketchup
+software</a> (free). Other miscellaneous 3D model formats can be opened
+by <a href="http://meshlab.sourceforge.net/">Meshlab</a> for
+visualization.<br>
+      <br>
+The following is an example of what can be done on this 3D data more
+specifically.<br>
+      <ul>
+        <li>Each face of a 3D model is associated with a texture image,
+whose name is specified in a line somewhere before. Architectural
+scenes exhibit repetition and you may be able to identify repeating
+structure by collecting all the faces that are associated with the same
+texture image. Generate a new OBJ file that only contains such facaes
+to prove that you could extract a single structure that contains many
+repetitions. You may be able to also identify the core repeating
+element, then how many times it is repeated. Repeating structures may
+not use exactly the same texture image, but often their texture images
+have very similar filenames, which can be used to identify the entire
+repeating structure. Generate a file and open
+it by Meshlab to verify.<br>
+        </li>
+        <li>A CAD model may consist of multiple groups, which a modeler
+probably generated for organization. You can probably find such group
+names inside a OBJ file. Write a code to extract 3D geometry, whose
+group name is X, starts from Y, and etc. Again, generate a new OBJ file
+and open it by Meshlab to verify.<br>
+        </li>
+      </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
