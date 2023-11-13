@@ -1,0 +1,1275 @@
+<<<<<<< HEAD
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<style>
+  .carousel-inner > .item > img,
+  .carousel-inner > .item > a > img {
+  height: 200px;
+  margin: auto;
+  }
+  .carousel-caption {
+  background: rgba(0, 0, 0, 0.3);
+  }
+  th, td {
+  padding: 8px;
+  valign: middle
+  }
+</style>
+<title>Yasutaka Furukawa's Homepage</title>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-17CB48SE6J"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-17CB48SE6J');
+    </script>
+
+</head>
+    
+<body bgcolor="#ffffff">
+<table width="1024">
+  <tbody>
+    <tr>
+      <td>
+      <table cellpadding="10">
+        <tbody>
+          <tr>
+            <td align="right" valign="middle" width="22%"><a href="http://www.sfu.ca/computing.html">
+                <img src="newimages/sfu.jpg" height="200">
+              </a>
+            </td>
+            <td align="center" width="28%"><font color="#000000" face="Times New Roman" size="+2"><b>Yasutaka Furukawa</b><br><br>
+            </font>Associate Professor<br><br>
+              Associate Director for<br> Research and Industry Relations
+              <br><br>
+              <a href="http://gruvi.cs.sfu.ca/">GrUVi Lab</a>, VML Lab<br>
+<!--              <a href="http://www.sfu.ca/computing.html">Simon Fraser University</a><br> -->
+
+              <!-- Principal Research Scientist<br> -->
+              <!-- Zillow Group<br><br> -->
+Email: furukawa-atmark-sfu.ca<br>
+Office: TASC I 8023<br>
+Phone: 778-782-4619<br>
+<!-- Fax: 778-782-3045<br> -->
+Mail address: <a href="address.txt">click here</a>
+              <!-- Phone: +1-314-935-3098<BR> -->
+            </td>
+            <td align="right" width="50%"><img src="newimages/furukawa5.jpg" border="0" width="450"></td>
+          </tr>
+          <tr>
+            <!-- <td align="center"><img src="images/institutions.jpg" border="0" height="200"><br><span style="color: gray">Great institutions I have worked at in the past.</span></td> -->
+            <td colspan="2" align="center" valign="top">
+              <div class="container" style=" width:660px; height:200px;">
+                <div id="myCarousel" class="carousel slide" data-ride="carousel">
+                  <!-- Indicators -->
+                  <ol class="carousel-indicators">
+                    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+                    <li data-target="#myCarousel" data-slide-to="1"></li>
+                    <li data-target="#myCarousel" data-slide-to="2"></li>
+                    <li data-target="#myCarousel" data-slide-to="3"></li>
+                  </ol>
+
+                  
+                  <!-- Wrapper for slides -->
+                  <div class="carousel-inner" role="listbox">
+                    <div class="item active">
+                      <video autoplay loop muted playsinline width="450px">
+                        <source src="newimages/houseganpp-demo2.mp4" type="video/mp4"/>
+                      </video>
+                      <div class="carousel-caption">                         
+                        <p>
+                          <a href="https://ennauata.github.io/houseganpp/page.html" style="color:white">House-GAN++: Generative Adversarial Layout Refinement Networks</a></p>
+                      </div>
+                    </div>
+                    
+                    <div class="item">
+                      <video autoplay loop muted playsinline width="400px">
+                        <source src="newimages/ronin-demo.mp4" type="video/mp4"/>
+                      </video>
+                      <!--<img src="carousel/2019-ronin.png">-->
+                      <div class="carousel-caption">                         
+                        <p>
+                          <a href="https://www.youtube.com/watch?v=JkL3O9jFYrE" style="color:white">RoNIN: Robust Neural Inertial Navigation in the Wild</a></p>
+                      </div>
+                    </div>
+
+                    <div class="item">
+                      <img src="carousel/2018-procedural.png">
+                      <div class="carousel-caption">
+                        <p><a href="https://youtu.be/9yyFlE4lWUo" style="color:white">Neural Procedural Reconstruction for Residential Buildings</a></p>
+                      </div>
+                    </div>
+                    
+                    <div class="item">
+                      <img src="carousel/2017-floorplan-vector.png">
+                      <div class="carousel-caption">
+                        <p><a href="https://www.youtube.com/watch?time_continue=82&v=ZjI36DvfVPc" style="color:white">Raster-to-Vector: Revisiting Floorplan Transformation</a></p>
+                      </div>
+                    </div>
+
+                    <!--
+                    <div class="item">
+                      <img src="carousel/2016-campus-wide.png">
+                      <div class="carousel-caption">
+                        <p><a href="https://www.youtube.com/watch?v=roJOp5ncpSE&feature=youtu.be" style="color:white">Campus-wide Indoor Mapping</a></p>
+                      </div>
+                    </div>
+                    
+                    <div class="item">
+                      <img src="carousel/sim_teaser.jpg">
+                      <div class="carousel-caption">
+                        <p><a href="sim" style="color:white">Structured Indoor Modeling</a></p>
+                      </div>
+                    </div>
+                    <div class="item">
+                      <img src="carousel/museum_teaser.jpg">
+                      <div class="carousel-caption">
+                        <p>
+                          <a href="https://www.youtube.com/watch?v=NChPgMIasl0" style="color:white">Reconstructing the World's Museums</a>
+                        </p>
+                      </div>
+                    </div>
+                    -->
+                  </div>
+                  
+                  <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+                    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+                    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </div>
+              </div>
+
+
+
+<!--              
+              <h4>Research highlight</h4>
+              <div class="container" style="width:660px; height:200px;">
+                <a href="https://ennauata.github.io/houseganpp/page.html">
+                  <video autoplay loop muted playsinline width="450px">
+                    <source src="newimages/houseganpp-demo.mp4" type="video/mp4"/>
+                  </video>
+                </a>
+              </div>
+              -->
+            </td>
+            
+            <td align="left" valign="top">
+              <b>Bio</b>
+              (<a href="https://docs.google.com/document/d/1IMBFNIDO_f8bFQG6QqiSPq-c-VGXRea6o2AtKU2i4Mw/edit?usp=sharing">CV</a>,
+              <a href="https://scholar.google.com/citations?user=wCxzFrMAAAAJ&hl=en&oi=ao">Google
+              scholar</a>)<br> I am an associate professor of Computing
+              Science at Simon Fraser University.
+              <!-- I am also a principal research scientist at Zillow Group. -->
+              Prior to SFU, I was an assistant professor at Washington University in St. Louis. Before WUSTL, I was a software engineer at Google. Before Google, I was a
+              post-doctoral research associate at <a href="http://grail.cs.washington.edu"
+              target="_blank"> University of Washington</a>. I worked with
+              <a href="http://www.cs.washington.edu/homes/seitz" target="_blank">Prof. Seitz</a>
+              and <a href="http://www.cs.washington.edu/homes/curless" target="_blank">Prof. Curless</a> at <a>
+                University of Washington</a>, and <a href="http://szeliski.org/RichardSzeliski.htm" target="_blank">Rick
+                Szeliski</a> at Facebook (was at Microsoft Research). I completed my Ph.D. under the
+                supervision of <a href="http://www.di.ens.fr/%7Eponce/enindex.html" target="_blank">Prof. Ponce</a>
+              at Computer Science Department of University of Illinois at
+              Urbana-Champaign in May 2008. I received PAMI Longuet-Higgins prize (2020), CS-CAN: Outstanding Young CS Researcher Award (2018), NSF CAREER Award (2015), Best Student Paper Award at ECCV 2012, and Google Faculty Research Awards (2018, 2017, 2016).
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" align="center">
+              <h4>SFU Visual Computing Groups</h4>(<a href="http://csrankings.org/#/index/#/index?vision&graph&world">Ranked 12th in the world in Computer Vision and Graphics as of 2022.01)</a><br>
+              <table border="0" cellpadding="0" cellspacing="0">
+                <tbody>
+                  <tr>
+                    <td align="center"><a href="http://www.cs.sfu.ca/~mori"><img src="colleagues/greg.jpg" height="130"><br>Greg Mori</a></td>
+                    <td align="center"><a href="https://www.math.ias.edu/~ke.li"><img src="colleagues/ke_li.jpg" height="130"><br>Ke Li</a></td>                    
+                    <td align="center"><a href="http://www.cs.sfu.ca/~pingtan"><img src="colleagues/ping2.png" height="130"><br>Ping Tan</a></td>                    
+                    <td align="center"><a href="http://msavva.github.io"><img src="colleagues/manolis.png" height="130"><br>Manolis Savva</a></td>
+                    <td align="center"><a href="https://angelxuanchang.github.io"><img src="colleagues/angel.png" height="130"><br>Angel Chang</a></td>
+                    <td align="center"><a href="http://yaksoy.github.io/"><img src="colleagues/yagiz.png" height="130"><br>Yağız Aksoy</a></td>
+                    <!-- <td align="center"><a href="http://www.cs.sfu.ca/~mark"><img src="colleagues/mark.jpg" height="130"><br>Mark Drew</a></td> -->
+                    <!-- <td align="center"><a href="http://www.cs.sfu.ca/~li"><img src="colleagues/ze-nian.jpg" height="130"><br>Ze-Nian Li</a></td> -->
+                    <td align="center"><a href="http://www.cs.sfu.ca/~kkyin"><img src="colleagues/kangkang.jpg" height="130"><br>KangKang Yin</a></td>
+                    <td align="center"><a href="http://www.cs.sfu.ca/~haoz"><img src="colleagues/richard-z.jpg" height="130"><br>Richard Zhang</a></td>
+                    <td align="center"><a href="https://www.sfu.ca/computing/people/faculty/eugenefiume.html"><img src="colleagues/eugene.png" height="130"><br>Eugene Fiume</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" align="center">
+              <h4>Group photographs</h4> <p align="left">
+                <table border="0" cellpadding="0" cellspacing="0">
+                  <tbody>
+                    <tr>
+                      <td align="center"><img src="newimages/group-2023-cvpr.jpg" height="180"><br>At CVPR 2023, Vancouver.</td>
+                      <td align="center"><img src="newimages/group-2022-sfu.jpg" height="180"><br>At SFU 2022, Vancouver.</td>
+                      <td align="center"><img src="newimages/group-2019-iccv.jpg" height="180"><br>At ICCV 2019, Seoul.</td>
+                      <td align="center"><img src="newimages/group-2018-cvpr.jpg" height="180"><br>At CVPR 2018, Salt Lake City.</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </td>
+          </tr>          
+          <tr>
+            <td colspan="3" align="center">
+              <h4>How to join my group?</h4> <p align="left">
+                I am recruiting graduate students. Please drop me an email with your resume/CV.
+                <!-- I am done recruiting students for the 2017-2018 cycle. I am not taking summer intern students for 2018. If you are interested in joining my group for the 2018-2019 cycle, please drop me an email with your resume/CV with a subject "graduate admission".  -->
+                However, I am likely unable to reply to individual inquiries due to the volume.</p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" align="center">
+              <h4>Financial supporters</h4>
+              <img src="newimages/nsf-logo.png" height="110">
+              <!-- <img src="newimages/iarpa.jpg" height="110"> -->
+              <img src="newimages/nserc-logo.png" height="110">
+              <img src="newimages/zillow-logo.jpg" height="110">
+              <!-- <img src="newimages/nvidia-logo.jpg" height="110"> -->
+              <!-- <img src="newimages/google-logo.png" height="110"> -->
+              <!-- <img src="newimages/microsoft-logo.png" height="110"> -->
+              <img src="newimages/adobe-logo.jpg" height="110">
+              <img src="newimages/renoworks-logo.png" height="110">
+              <img src="newimages/lianjia-logo.png" height="110">
+              <img src="newimages/ga-technologies.jpg" height="110">
+              <img src="newimages/autodesk.png" height="110">
+              <img src="newimages/ricoh.jpg" height="110">
+              <!-- <img src="newimages/seas-logo.jpg" height="110"> -->
+            </td>
+          </tr>
+          <tr><td colspan="3" align="center">
+              <h4>Recent Projects</h4>
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/wANagTkvyIY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/pipJqdbH8XI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/FmkfUKhKe2Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/JkL3O9jFYrE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/PyYz7XAs7UE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/9yyFlE4lWUo" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/i7H7riAAYEc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/KAtTlQEUQXc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe><br> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/IroLp5VOPDE" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/ZjI36DvfVPc" frameborder="0" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/roJOp5ncpSE" frameborder="0" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/Nx9YZlnREiA" frameborder="0" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/d2az8RWx9MQ" frameborder="0" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/r3yyL6qrVX4" frameborder="0" allowfullscreen></iframe> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/k00-6ysyODg" frameborder="0" allowfullscreen></iframe> -->
+              <!-- <br> -->
+              <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/RZU8w3uvenU" frameborder="0" allowfullscreen></iframe> -->
+          </tr>
+          
+          <tr>
+            <td colspan="3" align="" valign="top">
+              <table>
+                <tbody>
+                  <tr>
+                    <td width="512">
+                      <b>News</b>
+                      <ul>
+                        <li>Taks at KCCV, Kyoto-U, and Tokyo-U, August 2023</li>
+                        <li>Talk at <a href="https://sites.google.com/view/cvprcivils2023">CVPR workshop</a> June 2023</li>
+                        <li>Talks at U-Tokyo, Tokyo-Institute-Tech, and Korea AI Summit, December 2022</li>
+                        <li>Keynote at 3DV, September 2022</li>
+                        <li>Talk at Amazon Computer Vision Conference, August 2022.</li>
+                        <li>Talk at SFU AI4ALL event, July 2022.</li>
+                        <li>Talk at 3rd OmniCV workshop, June CVPR2022.</li>
+                        <li>Talk at TU Delft seminar, April 2022.</li>
+                        <li>Talk at UCSD Pixel Cafe seminar, March 2022.</li>
+                        <!-- <li>Talk at IlluminAlte (highschool students) Dec. 18th 2021.</li> -->
+                        <!-- <li>Invited talk (TBD) at University of Tokyo 12/15th 2020.</li> -->
+                        <!-- <li>Invited talks (Structured Architectural Modeling) at Facebook Reality Lab 9/24th and UIUC 10/1st 2020.</li> -->
+                        <!-- <li><a href="https://3dgv.github.io">Seminar on geometry processing & 3D Vision starting.</a></li> -->
+                        <!-- <li><a href="https://confit.atlas.jp/guide/event/ssii2020/top">Invited talk at SSII.</a> Yokohama Japan. 2020/06/12. -->
+                        <!-- <li>Research grant from GA technologies 2019.12</li> -->
+                        <!-- <li><a href="https://docs.google.com/document/d/10tPCWeLuhlOD93WG0OcaVKvjBLLAMS9qX9ltCpsXXN4/edit#heading=h.az97se5ul39q">SFU Visual Computing Workshop 2018/08/10.</a></li> -->
+                        <!-- <li>Talk at MSR Redmond on 1/24, 2018.</li> -->
+			<!-- <li>Talks at <a href="http://seis.bris.ac.uk/~csadc/LPM17/keynotes.html">IROS (9/28)</a>, Tsinghua (10/12), MSRA (10/12), <a href="https://www.facebook.com/cvvr17/">ICCV (10/28)</a>. -->
+                      </ul>
+                    </td>
+                    <td align="left" width="700">
+                      <ul>
+                        <li>PAMI Longuet-Higgins prize at CVPR2020.</li>
+                        <li>Program Chair for ICCV 2023.</li>
+                        <li>Congrats Nelson for <a href="https://bit.ly/3wH18wj">winning Borealias AI Fellowship</a>.</li>
+                        <!-- <li><a href="http://www.houseganpp.com">House-GAN++: Interactive floorplan designer demo!</a></li> -->
+                        <!-- <li><a href="https://gruvi.cs.sfu.ca/publications/">16 CVPR2021 papers from SFU Visual Computing Group.</a></li> -->
+                        <li>Congrats Sachini and Jiacheng for winning Graduate Dean Entrance Scholorship.</li>
+                        <li>News about the team <a href="http://www.sfu.ca/computing/newsandevents/2020/visual-computing-researchers-cvpr.html">here</a>, <a href="https://www.ga-tech.co.jp/en/news/5675/">here</a>, and <a href="https://www.inria.fr/fr/jean-ponce-recoit-le-prix-longuet-higgins">there</a>.</li>
+                        <!-- <li>Talk at <a href="http://www.scan-net.org/cvpr2020workshop/">ScanNet challenge CVPR20 workshop 6/19th.</a></li> -->
+                        <!-- <li>Talk at <a href="https://scene-understanding.com/">3D scene understanding CVPR20 workshop 6/15th.</a></li> -->
+                        <!-- <li><a href="https://www.nii.ac.jp/dsc/idr/userforum/2019.html">Invited talk for IDR User Forum at NII</a> 2019/11/29.</li> -->
+                        <!-- <li><a href="https://holistic-3d.github.io/iccv19/">ICCV tutorial (Holistic 3D reconstruction)</a> 2019/10/28 AM.</li> -->
+                        <!-- <li>Invited talk at Inter. Conf. on Predictive Vision 2019/06/10.</li> -->
+                        <!-- <li>On the editorial boards for PAMI, IJCV, CVIU, and IVC</li> -->
+                        <!-- <li>Research grant from Lianjia (Ke finance) 2019.2.</li> -->
+                        <!-- <li><a href="http://aitutorial.org">Aitutorial talk</a> at Peking University 2018/12/12.</li> -->
+                        <li>DND/NSERC Supplement Grants (2018.8 - 2021.7)</li>
+                        <li>NSERC DAS Grants (2018.4 - 2021.3)</li>
+                        <!-- <li>NSERC Discovery Grants (2018.4 - 2023.3)</li> -->
+                        <li><a href="https://cscan-infocan.ca/awards/">CS-CAN, Outstanding Young CS Researcher Award (2018)</a></li>
+                        <li>Google Research Awards (2018, 2017, and 2016)</li>
+                        <!-- <li>Gift funding from Renoworks (2018)</li> -->
+                        <!-- <li>Gift funding from Zillow (2018)</li> -->
+                        <!-- <li>Moved to Simon Fraser University in Vancouver Canada.</li> -->
+			<!-- <li><span style="color: green"><strong>Hiring undergraduates, graduates, and postdocs. For postdoc, please see <a href="https://sites.google.com/view/postdoc-3dvision-dl">here</a>.</strong></span></li> -->
+                        <!-- <li>Google Research Award (2nd time) (2017.2).</li> -->
+                        <!-- <li>Visiting corp. research groups in Seattle (Google, Facebook, MSR) over summer.</li> -->
+                        <!-- <li>Program co-chair for 3DV 2017, 2013.</li> -->
+                        <!-- <li>Area chair for CVPR 2018, CVPR 2017, ICCV 2019, 2017.</li> -->
+                        <!-- <li>CORE3D award from IARPA (2017.2).</li> -->
+                        <!-- <li>Talk at UMD on 12/1.</li> -->
+                        <!-- <li>Talk at NVIDIA on 10/14.</li> -->
+                        <!-- <li>Talk at Berkeley on 9/30.</li> -->
+                        <li>PMVS for <a href="http://www.dailymail.co.uk/sciencetech/article-3800028/Lord-Sip-n-brought-life-reconstruction-2-000-year-old-skull.html">2000-year-old skull</a> or <a href="http://abcnews.go.com/International/tortoise-burned-fire-custom-3d-printed-shell/story?id=39306133">saving wild animals.</a></li>
+                        <!-- <li>Received an NSF grant (RI:small, PI: Furukawa), 2016.</li> -->
+                        <!-- <li><a href="https://engineering.wustl.edu/news/Pages/Three-faculty-receive-$25,000-SEAS-Collaboration-Initiation-Grants.aspx">Received SEAS Collaboration Initiation Grant.</a></li> -->
+                        <!-- <li>Microsoft Azure Research Award.</li> -->
+                        <!-- <li>Associate editor for Image and Vision Computing.</li> -->
+                        <!-- <li>Will be at ACCV area chair workshop in Taipei, 2016.8.</li> -->
+                        <!-- <li>Will be at <a href="http://sist.shanghaitech.edu.cn/ssist">ShanghaiTech (SSIST)</a> 2016.6.</li> -->
+                        <!-- <li>Will be at ENS/INRI-Paris 2016.5.</li> -->
+                        <!-- <li>CVPR16 paper accepted (spotlight).</li> -->
+                        <!-- <li>Google Research Award (2016.2).</li> -->
+                        <!-- <li>Talks at University of Tokyo and Tokyo Institute of Technology (Jan, 2016).</li> -->
+                        <!-- <li><a href="sim">The project website for our ICCV15 paper with code and data!</a></li> -->
+                        <!-- <li>Area chair for ACCV 2016 and 3DV 2016.</li> -->
+                        <!-- <li>My first paper from WUSTL will appear at ICCV 2015 (oral).</li> -->
+                        <!-- <li>I will give a talk at University of Tokyo on 7/30 and at Osaka University on 8/5 this summer.</li> -->
+                        <!-- <li>An MVS article published on Foundations and Trends in Computer Graphics and Vision.</li> -->
+                        <li>Received NSF CAREER Award (starting Feb 2015).</li>
+                        <!-- <li>Area chair for ICCV 2015 and 3DV 2015.</li> -->
+                        <!-- <li>Qi Shan will present <a href="http://grail.cs.washington.edu/projects/sq_photo_uncrop/">our paper (Photo Uncrop)</a> at ECCV 2014. -->
+                        <!-- <li> Two papers accepted to CVPR 2014.</li> -->
+                        <!-- <li> IJCV paper (Reconstructing the World's Museums) was accepted.</li> -->
+                        <!-- <li> I will be giving a lecture at ICVSS 2014 (International Computer Vision Summer School) at amazing Sicily island.</li> -->
+                        <!-- <li> Associate editor for <a href="http://www.journals.elsevier.com/computer-vision-and-image-understanding">Computer Vision and Image Understanding</a>.</li> -->
+                        <!-- <li> Received <a href="http://googleresearch.blogspot.com/2013/06/excellent-papers-for-2012.html">2012 excellent paper by Google Research.</a></li> -->
+                        
+                        <!-- <li>Served as a program co-chair for <a href="http://www.3dv.org">3DV (the third joint 3DIM/3DPVT conference)</a> in 2013.</li> -->
+                        <!-- <li> Received <a href="http://mit.edu/jxiao/museum">ECCV 2012, Best Student Paper Award</a>.</li> -->
+                        <!-- <iframe width="560" height="315" src="http://www.youtube.com/embed/cNoC5FV10Gs" frameborder="0" allowfullscreen></iframe> -->
+                        <!-- <li><a href="http://google-latlong.blogspot.com/2012/04/visit-global-landmarks-with-photo-tours.html" target="_blank">Google Maps - Photo Tours launched! (2012/04)</a></li> -->
+                        <!-- <li><a href="http://googleblog.blogspot.com/2011/10/step-inside-map-with-google-mapsgl.html" target="_blank">Google MapsGL launched! (2011/10)</a></li> -->
+                        <!-- <li><a href="http://www.zdnet.com/blog/btl/intel-university-of-washington-create-3d-models-with-web-images/58268" target="_blank">INTEL CEO talked about our internet-scale MVS work</a></li> -->
+                        <!-- <li><a href="http://www.di.ens.fr/cmvs">PMVS</a> in production use by <a href="http://www.ilm.com" target="_blank">Industrial Light & Magic</a>, <a href="http://www.wetafx.co.nz">Weta Digital</a>, and <a href="http://www.google.com">Google Inc.</a></li> -->
+                      </ul>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+                      <!-- <iframe width="450" height="280" src="https://www.youtube.com/embed/RZU8w3uvenU" frameborder="0" allowfullscreen></iframe> -->
+            </td>            
+          </tr>          
+        </tbody>
+      </table>
+
+      <h3>Projects</h3>
+      <table>
+        <tbody>
+          <!-- <tr> -->
+          <!--   <td valign="middle" align="center" width="15%"> -->
+          <!--     <img src="newimages/conv-mpn.jpg" border="0" width="200"> -->
+          <!--   </td> -->
+          <!--   <td width="35%"> -->
+          <!--   </td> -->
+
+          <!--   <td valign="middle" align="center" width="15%"> -->
+          <!--     <img src="newimages/conv-mpn.jpg" border="0" width="200"> -->
+          <!--   </td> -->
+          <!--   <td width="35%"> -->
+          <!--   </td> -->
+          <!-- </tr> -->
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-bmvc-scan2bim.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="">A-Scan2BIM: Assistive Scan to Building Information Modeling</a><br>
+              Weilian Song, Jieliang Luo, Dale Zhao, Yan Fu, Chin-Yi Cheng, and Yasutaka Furukawa<br>
+              BMVC 2023 (oral).<br>
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-bmvc-extreme-recon.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="">Floorplan Restoration by Structure Hallucinating Transformer Cascades</a><br>
+              Sepidehsadat Hosseini and Yasutaka Furukawa<br>
+              BMVC 2023.<br>
+            </td>
+          </tr>
+           
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-mvdiffusion.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1QZhDPWxx_Z9YJUdC3U8azXUUm14e5fzP/view?usp=drive_link">
+                MVDiffusion: Enabling Holistic Multi-view Image Generation with Correspondence-Aware Diffusion</a><br>
+              Shitao Tang, Fuyang Zhang, Jiacheng Chen, Peng Wang, and Yasutaka Furukawa<br>
+              NeurIPS 2023 (spotlight).<br>
+              <a href="https://mvdiffusion.github.io/">Project website.</a><br>
+              <a href="https://huggingface.co/spaces/tangshitao/MVDiffusion">Hugging Face Demo.</a>
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-puzzlefusion.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1V5yE28u4L5f5uvgC76IL1k9c1dwrNpdJ/view?usp=drive_link">
+               PuzzleFusion: Unleasing the Power of Diffusion Models for Spatial Puzzle Solving</a><br>
+              Sepidehsadat Hosseini, Mohammad Amin Shabani, Saghar Irandoust, and Yasutaka Furukawa<br>
+              NeurIPS 2023 (spotlight).<br>
+              <a href="https://sepidsh.github.io/puzzlefusion/">Project website.</a>
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-polydiffuse.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1vdSpn6YL_qnFirOCwruTHOvVS5t0oQiI/view?usp=drive_link">
+                PolyDiffuse: Polygonal Shape Reconstruction via Guided Set Diffusion Models</a><br>
+              Jiacheng Chen, Ruizhi Denge, and Yasutaka Furukawa<br>
+              NeurIPS 2023.<br>
+              <a href="https://poly-diffuse.github.io/">Project website.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-icml-cad-generation.jpg" border="0" width="200">
+            </td>
+            
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1ATM_bo0ba8POliMFO_6omxWtArui8MZv/view?usp=share_link">
+                Hierarchical Neural Coding for Controllable CAD Model Generation</a><br>
+              Xiang Xu, Pradeep Kumar Jayaraman, Joseph George Lambourne, Karl D.D. Willis, and Yasutaka Furukawa<br>
+              ICML 2023.<br>
+              <a href="https://hnc-cad.github.io/">Project website.</a>
+            </td>
+          </tr>
+          <tr>            
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-cvpr-neumap.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1ReaFh2ygkCiGlRvecFoIB9X3WSBVVJc2/view?usp=share_link">
+                NeuMap: Neural Coordinate Mapping by Auto-Transdecoder for Camera Localization</a><br>
+              Shitao Tang, Sicong Tang, Andrea Tagliasacchi, Ping Tan, and Yasutaka Furukawa<br>
+              CVPR 2023.<br>
+              <a href="https://github.com/Tangshitao/NeuMap">Project website.</a>
+              
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-cvpr-house-diffusion.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1SmUnk9KmRPbgWYN_eS3OUTpKDw0dhDYe/view?usp=share_link">HouseDiffusion: Vector Floorplan Generation via a Diffusion Model with Discrete and Continuous Denoising
+                </a><br>
+              Amin Shabani, Sepidehsadat Hosseini, and Yasutaka Furukawa<br>
+              CVPR 2023.<br>
+              <a href="https://aminshabani.github.io/housediffusion/">Project website.</a>
+            </td>
+          </tr>
+
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2023-cvpr-event-camera.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1AELqgLuPdBUy7R-WfC2FJ2-E4BScX1mm/view?usp=share_link">Hierarchical Neural Memory Network for Low Latency Event Processing</a><br>
+              Ryuhei Hamaguchi, Yasutaka Furukawa, Masaki Onishi, and Ken Sakurada<br>
+              CVPR 2023.<br>
+              <a href="https://hamarh.github.io/hmnet/">Project website.</a>
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2022-accv-blueprint.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1ASIAVhs0HeTiTdyHrEim2G4cF7PXCOs0/view?usp=share_link">Vectorizing Building Blueprints</a><br>
+              Weilian Song, Mahsa Maleki Abyaneh, Mohammad Amin Shabani, and Yasutaka Furukawa<br>
+              ACCV 2022.<br>
+            </td>
+          </tr>
+
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2022-icml-skexgen.jpg" border="0" width="200">
+            </td>
+            
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1T2a11rmwWqnftOl_iG7e7SL3OhB85WBe/view?usp=share_link">
+              SkexGen: Generating CAD Construction Sequences by Autoregressive VAE with Disentangled Codebooks</a><br>
+              Xiang Xu, Karl Willis, Joseph Lambourne, Chin-Yi Cheng, Pradeep Kumar Jayaraman, and Yasutaka Furukawa<br>
+              ICML 2022.<br>
+              <a href="https://samxuxiang.github.io/skexgen/index.html">Project website.</a>
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/cvpr2022-niloc.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1o1fzvX2FxdNIlVirD2_zxVoKBrga4M9I/view?usp=sharing">
+                Neural Inertial Localization</a><br>
+              Sachini Herath, David Caruso, Chen Liu, Yufan Chen, and Yasutaka Furukawa<br>
+              CVPR 2022.<br>
+              <a href="https://sachini.github.io/niloc">Project website.</a><br>
+            </td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/cvpr2022-heat.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/10K1cUdEopFSN4VjwtBnmYGZospQS0B7s/view?usp=sharing">
+                HEAT: Holistic Edge Attention Transformer for Structured Reconstruction</a><br>
+              Jiacheng Chen, Yiming Qian, and Yasutaka Furukawa<br>
+              CVPR 2022.<br>
+              <a href="https://heat-structured-reconstruction.github.io/">Project website.</a>
+            </td>
+            
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2022-icra-wifi-sfm.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1rOKqGDQ1NtVay3-DUvhJPDhjIXD5ydSH/view?usp=sharing">
+              Single User WiFi Structure from Motion in the Wild</a><br>
+              Yiming Qian, Hang Yan, Sachini Herath, Pyojin Kim, and Yasutaka Furukawa<br>
+              ICRA 2022.<br>
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2021-iccv-extreme-sfm.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1LVcva9S0n0N7QoeuKm0ItY4K62HlOi-h/view?usp=sharing">Extreme Structure from Motion for Indoor Panoramas without Visual Overlaps</a><br>
+              Amin Shabani, Weilian Song, Hirochika Fujiki, Makoto Odamaki, and Yasutaka Furukawa<br>
+              ICCV 2021.<br>
+              <a href="https://drive.google.com/file/d/1p8S9O6T7_ULtNp18VWrpFMK4RhNey8C0/view?usp=sharing">Supplementary document.</a>
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/2021-iccv-search-evaluate.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1Gb9UaeDWuyuPPcmM0wlIp8N36lQhTRzY/view?usp=sharing">Structured Outdoor Architecture Reconsruction by Exploration and Classification</a><br>
+              Fuyang Zhang, Sam Xu, Nelson Nauata, and Yasutaka Furukawa<br>
+              ICCV 2021.<br>
+              <a href="https://zhangfuyang.github.io/expcls">Project website.</a><br>
+              <a href="https://drive.google.com/file/d/1ZIPLgLH1HSeCeMeATCcKaksR4CkeDBg6/view?usp=sharing">Supplementary document.</a>
+            </td>
+          </tr>
+
+          
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/cvpr2021-roofgan.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1kshBOm4pC_7G_Hkf8ImFCeIg5udSrCTu/view?usp=sharing">Roof-GAN: Learning to Generate Roof Geometry and Relations for Residential Houses</a><br>
+              Yiming Qian, Hao Zhang, and Yasutaka Furukawa<br>
+              CVPR 2021.<br>
+              <a href="https://github.com/yi-ming-qian/roofgan">Project website.</a><br>
+              <a href="https://drive.google.com/file/d/130p1PjD2OuV6bhYdp8c_QEU6LPbUux8Q/view?usp=sharing">Supplementary document.</a>
+            </td>
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/cvpr2021-houseganpp.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1i1d5u8xxP1dmQO7gt_lkjdY49GfeSk-6/view?usp=sharing">House-GAN++: Generative Adversarial Layout Refinement Networks</a><br>
+              Nelson Nauata, Sepidehsadat Hosseini, Kai-Hung Chang, Hang Chu, Chin-Yi Cheng, and Yasutaka Furukawa<br>
+              CVPR 2021.<br>
+              <a href="https://ennauata.github.io/houseganpp/page.html">Project website.</a><br>
+              <a href="http://www.houseganpp.com/">Online interactive browser demo!</a><br>
+              <a href="https://drive.google.com/file/d/1uZCajBUqbm2E3OxwAAZIRBRUyxSBiEDK/view?usp=sharing">Supplementary document.</a>
+            </td>
+          </tr>
+
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/cvpr2021-hetero.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1LrrYdr6T_M7G1lomly-9qV96t1qLw84E/view?usp=sharing">Heterogeneous Grid Convolution for Adaptive, Efficient, and Controllable Computation</a><br>
+              Ryuhei Hamaguchi, Yasutaka Furukawa, Masaki Onishi, and Ken Sakurada.<br>
+              CVPR 2021.
+            </td>
+
+
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/cvpr2021-plan2cg.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1ikT9LHKglFiysAxHEE67LAJteStvyZN2/view?usp=sharing">Plan2Scene: Converting Floorplans to 3D Scenes</a><br>
+              Madhawa Vidanapathirana, Qirui Wu, Yasutaka Furukawa, Angel Chang, and Manolis Savva<br>
+              CVPR 2021.<br>
+              <a href="https://3dlg-hcvc.github.io/plan2scene">Project website.</a>
+            </td>
+          </tr>
+    
+          <tr>            
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/icra2021-dhl.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1BQuukubFjlH4clZhFI-C5cJ0_uBYaFly/view?usp=sharing">Fusion-DHL: WiFi, IMU, and Floorplan Fusion for Dense History of Locations in Indoor Environments</a><br>
+              Sachini Herath, Saghar Irandoust, Bowen Chen, Yiming Qian, Pyojin Kim, and Yasutaka Furukawa<br>
+              ICRA 2021.<br>
+              <a href="https://github.com/Sachini/Fusion-DHL">Project website.</a>
+            </td>
+            
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/housegan.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1O02W7yzZwhRsSYuaKglzIwP8yCdTVe6z/view?usp=sharing">House-GAN: Relational Generative Adversarial Networks for Graph-constrained House Layout Generation</a><br>
+              Nelson Nauata, Kai-Hung Chang, Chin-Yi Cheng, Greg Mori, and Yasutaka Furukawa<br>
+              ECCV 2020 (oral).<br>
+              <a href="https://ennauata.github.io/housegan/page.html">Project website.</a><br>
+              <a href="https://www.linkedin.com/posts/chinyi_autodeskailab-sfu-eccv2020-activity-6714595508905742336-P1EZ">Interactive demo video.</a>
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/vectorize-building.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1posUNdfLmCcBMEdRG7p7Zx26IBROsfYR/view?usp=sharing">Vectorizing world buildings: Planar graph reconstruction by primitive detection and relationship inference</a><br>
+              Nelson Nauata and Yasutaka Furukawa<br>
+              ECCV 2020.<br>
+              <a href="https://ennauata.github.io/buildings2vec/page.html">Project website.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/inter-plane.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://github.com/yi-ming-qian/interplane">Learning Inter-Plane Relations for Piecewise Planar Reconstruction</a><br>
+              Yiming Qian and Yasutaka Furukawa<br>
+              ECCV 2020.<br>
+              <a href="https://github.com/yi-ming-qian/interplane">Project website.</a>
+            </td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/conv-mpn.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1jdpsJ3oFK4hRuDIQnk2l2DzIvYjDyAzA/view?usp=sharing">Conv-MPN: Convolutional Message Passing Neural Network for Structured Outdoor Architecture Reconstruction</a><br>
+              Fuyang Zhang*, Nelson Nauata*, and Yasutaka Furukawa (* indicates equal contribution)<br>
+              CVPR 2020.<br>
+              <a href="https://zhangfuyang.github.io/convmpn">Project website.</a><br>
+              <a href="https://drive.google.com/file/d/1tE8HNRlYOIYS5F8Hu6YhzoSDvWRJ_gjJ/view?usp=sharing">Supplementary document.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/bundle-pooling.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1hOaGBz7cBLSd-0h9aLmM6SFs96hOp_hM/view?usp=sharing">Bundle Pooling for Polygonal Architecture Segmentation Problem</a><br>
+              Huayi Zeng, Kevin Joseph, Adam Vest, and Yasutaka Furukawa<br>
+              CVPR 2020.<br>
+            </td>
+          </tr>            
+          
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/floor-sp.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1dXnSliw-M5vaDSENQ3w_X_P7GirghdLm/view?usp=sharing">Floor-SP: Inverse CAD for Floorplans by Sequential Room-wise Shortest Path</a><br>
+              Jiacheng Chen, Chen Liu, Jiaye Wu, and Yasutaka Furukawa<br>
+              ICCV 2019.<br>
+              <a href="https://www.youtube.com/watch?v=PyYz7XAs7UE">Video.</a><br>
+              <a href="https://jcchen.me/floor-sp">Project website.</a><br>
+              <a href="https://drive.google.com/file/d/1mDJETVyNm5mpIm_CZQNEn6MzpuvAplAF/view?usp=sharing">Supplementary document.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/sanet.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/19ORJcMU4d3q6PWHLBnUTwtmOJgwhdt_U/view?usp=sharing">SANet: Scene Agnostic Network for Camera Localization</a><br>
+              Luwei Yang, Ziqian Bai, Chengzhou Tang, Honghua Li, Yasutaka Furukawa, and Ping Tan<br>
+              ICCV 2019.<br>
+              <a href="https://drive.google.com/file/d/1XQSVRPXauGADywzN15mYKFvMXH9eTGW5/view?usp=sharing">Supplementary document.</a>
+            </td>
+          </tr>            
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/ronin.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1hFC6R7HuejTskPiBJlqbU8YYE65ywd-_/view?usp=sharing">RoNIN: Robust Neural Inertial Navigation in the Wild</a><br>
+              Hang Yan*, Sachini Herath*, and Yasutaka Furukawa (* indicates equal contribution)<br>
+              ICRA 2020<br>
+              arXiv:1905.12853<br>
+              <a href="https://www.youtube.com/watch?v=JkL3O9jFYrE">Video.</a><br>
+              <a href="https://ronin.cs.sfu.ca">Project website.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/planercnn.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/file/d/1aHiF4Lv4COO-w-mLYFshikh76HZIH0GW/view?usp=sharing">PlaneRCNN: 3D Plane Detection and Reconstruction from a Single Image</a><br>
+              Chen Liu, Kihwan Kim, Jinwei Gu, Yasutaka Furukawa, Jan Kautz<br>
+              CVPR 2019 (oral).<br>
+              arXiv:1812.04072<br>
+              <a href="https://research.nvidia.com/publication/2019-06_PlaneRCNN">Project website.</a>
+            </td>
+          </tr>            
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/neural-pr.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <br>
+              <a href="https://drive.google.com/open?id=1eUKjd1xijtS1YOVUWnKd4D58ED_AqdVe">Neural Procedural Reconstruction for Residential Buildings</a><br>
+              Huayi Zeng, Jiaye Wu, and Yasutaka Furukawa<br>
+              ECCV 2018.<br>
+              <a href="https://youtu.be/9yyFlE4lWUo">Video.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/floornet.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <br>
+              <a href="https://drive.google.com/open?id=1XzOaWWOaiISkA7yUt11q0xSySf2YN9MS">FloorNet: A Unified Framework for Floorplan Reconstruction from 3D Scans</a><br>
+              Chen Liu*, Jiaye Yu*, and Yasutaka Furukawa<br> (* indicates equal contribution)<br>
+              ECCV 2018.<br>
+              <a href="https://youtu.be/i7H7riAAYEc">Video.</a><br>
+              <!-- arXiv:1804.00090,2018<br> -->
+              <a href="http://art-programmer.github.io/floornet.html">Project website</a><br>
+            </td>
+          </tr>            
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/ridi.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/open?id=1tQyz5DGklJvOyFqdr9z3fKDWOti6A8sZ">RIDI: Robust IMU Double Integration</a><br>
+              Hang Yan, Qi Shan, and Yasutaka Furukawa<br>
+              ECCV 2018.<br>
+              <a href="https://youtu.be/IroLp5VOPDE">Video.</a><br>
+              <a href="https://yanhangpublic.github.io/ridi/index.html">Project website.</a><br>
+              <!-- <a href="https://arxiv.org/abs/1712.09004">arXiv:1712.09004</a><br> -->
+            </td>
+            <td valign="middle" align="center" width="15%">
+            <img src="newimages/polarimetric.jpg" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/open?id=1sVibSzhze525ayt9KE_NvC5DJgD2edGs">Polarimetric Dense Monocular SLAM</a><br>
+              Luwei Yang, Feiton Tan, Ao Li, Zhaopeng Cui, Yasutaka Furukawa, and Ping Tan.<br>
+              CVPR 2018 (oral).<br>
+              <a href="https://drive.google.com/open?id=1YG6qgbrnD6a4vwxuvvfckqob2O9jRVIl">Supplementary material.</a>
+            </td>
+          </tr>            
+          <tr>
+            <td valign="middle" align="center" width="15%">
+              <img src="newimages/planenet.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <br>
+              <a href="https://drive.google.com/open?id=1SCu0lgAKEIdkHQr3bNiy_OoiAfaEar0Q">PlaneNet: Piece-wise Planar Reconstruction from a Single RGB Image</a><br>
+              Chen Liu, Jimei Yang, Duygu Ceylan, Ersin Yumer, and Yasutaka Furukawa<br>
+              CVPR 2018 (spotlight).<br>
+              <a href="http://art-programmer.github.io/planenet.html">Project website</a><br>
+              <a href="https://drive.google.com/open?id=1fJ7zZNJrBpgZ4kM18-97qDwiDtEmjv3H">Supplementary material.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+            <img src="newimages/2017-floorplan.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://drive.google.com/open?id=1uQ8LloejDbPaRkHzXM-fb5PtQI-x1IC3">Raster-to-Vector: Revisiting Floorplan Transformation</a><br>
+              Chen Liu, Jiajun Wu, Pushmeet Kohli, and Yasutaka Furukawa<br>
+              ICCV 2017.<br>
+              <a href="https://www.youtube.com/watch?time_continue=82&v=ZjI36DvfVPc">Video</a>.  <a href="https://drive.google.com/open?id=1mPDLcPWzpqdpsdDlE4aQ81MlfAuvh32h">Supplementary material.</a><br>
+              <a href="http://art-programmer.github.io/floorplan-transformation.html">A project website.</a><br>
+<a href="https://github.com/art-programmer/FloorplanTransformation">Code and data.</a>
+            </td>
+          </tr>            
+          <tr>
+            <td valign="middle" align="center" width="15%">
+            <img src="newimages/2016-campus.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://arxiv.org/abs/1612.02859">Exploiting 2D Floorplan for Building-scale Panorama RGBD Alignment</a><br>
+              Erik Wijmans and Yasutaka Furukawa<br>
+              CVPR 2017<br>
+              Arxiv:1612.02859.<br>
+              <a href="http://erikwijmans.github.io/WashU-Research/">Project page.</a><br>
+              <a href="https://www.youtube.com/watch?v=_IOu__yCpeM&feature=youtu.be">Video.</a><br>
+              <a href="https://www.youtube.com/watch?v=roJOp5ncpSE&feature=youtu.be">Video highlight.</a>
+            </td>
+            <td valign="middle" align="center" width="15%">
+            <img src="newimages/2016-floorplan.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="http://arxiv.org/abs/1612.01225">Deep Multi-Modal Image Correspondence Learning</a><br>
+              Chen Liu, Jiajun Wu, Pushmeet Kohli, and Yasutaka Furukawa<br>
+              arXiv:1612.01225.</br>
+              <a href="https://youtu.be/d2az8RWx9MQ">Video.</a>
+            </td>
+          </tr>            
+          <tr>
+            <td width="15%">
+              <img src="newimages/2016-cinemagraph.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="http://arxiv.org/abs/1612.01235">Turning an Urban Scene Video into a Cinemagraph</a><br>
+              Hang Yan, Yebin Liu, and Yasutaka Furukawa<br>
+              CVPR 2017<br>
+              arXiv:1612.01235.<br>
+              <a href="https://www.youtube.com/watch?v=r3yyL6qrVX4">Video.</a>
+            </td>
+            <td width="15%">
+              <img src="newimages/2016-panoramic-sfm0.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="http://arxiv.org/abs/1612.01256">Panoramic Structure from Motion via Geometric Relationship Detection</a><br>
+              Satoshi Ikehata, Ivaylo Boyadzhiev, Qi Shan, and Yasutaka Furukawa<br>
+              arXiv:1612.01256.<br>
+              <a href="https://youtu.be/k00-6ysyODg">Video.</a>
+            </td>
+          </tr>
+          <tr>
+            <td width="15%">
+              <img src="newimages/2016-swarm.png" border="0" width="200">
+            </td>
+            <td width="35%">
+              <a href="https://arxiv.org/abs/1612.01234">Multi-way Particle Swarm Fusion</a><br>
+              Chen Liu, Hang Yan, Pushmeet Kohli, and Yasutaka Furukawa<br>
+              arXiv:1612.01234.<br>
+            </td>
+            
+            <td valign="middle" align="center" width="15%">
+			<img src="newimages/2016-cvpr-layer-teaser.png" border="0" width="200"><p></p></td>
+            <td width="35%">
+	      <a href="https://drive.google.com/open?id=14sMDwHdjvFtJm-mg1J3r1LE_Uzufic6g">Layered Scene Decomposition via the Occlusion-CRF</a><br>
+              Chen Liu, Pushmeet Kohli, and Yasutaka Furukawa<br>
+              CVPR 2016 (spotlight). <br>
+              <a href="https://youtu.be/jjo1jI_sOHs">Video.</a><br>
+              <a href="https://github.com/art-programmer/LayeredSceneDecomposition">Code.</a><br>
+              <a href="https://drive.google.com/open?id=1ZkN2AY7QXrEKTMFVTBArD2LA8tLaVmMW">Supplementary material.</a>
+            </td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center">
+	      <img src="newimages/structured_indoor_modeling.png" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="sim">Structured Indoor Modeling</a><br>
+              Satoshi Ikehata, Hang Yan, and Yasutaka Furukawa<br>
+              ICCV 2015 (oral). <br>
+              <!-- <a href="https://youtu.be/RZU8w3uvenU">Video (youtube).</a><br> -->
+              <!-- <a href="papers/iccv_2015_supp.pdf">Supplementary material.</a><br> -->
+              <a href="sim">Project website.</a>
+            </td>
+            <td valign="middle" align="center">
+	      <img src="newimages/fnt_mvs.png" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1rPHk0dyAfjh-1wu-wQShFm-qtiUScPxz">Multi-View Stereo: A Tutorial</a><br>
+              Yasutaka Furukawa and Carlos Hernandez<br>
+              Foundations and Trends in Computer Graphics and Vision, 2015.
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+			<img src="newimages/3dv14.png" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1Wg14jr001Beih_LXDxmSUBReO3AsRdw9">Accurate Geo-registration by Ground-to-Aerial Image Matching</a><br>
+              Qi Shan, Changchang Wu, Brian Curless, Yasutaka Furukawa, Carlos Hernandez, and Steven M. Seitz<br>
+              3DV 2014 (oral).<br>
+              <a href="http://grail.cs.washington.edu/projects/sq_ground2aerial/">Project website.</a><br><br><br>
+            </td>
+            <td valign="middle" align="center">
+			<img src="newimages/uncrop.jpg" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1D_c3ROE9OCiAR9N5-lJVTKT8xkJyv-tt">Photo Uncrop</a><br>
+              Qi Shan, Brian Curless, Yasutaka Furukawa, Carlos Hernandez, and Steven M. Seitz<br>
+              ECCV 2014.<br>
+              <a href="http://grail.cs.washington.edu/projects/sq_photo_uncrop/">Project website.</a><br><br><br>
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle">
+			<img src="newimages/cvpr14_floorplan.png" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1OQbh3s2uoiwMeA95thjHqBcW0nZN-5Tl">Piecewise Planar and Compact Floorplan Reconstruction from Images</a><br>
+              Ricardo Cabral and Yasutaka Furukawa<br>
+              CVPR 2014.<br>
+              <a href="https://www.youtube.com/watch?v=NChPgMIasl0">Video.</a><br>
+              <a href="https://drive.google.com/open?id=1uv86rvQRviKM0V541wh6s3axTXuQbmAv">Supplementary material.</a><br>
+              <br>
+            </td>
+            <td valign="middle" align="center">
+			<img src="newimages/cvpr14_contour.jpg" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1s28tA5Ga96FVZSFot49LrAijaUTADzXk">Occluding Contours for Multi-View Stereo</a><br>
+              Qi Shan, Brian Curless, Yasutaka Furukawa, Carlos Hernandez, and Steven M. Seitz<br>
+              CVPR 2014.<br>
+              <a href="http://grail.cs.washington.edu/projects/sq_rome_g2"><span style="font-weight: bold; color: green;">A project website with more contents.</span></a><br>
+          <br>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+			<img src="newimages/visual_turing_thumbnail.png" border="0" width="200"></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1p1GRsTPDahC6Y3mGTk-dd7vw5B8N7eV-">The Visual Turing Test for Scene Reconstruction</a> - (<a href="https://drive.google.com/open?id=1xR6kt6aZ7zDUzLTduv_IeFU1Rm1rUmvq">supplementary document.</a>)<BR>
+              Qi Shan, Riley Adams, Brian Curless, Yasutaka Furukawa, and Steven M. Seitz<br>
+              3DV 2013 (oral).<br>
+              Best Paper Award.<br>
+              <a href="http://homes.cs.washington.edu/~shanqi/work/proj_rome_g1"><span style="font-weight: bold; color: green;">A project website with more contents.</span></a><br>
+            </td>
+            <td valign="middle" align="center">
+			<img src="newimages/museum.jpg" border="0" width="200"><p></p></td>
+            <td>
+              <a href="https://drive.google.com/open?id=1W9OMZ4aTscOpKIR6eY3UElHKXUuWhz6h">Reconstructing the World's Museums</a><br>
+              Jianxiong Xiao and Yasutaka Furukawa<br>
+              IJCV 2014.
+              <br><br>
+	      <a href="https://drive.google.com/open?id=1wK0-mfqsqeX_mIPCkjBYysaZynoFS_pU">Reconstructing the World's Museums</a> - (<a href="https://drive.google.com/open?id=1i-uQtgPEnEjDSQ2m0fW1IntOVfCthLMG">supplementary document</a>)<BR>
+              Jianxiong Xiao and Yasutaka Furukawa<br>
+              ECCV 2012 (oral).<br>
+              <font color="#ff4500">Best Student Paper Award.</font><br>
+              <!-- <a href="http://mit.edu/jxiao/museum"><span style="font-weight: bold; color: green;">A project website with a bunch of movies and demos.</span></a><br> -->
+              <br>
+              <a href="http://googleresearch.blogspot.com/2013/06/excellent-papers-for-2012.html">Selected as a 2012 excellent paper by Google Research.</a><br>
+              <!-- This is a summer intern project at Google Seattle.<br> -->
+              <br>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+			<img src="newimages/photo-tours.jpg" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="http://google-latlong.blogspot.com/2012/04/visit-global-landmarks-with-photo-tours.html" target="_blank">Google Maps - Photo Tours</a>, April, 2012<BR>
+              Designed and implemented a pipeline to compute scene geometries for rendering and "3D Ken Burns" motions.<br>
+              <a href="http://maps.google.com/phototours" target="_blank">Examples (a few clicks away).</a> <br><br>
+              <a href="https://drive.google.com/open?id=1FMqGrl2HUvM_0T4fe3e_0uU34kb6igeZ">Photo Tours</a><BR>
+                Avanish Kushal, Ben Self, Yasutaka Furukawa, David Gallup, Carlos Hernandez, Brian Curless, and Steve Seitz<br>
+                3DimPVT 2012 (oral).<br>
+                <br>
+            </td>
+            <td valign="middle" align="center">
+	      <img src="newimages/mapsgl.jpg" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="http://support.google.com/maps/bin/answer.py?hl=en&answer=1630790" target="_blank">MapsGL (Next generation Google Map)</a>, October, 2011<BR>
+              Designed and implemented a city-scale dense 3D reconstruction pipeline from aerial images, running in an unprecedented scale for hundreds of cities all over the world.
+              <BR>              
+            </td>
+          </tr>
+
+
+          <tr>
+            <td valign="middle" align="center">
+			<img src="newimages/rome.png" border="0" width="200"><p></p></td>
+            <td>
+	      <a href="http://cacm.acm.org/magazines/2011/10/131417-building-rome-in-a-day" target="_blank">Building Rome in a Day</a><BR> Sameer Agarwal,
+              Yasutaka Furukawa, Noah Snavely, Brian Curless, Steven M. Seitz and
+              Richard Szeliski<BR> Communications of the ACM, Vol. 54, No. 14, Pages
+              105-112, October 2011.<BR>
+              <BR>
+              <a href="http://www.computer.org/portal/web/csdl/doi/10.1109/MC.2010.175" target="_blank">Building Rome</a><br>
+              Sameer Agarwal, Yasutaka Furukawa, Noah Snavely, Brian Curless, Steven M. Seitz and Richard Szeliski<br>
+              IEEE Computer Society, June 2010.<br>
+              <br>
+            </td>
+            <td valign="middle" align="center">
+			<img src="newimages/internetmvs.jpg" border="0" width="200"></td>
+            <td>
+              <a href="https://drive.google.com/open?id=12kDBb0FPxV-AVgndHQ7E_5V7tFyPas4l" target="_blank">Towards Internet-scale Multi-view Stereo</a> (<a href="https://drive.google.com/open?id=14RQnTpiYkC1XVTd9hM79r5L7uYXpQocY" target="_blank">supplementary material</a>)<br>
+              Yasutaka Furukawa, Brian Curless, Steven M. Seitz and Richard Szeliski<br>
+              CVPR 2010.<br>
+              <br>
+              <a href="http://www.di.ens.fr/cmvs" target="_blank">CMVS software available!</a><br><br>
+              Project website coming soon.
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+              <img src="newimages/interior.jpg" border="0" width="200"><p></p></td>
+            <td>
+              <a href="https://drive.google.com/open?id=1-nOBfSTB1cI7rArAuBJeJ9vPGbvxqrp0" target="_blank">Reconstructing Building Interiors from Images</a><br>
+              Yasutaka Furukawa, Brian Curless, Steven M. Seitz and Richard Szeliski<br>
+              ICCV 2009 (oral).<br><br>
+              <a href="http://grail.cs.washington.edu/projects/interior/" target="_blank">Project website.</a>
+            </td>
+            <td valign="middle" align="center">
+	      <img src="newimages/mocap2-result.jpg" border="0" width="200"><p></p></td>
+            <td>
+              <a href="http://grail.cs.washington.edu/projects/fmocap" target="_blank">Dense 3D Motion Capture for Human Faces</a><br>
+              Yasutaka Furukawa and Jean Ponce<br>CVPR 2009.<br>
+              <!-- <a href="http://homes.cs.washington.edu/~furukawa/gallery/mocap2-overview.mov" target="_blank">Movie</a> -->
+            </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+              <img src="newimages/mws-result2.jpg" border="0" width="200"><p></p></td>
+            <td>
+             <a href="http://grail.cs.washington.edu/projects/manhattan" target="_blank">Manhattan-world Stereo</a><br>
+             Yasutaka Furukawa, Brian Curless, Steven M. Seitz and Richard Szeliski
+             <br>CVPR 2009.<br><br>
+             <a href="https://www.youtube.com/watch?v=VVBjEnp1rdc" target="_blank">Movie</a>
+            </td>
+            <td valign="middle" align="center">
+	      <!-- <img src="newimages/mocap-face1.jpg" border="0" height="74" width="150"><img src="newimages/mocap-face2.jpg" border="0" height="74" width="150"><p> -->
+		<img src="newimages/mocap-results.jpg" border="0" height="125" width="200"></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1lQ7V0lAQ3pcRhHMemfd5L6vUbd73d-Df" target="_blank">Dense 3D Motion Capture from Synchronized Video Streams</a><br>
+              Yasutaka Furukawa and Jean Ponce<br>CVPR 2008. (oral)<br><br>
+	      <a href="https://drive.google.com/open?id=1c7qnqg5TaDrEWDyr3oJYIgvo-N2YyiCU" target="_blank">Dense Patch Models for
+		  Motion Capture from Synchronized Video Streams</a><br>
+              Yasutaka Furukawa and Jean Ponce -- Willow Tech. Report 02-07<br><br>
+	    </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+			<img src="newimages/mvs-ba.jpg" border="0" width="200"></td>
+            <td>
+	      <p align="left"><a href="https://drive.google.com/open?id=1ukw1DCPMX7JwLV1FQnOLayM-0WqTuCfd" target="_blank">Accurate Camera Calibration from Multi-View Stereo and Bundle
+			Adjustment</a><br>Yasutaka Furukawa and Jean Ponce<br>
+			IJCV, 2009.<br>
+              </p>
+	    <p align="left"><a href="https://drive.google.com/open?id=1Lu2NmKQaUvj0mE-lXz1djSuYxAmsTGtj" target="_blank">Accurate Camera Calibration from Multi-View Stereo and Bundle
+			Adjustment</a><br>Yasutaka Furukawa and Jean Ponce<br>
+			CVPR 2008.<br>
+            </p>
+            <!-- <a href="http://homes.cs.washington.edu/~furukawa/gallery/mvs-ba-overflow.mov" target="_blank">Movie</a> -->
+	    </td>
+            <td valign="middle" align="center">
+			<img src="newimages/mvs.jpg" border="0" width="200"></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1LMzM5SLzFaC8YvFEqOP_D5_iFn5NDGug" target="_blank">Accurate, Dense, and Robust Multi-View Stereopsis</a><br>Yasutaka Furukawa and Jean Ponce<br>PAMI, August 2010.<br><br>
+              <a href="https://drive.google.com/open?id=15yYYGTL65Lc_VSXgTIxEIW9uZxj4JUwb" target="_blank">Accurate, Dense, and Robust Multi-View Stereopsis</a><br>Yasutaka Furukawa and Jean Ponce<br>CVPR 2007.
+              <!-- <a href="papers/cvr_tr_2006_02.pdf" target="_blank">High-Fidelity Image Based Modeling</a><br>Yasutaka Furukawa and Jean Ponce -- Technical Report 2006-02<br> -->
+	      <!-- <font face="Times New Roman" size="4"> -->
+	      <!--   <a href="research/pmvs/index.html" target="_blank"> -->
+	      <!--       Multi-View Stereo Software for download.</a></font><br> -->
+	      <!-- See our <a href="gallery" target="_blank">gallery</a> and <a href="research/mview/index.html" target="_blank">3D Photography Datasets</a>.<br> -->
+	      <!-- See the <a href="http://vision.middlebury.edu/mview/" target="_blank">multi-view -->
+              <!--   stereo evaluation project</a> by Steve Seitz et al. for -->
+              <!-- quantitative evaluations of our results. As of 9/25/2007, -->
+	      <!-- our algorithm achieves the best result in terms of both -->
+              <!-- <i>accuracy</i> and <i>completeness</i> for 4 out of 6 datasets. -->
+            </td>
+          </tr>
+
+          <tr>
+            <td valign="middle" align="center">
+	      <img src="newimages/carved-vh.jpg" border="0" width="200"></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1Xuy5qYe70yHhxiKOKDlr_yKJvPHPx-in" target="_blank">Carved Visual Hulls for Image-Based Modeling</a><br>
+		Yasutaka Furukawa and Jean Ponce<br>
+		IJCV, March 2008<br>
+                Special Issue: Best of the European Conference on Computer Vision 2006<br><br>
+	      <a href="https://drive.google.com/open?id=1-9Utp6kTJXytPJtvZzbSiPHVgoZyDRDv" target="_blank"><font size="+1">Carved Visual Hulls for Image-Based Modeling</font></a><br>Yasutaka Furukawa and Jean Ponce<br> ECCV 2006. (oral)<br><br>
+	      <!-- <a href="papers/siggraph2005.ps" target="_blank">Carved Visual Hulls for High-Accuracy -->
+              <!--         Image-Based Modeling</a><br>Yasutaka Furukawa and Jean Ponce -- SIGGRAPH 2005 Technical Sketch<br> -->
+	      <!-- See our <a href="research/mview/index.html" target="_blank">3D Photography Datasets</a> and <a href="research/visual_hull/index.html" target="_blank">visual hull data sets</a>. -->
+            </td>
+            <td valign="middle" align="center">
+			<img src="newimages/projective-vh1.jpg" border="0" width="200"><p>
+			<img src="newimages/projective-vh2.jpg" border="0" width="200"></p></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1gC68GIUGKlvbCgZTaw75kjdLNRVDXf9g" target="_blank"><font size="+1">Projective Visual Hulls</font></a><br>
+	    IJCV, August 2007<br>
+	    Svetlana Lazebnik, Yasutaka Furukawa and Jean Ponce
+	      <!-- <br><br> -->
+	      <!-- See our <a href="research/visual_hull/index.html" target="_blank">visual hull data sets</a>. -->
+	    </td>
+          </tr>
+          
+          <tr>
+            <td valign="middle" align="center">
+			<img src="newimages/sfs.jpg" border="0" width="200"></td>
+            <td>
+	      <a href="https://drive.google.com/open?id=1wSdxmlOVW702nFveh1MNLUIY8VFsfsge" target="_blank">Robust Structure and Motion from Outlines
+                of Smooth Curved Surfaces</a><br>Yasutaka Furukawa, Amit Sethi, Jean Ponce,
+              and David Kriegman.<br>PAMI, February 2006 (Vol. 28, No. 2) pp.302-315<br><br>
+              <a href="https://drive.google.com/open?id=1gU26weQKvSarYE4B6SbaVsN08LD8gkiI" target="_blank">Structure and Motion from Images of Smooth
+                Textureless Objects</a><br>Yasutaka Furukawa, Amit Sethi, Jean Ponce,
+              and David Kriegman.<br>ECCV 2004.
+	    </td>
+            <td valign="middle" align="center">
+	      <img src="newimages/line.jpg" border="0" height="111" width="200"></td>
+            <td>
+              Accurate and Robust Line Segment Extraction by Analyzing Distribution around Peaks in
+              Hough Space<br>
+              Yasutaka Furukawa and Yoshihisa Shinagawa<br>
+              Computer Vision and Image Understanding Volume
+              92, Issue 1, Pages 1-25 (October 2003)
+	    </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr>
+      <h3>Members</h3>
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <ul>
+                <li><a href="https://sachini.github.io">Sachini Herath (SFU graduate)</a></li>
+                <li><a href="http://weiliansong.github.io">Weilian Song (SFU graduate)</a></li>
+                <li><a href="https://aminshabani.github.io/">Mohammad Amin Shabani (SFU graduate)</a></li>
+                <!-- <li>Madhawa Vidanapathirana<br> (SFU graduate w/ Manolis Savva)</li> -->
+                <li><a href="https://zhangfuyang.github.io">Fuyang Zhang (SFU graduate)</a></li>
+                <li><a href="https://sepidsh.github.io">Sepid Hosseini (SFU graduate)</a></li>
+                <li><a href="http://jcchen.me/">Jiacheng Chen (SFU graduate)</a></li>
+                <li><a href="https://samxuxiang.github.io/">Sam Xu (SFU graduate)</a></li>
+                <li><a href="https://tangshitao.github.io">Shitao Tang (SFU graduate)</a></li>
+                <li><a href="">Eric Wang (SFU undergraduate)</a></li>
+                <li><a href="http://yanxg.art">Xingguang Yan (SFU graduate)</a></li>
+                <li><a href="https://ivenwu.com">Yuefan Wu (SFU graduate)</a></li>
+                <!-- <li>Hirokazu Iida (visiting graduate)</li> -->
+              </ul>
+            </td>
+            <!-- <td align="center"> -->
+            <!--   <img src="newimages/group-2018-cvpr.jpg" height="240"/> -->
+            <!--   <br> -->
+            <!--   At CVPR 2018, Salt Lake City. -->
+            <!-- </td> -->
+            <!-- <td align="center"> -->
+            <!--   <img src="newimages/group-2019-iccv.jpg" height="240"/> -->
+            <!--   <br> -->
+            <!--   At ICCV 2019, Seoul. -->
+            <!-- </td> -->
+          </tr>
+        </tbody>
+      </table>
+<h3>Past members</h3>
+      <ul>
+        <li><a href="http://www.sfu.ca/~nnauata/">Nelson Nauata. Apple (SFU Ph.D., 2022)</a></li>
+        <li><a href="https://www.linkedin.com/in/saghar-irandoust/">Saghar Irandoust. Borealis AI (SFU M.Sc., 2022)</a></li>
+        <li><a href="https://yi-ming-qian.github.io">Yiming Qian. Assistant Professor at University of Manitoba (Postdoc, 2022)</a></li>
+        <li>Mahsa Abyaneh. LivingCities (SFU M.Sc., 2021)</li>
+        <li><a href="https://www.cse.wustl.edu/~zengh">Huayi Zeng. Waymo (WUSTL Ph.D., 2021)</span></li>
+        <li>Kevin Joseph. Software engineer at Motion Metrics (SFU M.Sc., 2021)</li>
+        <li><a href="http://pyojinkim.com">Pyojin Kim.</a> Assistant Professor at Sookmyung Women's University (SFU postdoc, 2020)</li>
+        <li>Bowen Chen. (SFU undergraduate, 2020)</li>
+        <li>Chen Liu. Facebook Reality Lab (WUSTL Ph.D., 2019)</li>
+        <li>Hang Yan. Waymo (WUSTL Ph.D., 2019)</li>
+        <li><a href="jcchen.me">Jiacheng Chen</a>. USC graduate student (SFU undergraduate, 2019)</li>
+        <li><a href="https://csjunxu.github.io">Jun XU</a>. Assistant Professor at Nankai University (SFU postdoc, 2019)</li>
+        <li>Charlie Wu. UMD graduate student (WUSTL undergraduate, 2019)</li>
+        <li>Adam Patrick. NIKE (Fulbright scholar at SFU, 2019)</li>
+        <li>Leo Li. University of Toronto graduate student (SFU undergraduate, 2018)</li>
+        <li>Erik Wijmans. Georgia Tech graduate student (WUSTL undergraduate, 2017)</li>
+        <li>Patrick Sullivan. Boeing (WUSTL Master, 2017)</li>
+        <li>Jeanine Burke. Microsoft software developper (WUSTL undergraduate, 2016)</li>
+        <li>Xinyi Gong. Amazon software engineer (WUSTL undergraduate, 2016)</li>
+        <li><a href="https://www.hal.t.u-tokyo.ac.jp/~ikehata/">Satoshi Ikehata</a>. Assistant Professor at National Institute of Informatics (WUSTL postdoc, 2016)</li>
+        <li>Moniqua Guo. Google (WUSTL undergraduate, 2015)</li>
+        <li>Brian Choi. Google (WUSTL master, 2014)</li>
+      </ul>
+      
+      <h3>Teaching</h3>
+      <ul>
+        <li>CMPT412 Computer Vision: <a href="cmpt412-762-2023-fall">Fall 2023</a>, Spring 2023, Fall 2021, Fall 2020, Fall 2019</li>
+        <li>CMPT762 Computer Vision: <a href="cmpt412-762-2023-fall">Fall 2023</a>, Fall 2022, Spring 2022, Spring 2021, Spring 2020</li>
+        <li>Visual Computing Seminar:
+          <!-- <a href="https://docs.google.com/document/d/1iaS5bWRQtYBuAIWpvNxKF6l4whbZKAJ1aGM7KpfsLos">Fall 2018</a> -->
+          Fall 2018
+        </li>
+        <li>CMPT822(7XX) Computer Vision: <!-- <a href="cmpt822">Fall 2018</a> --> Fall 2018</li>
+        <li>CMPT469-888 Computational Photography: <!-- <a href="cmpt469-888/">Winter 2018</a> --> Winter 2018</li>
+        <li> <!-- <a href="https://docs.google.com/spreadsheets/d/120_v0xqkN66yWGmQ4gQQV4nd9FFZkWqZmqP9Wfv0FrQ/edit#gid=0"> -->
+          <!-- <a href="https://docs.google.com/spreadsheets/d/120_v0xqkN66yWGmQ4gQQV4nd9FFZkWqZmqP9Wfv0FrQ/edit#gid=0"> -->
+          Graphics and Vision seminar, Spring 2017</li>
+        <li>CSE559 Computer Vision: Fall 2016, Spring 2015, Fall 2013</li>
+        <li>ARCH529 New Vision: Designing for New Tools: Spring 2016, Spring 2015</li>
+        <li>CSE452 Computer Graphics: Spring 2016, Spring 2014</li>
+      </ul>
+
+      
+      <!-- <table id="table1" cellpadding="5"> <tbody> <tr> <td><img src="images/holi1_tp.gif" border="0" height="70" width="70"></td> -->
+      <h3>Resources</h3>
+      <ul>
+        <li>
+          <a href="http://www.di.ens.fr/cmvs">PMVS & CMVS<a/>
+        </li>
+        <!-- <li> I am on the advisory panel of <a href="http://www.floored.com">Floored</a>.</li> -->
+        <!-- <li> I will serve as an area chair for <a href="http://www.accv2014.org">ACCV 2014</a>.</li> -->
+        <!-- <li>Our 3DV 2013 paper won the Best Paper Award.</li> -->
+        <!-- <li><a href="http://blogs.seattletimes.com/brierdudley/2014/10/22/uncropping-photos-and-other-uw-tech-on-display/">An article about our "Photo Uncrop" paper.</a> -->
+        <li>CVPR 2014 tutorial slides - State of the Art 3D Reconstruction Techniques. <br>
+          [<a href="https://drive.google.com/open?id=1daWIMZxej_u-XyCKB-Q0-CaIJ8nU_7LL">Introduction</a>]
+          [<a href="https://drive.google.com/open?id=19rsWsFxeZOaaae6Pzw6XeW8c_beSHiV6">MVS with priors</a>]
+          [<a href="https://drive.google.com/open?id=1e9X8LOQSu1nT1a17BUmwPVpeVrrXGVN2">Large scale MVS</a>]
+        </li>                   
+      <!--   <li> -->
+      <!--     Changchang Wu distributes an -->
+      <!-- <a href="http://www.cs.washington.edu/homes/ccwu/vsfm" target="_blank">automated -->
+      <!-- end-to-end 3D reconstruction system from images</a>, which -->
+      <!-- integrates well with our CMVS and PMVS. -->
+      <!--     </li> -->
+     <!-- <li> -->
+     <!--   I recently found a very interesting website, which has nice video tutorials on an end-to-end 3D reconstruction system (including PMVS2) on Windows (32/64 bits) machines. <a href="http://www.visual-experiments.com/2010/09/23/pmvs2-x64-and-videos-tutorials" target="_blank">Here is the link.</a> -->
+     <!--  </li> -->
+      <li>
+      CVPR 2010 Tutorial on <a href="http://carlos-hernandez.org/cvpr2010/index.html" target="_blank">3D shape Reconstruction from Photographs: a Multi-View Stereo Approach.</a>
+      </li>
+      <!-- <li><span><a href="http://grail.cs.washington.edu/software/cmvs" target="_blank">Clustering -->
+      <!-- software for Multi-view Stereo (CVPR 2010)</a> is now available!</span> </li> -->
+      
+      <!-- <li><span style="font-weight: bold;">Windows binary (32 and 64 bits versions) and modified source codes of PMVS2 is now available at <a target="_blank" href="http://francemapping.free.fr/Portfolio/Prog3D/PMVS2.html">Pierre Moulon's website!</a>      </span> -->
+      <!-- </li> -->
+      <!-- <li><a href="http://grail.cs.washington.edu/projects/interior" target="_blank"><span style="font-weight: bold;">3D viewer with the gallery dataset for download (ICCV paper)</span></a><a style="font-weight: bold;" href="http://grail.cs.washington.edu/software/pmvs" target="_blank"></a></li><li><a style="font-weight: bold;" href="http://grail.cs.washington.edu/software/pmvs" target="_blank">2nd version of PMVS is now available with the source codes</a><font face="Times New Roman" size="4"> </font></li><li><font face="Times New Roman" size="4"><a href="gallery" target="_blank">Gallery</a></font></li> -->
+
+      
+      <!-- <li> <font face="Times New Roman" size="4"><a href="research/pba/index.html" target="_blank">Patch-based bundle adjustment -->
+      <!-- software(PBA) for download</a></font></li> -->
+      <!-- <li><a href="research/mview/index.html" target="_blank">3D Photography Datasets</a></li> -->
+      <!-- <li><a href="research/visual_hull/index.html" target="_blank">Visual hull data sets</a><br> </li> </ul> <hr> </div> -->
+
+
+<!--       <table width="100%"> -->
+<!--       <tbody> -->
+<!--       <tr> -->
+<!-- <\!--       <td align="left"> -\-> -->
+<!-- <\!--       <a href="http://www2.clustrmaps.com/counter/maps.php?url=http://www.cs.washington.edu/homes/furukawa" target="_blank" id="clustrMapsLink"><img src="http://www2.clustrmaps.com/counter/index2.php?url=http://www.cs.washington.edu/homes/furukawa" style="border: 0px none ;" alt="Locations of visitors to this page" title="Locations of visitors to this page" id="clustrMapsImg" onerror="this.onerror=null; this.src='http://clustrmaps.com/images/clustrmaps-back-soon.jpg'; document.getElementById('clustrMapsLink').href='http://clustrmaps.com';"> -\-> -->
+<!-- <\!-- </a> -\-> -->
+<!-- <\!--       </td> -\-> -->
+<!--       <td align="right" valign="middle"> -->
+<!--       <font face="Times New Roman">Last updated: Feb 2014.<i><\!--  <a href="http://je-pu-pu.ddo.jp/counter/" target="_top"><img src="http://je-pu-pu.ddo.jp/c.php?id=yfurukaw2&amp;digit=8&amp;font=2&amp;fg-color=000000&amp;bg-color=FFFFFF&amp;bg-transparent" border="0"></a></i></font><br> -\-> -->
+<!--       <\!-- <a href="http://www.hostedscripts.com/scripts/antispam.html" target="_blank">You can fight against spam emails by visiting this website!</a> -\-> -->
+<!--       </td> -->
+<!--       </tr> -->
+<!--       </tbody> -->
+<!--       </table> -->
+      </td>
+    </tr>
+  </tbody>
+</table>
+</body></html>
+=======
+<html>
+<body>
+<h1>Hello World</h1>
+<p>I'm hosted with GitHub Pages 2.</p>
+</body>
+</html>
+>>>>>>> 40719d2fa3dd7dd321bf36a912409cdb1831d9c5
