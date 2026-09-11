@@ -1,0 +1,1049 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Convolution Theorem</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --bg:#F3F6F7;
+  --surface:#FFFFFF;
+  --surface-2:#E9EFF1;
+  --ink:#15212B;
+  --muted:#5D6E79;
+  --line:#D2DCE1;
+  --line-soft:#E3EAEE;
+  --freq:#0D8D9C;
+  --freq-soft:#D9EFF1;
+  --spat:#A9612A;
+  --spat-soft:#F3E6DA;
+  --ok:#2D7A4E;
+  --focus:#0D8D9C;
+  --shadow:0 1px 2px rgba(21,33,43,.06), 0 8px 24px -16px rgba(21,33,43,.35);
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1216;
+    --surface:#141D23;
+    --surface-2:#1B262D;
+    --ink:#E2EAEE;
+    --muted:#93A6B1;
+    --line:#25333B;
+    --line-soft:#1D2930;
+    --freq:#3FC6D2;
+    --freq-soft:#123036;
+    --spat:#D68F4E;
+    --spat-soft:#332318;
+    --ok:#54C288;
+    --focus:#3FC6D2;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1216;
+  --surface:#141D23;
+  --surface-2:#1B262D;
+  --ink:#E2EAEE;
+  --muted:#93A6B1;
+  --line:#25333B;
+  --line-soft:#1D2930;
+  --freq:#3FC6D2;
+  --freq-soft:#123036;
+  --spat:#D68F4E;
+  --spat-soft:#332318;
+  --ok:#54C288;
+  --focus:#3FC6D2;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:960px;
+  margin:0 auto;
+  padding-inline:20px;
+  padding-block:36px 56px;
+  display:flex;
+  flex-direction:column;
+  gap:28px;
+}
+
+/* ---- header ---- */
+.eyebrow{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:0 0 8px;
+}
+h1{
+  font-family:var(--sans);
+  font-weight:700;
+  font-size:clamp(28px,5vw,40px);
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin:0;
+  text-wrap:balance;
+}
+.lede{
+  margin:12px 0 0;
+  max-width:62ch;
+  color:var(--muted);
+  font-size:17px;
+}
+.identity{
+  margin-top:18px;
+  font-family:var(--mono);
+  font-size:clamp(13px,2.4vw,16px);
+  font-weight:500;
+  padding:12px 16px;
+  border-radius:2px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-left:3px solid var(--freq);
+  overflow-x:auto;
+  white-space:nowrap;
+}
+.identity .fr{color:var(--freq)}
+.identity .sp{color:var(--spat)}
+
+/* ---- controls ---- */
+.rig{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px 26px;
+  align-items:flex-end;
+  padding:16px 18px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:3px;
+  box-shadow:var(--shadow);
+}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field > label,.field > .flabel{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:10px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{
+  font-family:var(--sans);
+  font-weight:500;
+  font-size:12.5px;
+  color:var(--ink);
+  background:var(--surface-2);
+  border:1px solid transparent;
+  border-radius:2px;
+  padding:5px 10px;
+  cursor:pointer;
+  transition:background .12s,color .12s;
+}
+.seg button:hover{background:var(--line-soft)}
+.seg button[aria-pressed="true"]{
+  background:var(--ink);
+  color:var(--surface);
+}
+.seg button:focus-visible,select:focus-visible,input:focus-visible,label.file:focus-within{
+  outline:2px solid var(--focus);
+  outline-offset:2px;
+}
+input[type=range]{
+  width:150px;
+  accent-color:var(--freq);
+  margin:0;
+}
+.ksize{display:flex;align-items:center;gap:10px}
+.ksize output{
+  font-family:var(--mono);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+  color:var(--muted);
+  min-width:5ch;
+}
+label.file{
+  font-family:var(--sans);
+  font-size:12.5px;
+  font-weight:500;
+  padding:5px 10px;
+  border:1px dashed var(--line);
+  border-radius:2px;
+  cursor:pointer;
+  color:var(--muted);
+}
+label.file:hover{color:var(--ink);border-color:var(--muted)}
+label.file input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.check{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--sans);font-size:12.5px;font-weight:500;
+  cursor:pointer;
+}
+.check input{accent-color:var(--freq);width:15px;height:15px}
+
+/* ---- diagram ---- */
+.board{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:3px;
+  box-shadow:var(--shadow);
+  padding:22px 20px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+.route-tag{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:12px;
+}
+.route-tag::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+.route-tag.sp{color:var(--spat)}
+.route-tag.fr{color:var(--freq)}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr;
+  align-items:start;
+  gap:10px;
+}
+.op{
+  font-family:var(--mono);
+  font-size:clamp(14px,3vw,20px);
+  color:var(--muted);
+  align-self:center;
+  padding-top:14px;
+}
+.cell{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cap{
+  font-family:var(--mono);
+  font-size:11.5px;
+  font-weight:500;
+  color:var(--ink);
+  display:flex;
+  justify-content:space-between;
+  gap:6px;
+  align-items:baseline;
+}
+.cap .sub{
+  font-family:var(--sans);
+  font-size:9.5px;
+  font-weight:600;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  white-space:nowrap;
+}
+canvas.panel{
+  width:100%;
+  aspect-ratio:1;
+  display:block;
+  image-rendering:pixelated;
+  border-radius:2px;
+  background:#000;
+}
+.cell.sp canvas.panel{border:1px solid var(--spat)}
+.cell.fr canvas.panel{border:1px solid var(--freq)}
+
+.arrows{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr;
+  gap:10px;
+  padding:10px 0;
+}
+.arrow{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--freq);
+  line-height:1.2;
+}
+.arrow .glyph{font-size:16px;line-height:1}
+.arrow.up{color:var(--freq)}
+
+/* ---- residual ---- */
+.proof{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:20px;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-left:3px solid var(--ok);
+  border-radius:3px;
+  padding:16px 18px;
+  box-shadow:var(--shadow);
+}
+.proof h2{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:11px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:0 0 8px;
+}
+.resnum{
+  font-family:var(--mono);
+  font-size:clamp(16px,3.6vw,22px);
+  font-weight:600;
+  color:var(--ok);
+  font-variant-numeric:tabular-nums;
+}
+.proof p{margin:8px 0 0;font-size:14.5px;color:var(--muted);max-width:52ch}
+.thumbs{display:flex;gap:12px}
+.thumb{display:flex;flex-direction:column;gap:5px;align-items:center}
+.thumb canvas{
+  width:82px;height:82px;
+  image-rendering:pixelated;
+  border:1px solid var(--line);
+  border-radius:2px;
+  background:#000;
+}
+.thumb span{
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.25;
+}
+
+/* ---- probe ---- */
+.probe{
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--muted);
+  min-height:1.4em;
+  padding:9px 14px;
+  background:var(--surface-2);
+  border-radius:2px;
+  font-variant-numeric:tabular-nums;
+  overflow-x:auto;
+  white-space:nowrap;
+}
+.probe b{color:var(--ink);font-weight:600}
+
+/* ---- notes ---- */
+.notes{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:24px 40px;
+}
+.note h3{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:12.5px;
+  letter-spacing:.02em;
+  margin:0 0 6px;
+  color:var(--ink);
+}
+.note p{margin:0;font-size:14.5px;color:var(--muted)}
+.note code{
+  white-space:nowrap;
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--ink);
+  background:var(--surface-2);
+  padding:1px 4px;
+  border-radius:2px;
+}
+footer{
+  font-family:var(--sans);
+  font-size:12px;
+  color:var(--muted);
+  border-top:1px solid var(--line-soft);
+  padding-top:16px;
+}
+kbd{
+  font-family:var(--mono);
+  font-size:11px;
+  border:1px solid var(--line);
+  border-bottom-width:2px;
+  border-radius:3px;
+  padding:1px 5px;
+  color:var(--ink);
+}
+
+/* ---- annotate ---- */
+#ink{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  display:none;
+  cursor:crosshair;
+  touch-action:none;
+}
+body.annot #ink{display:block}
+#inkbar{
+  position:fixed;
+  z-index:61;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:18px;
+  display:none;
+  gap:10px;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:7px 14px;
+  box-shadow:var(--shadow);
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--muted);
+}
+body.annot #inkbar{display:flex}
+.swatch{width:14px;height:14px;border-radius:50%;border:1px solid var(--line)}
+
+@media (max-width:620px){
+  .proof{grid-template-columns:1fr}
+  .notes{grid-template-columns:1fr}
+  .cap .sub{display:none}
+  .grid,.arrows{gap:7px}
+  input[type=range]{width:120px}
+  .thumb canvas{width:72px;height:72px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">CMPT 361 · Filtering</p>
+    <h1>The Convolution Theorem</h1>
+    <p class="lede">Sliding a kernel over every pixel is a lot of arithmetic. Transform both sides, multiply them pixel by pixel, transform back, and the answer is identical to machine precision. This figure runs both routes on the same data and prints the residual.</p>
+    <div class="identity"><span class="sp">f ⊛ g</span> &nbsp;=&nbsp; IFFT( <span class="fr">FFT(f) ⊙ FFT(g)</span> )</div>
+  </header>
+
+  <section class="rig" aria-label="Controls">
+    <div class="field">
+      <span class="flabel">Image f</span>
+      <div class="seg" id="imgseg" role="group" aria-label="Image source"></div>
+    </div>
+    <div class="field">
+      <span class="flabel">&nbsp;</span>
+      <label class="file" tabindex="0">Upload…<input type="file" id="upload" accept="image/*"></label>
+    </div>
+    <div class="field">
+      <span class="flabel">Kernel g</span>
+      <div class="seg" id="kerseg" role="group" aria-label="Kernel"></div>
+    </div>
+    <div class="field">
+      <label for="ksize">Kernel size</label>
+      <div class="ksize">
+        <input type="range" id="ksize" min="3" max="21" step="2" value="9">
+        <output id="ksizeout" for="ksize">9 × 9</output>
+      </div>
+    </div>
+    <div class="field">
+      <span class="flabel">Spectra</span>
+      <label class="check"><input type="checkbox" id="logscale" checked> log magnitude</label>
+    </div>
+  </section>
+
+  <section class="board" aria-label="Commutative diagram">
+
+    <p class="route-tag sp">Spatial route — convolve directly</p>
+    <div class="grid">
+      <div class="cell sp">
+        <div class="cap"><span>f</span><span class="sub">image</span></div>
+        <canvas class="panel" id="cf" width="128" height="128" data-probe="spatial" data-name="f"></canvas>
+      </div>
+      <div class="op">⊛</div>
+      <div class="cell sp">
+        <div class="cap"><span>g</span><span class="sub" id="gzoom">kernel</span></div>
+        <canvas class="panel" id="cg" width="128" height="128" data-probe="kernel" data-name="g"></canvas>
+      </div>
+      <div class="op">=</div>
+      <div class="cell sp">
+        <div class="cap"><span>f ⊛ g</span><span class="sub">direct sum</span></div>
+        <canvas class="panel" id="cfg" width="128" height="128" data-probe="result" data-name="f ⊛ g"></canvas>
+      </div>
+    </div>
+
+    <div class="arrows" aria-hidden="true">
+      <div class="arrow"><span class="glyph">↓</span><span>FFT</span></div>
+      <div></div>
+      <div class="arrow"><span class="glyph">↓</span><span>FFT</span></div>
+      <div></div>
+      <div class="arrow up"><span class="glyph">↑</span><span>IFFT</span></div>
+    </div>
+
+    <p class="route-tag fr">Frequency route — multiply pixel by pixel</p>
+    <div class="grid">
+      <div class="cell fr">
+        <div class="cap"><span>|F|</span><span class="sub">spectrum of f</span></div>
+        <canvas class="panel" id="cF" width="128" height="128" data-probe="freq" data-name="F"></canvas>
+      </div>
+      <div class="op">⊙</div>
+      <div class="cell fr">
+        <div class="cap"><span>|G|</span><span class="sub">transfer function</span></div>
+        <canvas class="panel" id="cG" width="128" height="128" data-probe="freq" data-name="G"></canvas>
+      </div>
+      <div class="op">=</div>
+      <div class="cell fr">
+        <div class="cap"><span>|F ⊙ G|</span><span class="sub">product</span></div>
+        <canvas class="panel" id="cFG" width="128" height="128" data-probe="freq" data-name="F⊙G"></canvas>
+      </div>
+    </div>
+
+  </section>
+
+  <p class="probe" id="probe">Hover any panel to read its values.</p>
+
+  <section class="proof">
+    <div>
+      <h2>Residual — the two routes compared</h2>
+      <div class="resnum" id="resnum">max |difference| = 0</div>
+      <p id="resnote">Both images below are computed independently. Every pixel agrees to the last few bits a double can hold.</p>
+    </div>
+    <div class="thumbs">
+      <div class="thumb"><canvas id="tA" width="128" height="128"></canvas><span>direct<br>f ⊛ g</span></div>
+      <div class="thumb"><canvas id="tB" width="128" height="128"></canvas><span>via FFT<br>IFFT(F·G)</span></div>
+      <div class="thumb"><canvas id="tD" width="128" height="128"></canvas><span id="tDlabel">difference<br>×1</span></div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div class="note">
+      <h3>Both routes wrap around</h3>
+      <p>The FFT treats the image as tiled infinitely, so a kernel hanging off the right edge reads pixels from the left. The direct sum here wraps the same way, which is what makes the residual pure rounding noise. Zero-pad both signals to <code>N + K − 1</code> when you want the non-circular answer.</p>
+    </div>
+    <div class="note">
+      <h3>Zero frequency sits at the center</h3>
+      <p>Spectra are drawn <code>fftshift</code>ed. The middle pixel is <code>u = v = 0</code>, the image mean. Distance from the middle is spatial frequency in cycles per image, and direction is the orientation of that wave.</p>
+    </div>
+    <div class="note">
+      <h3>|G| is the filter, read directly</h3>
+      <p>Pick the box blur and look at |G|: a bright center fading outward, which attenuates the high frequencies carrying the edges. Pick the Laplacian of Gaussian and |G| turns into a ring, dark at the center, which is a band-pass filter drawn as a picture.</p>
+    </div>
+    <div class="note">
+      <h3>The kernel really is 128 × 128</h3>
+      <p>Multiplying spectra needs both arrays the same size, so g is zero-padded to the full image with its center at pixel (0, 0), split across the four corners. The g panel shows a zoomed, recentered crop of it.</p>
+    </div>
+  </section>
+
+  <footer>
+    Press <kbd>A</kbd> to annotate over the page. <kbd>1</kbd>–<kbd>4</kbd> pick a pen, <kbd>C</kbd> clears, <kbd>Esc</kbd> exits.
+  </footer>
+</div>
+
+<canvas id="ink"></canvas>
+<div id="inkbar">
+  <span>annotate</span>
+  <span class="swatch" data-pen="0"></span>
+  <span class="swatch" data-pen="1"></span>
+  <span class="swatch" data-pen="2"></span>
+  <span class="swatch" data-pen="3"></span>
+  <span>1–4 pen · C clear · Esc exit</span>
+</div>
+
+<script>
+(function(){
+"use strict";
+const N = 128, N2 = N*N;
+
+/* ================= FFT ================= */
+function fft1(re, im, inverse){
+  const n = re.length;
+  for(let i=1, j=0; i<n; i++){
+    let bit = n >> 1;
+    for(; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if(i < j){
+      let t = re[i]; re[i] = re[j]; re[j] = t;
+      t = im[i]; im[i] = im[j]; im[j] = t;
+    }
+  }
+  for(let len = 2; len <= n; len <<= 1){
+    const ang = 2*Math.PI/len * (inverse ? 1 : -1);
+    const wr = Math.cos(ang), wi = Math.sin(ang), half = len >> 1;
+    for(let i = 0; i < n; i += len){
+      let cr = 1, ci = 0;
+      for(let j = 0; j < half; j++){
+        const a = i + j, b = a + half;
+        const ur = re[a], ui = im[a];
+        const vr = re[b]*cr - im[b]*ci;
+        const vi = re[b]*ci + im[b]*cr;
+        re[a] = ur + vr; im[a] = ui + vi;
+        re[b] = ur - vr; im[b] = ui - vi;
+        const ncr = cr*wr - ci*wi;
+        ci = cr*wi + ci*wr; cr = ncr;
+      }
+    }
+  }
+  if(inverse){ for(let i = 0; i < n; i++){ re[i] /= n; im[i] /= n; } }
+}
+const colR = new Float64Array(N), colI = new Float64Array(N);
+function fft2(re, im, inverse){
+  for(let y = 0; y < N; y++) fft1(re.subarray(y*N,(y+1)*N), im.subarray(y*N,(y+1)*N), inverse);
+  for(let x = 0; x < N; x++){
+    for(let y = 0; y < N; y++){ colR[y] = re[y*N+x]; colI[y] = im[y*N+x]; }
+    fft1(colR, colI, inverse);
+    for(let y = 0; y < N; y++){ re[y*N+x] = colR[y]; im[y*N+x] = colI[y]; }
+  }
+}
+
+/* ================= images ================= */
+function mulberry(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+  let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+function makeImage(kind){
+  const a = new Float64Array(N2);
+  if(kind === 'grating'){
+    const th = 24*Math.PI/180, fu = 9*Math.cos(th)/N, fv = 9*Math.sin(th)/N;
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++)
+      a[y*N+x] = 0.5 + 0.45*Math.cos(2*Math.PI*(fu*x + fv*y));
+  } else if(kind === 'checker'){
+    const s = 16;
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++)
+      a[y*N+x] = ((x/s|0) + (y/s|0)) % 2 ? 0.92 : 0.08;
+  } else if(kind === 'disk'){
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      const d = Math.hypot(x-63.5, y-63.5);
+      a[y*N+x] = d < 22 ? 0.95 : 0.05;
+    }
+  } else if(kind === 'shapes'){
+    a.fill(0.10);
+    const rect=(x0,y0,w,h,v)=>{ for(let y=y0;y<y0+h;y++) for(let x=x0;x<x0+w;x++) if(x>=0&&x<N&&y>=0&&y<N) a[y*N+x]=v; };
+    rect(14,14,34,34,0.95);
+    rect(76,20,38,12,0.65);
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      if(Math.hypot(x-92,y-84) < 24) a[y*N+x] = 0.82;
+      if(Math.abs((x-20) - (y-70)*1.4) < 3 && y > 66 && y < 116) a[y*N+x] = 0.98;
+    }
+    for(let y=56;y<70;y++) for(let x=8;x<120;x++) a[y*N+x] = Math.max(a[y*N+x], 0.35 + 0.3*Math.sin(x*0.9));
+  } else { /* scene */
+    const rnd = mulberry(7);
+    const noise = new Float64Array(N2);
+    for(let i=0;i<N2;i++) noise[i] = rnd();
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      let v = 0.78 - 0.34*(y/N);
+      const sd = Math.hypot(x-88, y-26);
+      if(sd < 13) v = 0.99; else v += 0.25*Math.exp(-sd*sd/900);
+      const ridge = 78 + 16*Math.sin(x*0.055) + 9*Math.sin(x*0.14 + 1.2);
+      if(y > ridge) v = 0.30 - 0.16*Math.sin(x*0.035) + 0.16*((y-ridge)/N);
+      const ridge2 = 96 + 12*Math.sin(x*0.09 + 2.4);
+      if(y > ridge2) v = 0.14 + 0.22*((y-ridge2)/N);
+      let g = 0;
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++)
+        g += noise[((y+dy+N)%N)*N + ((x+dx+N)%N)];
+      v += (g/9 - 0.5) * (y > ridge ? 0.22 : 0.05);
+      a[y*N+x] = Math.min(1, Math.max(0, v));
+    }
+  }
+  return a;
+}
+
+let uploaded = null;
+function loadUpload(file){
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = function(){
+    const c = document.createElement('canvas');
+    c.width = N; c.height = N;
+    const g = c.getContext('2d');
+    const s = Math.min(img.width, img.height);
+    g.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, N, N);
+    const d = g.getImageData(0,0,N,N).data;
+    uploaded = new Float64Array(N2);
+    for(let i=0;i<N2;i++)
+      uploaded[i] = (0.2126*d[i*4] + 0.7152*d[i*4+1] + 0.0722*d[i*4+2]) / 255;
+    URL.revokeObjectURL(url);
+    setImage('upload');
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); };
+  img.src = url;
+}
+
+/* ================= kernels ================= */
+/* taps[(a+c)*k + (b+c)] = w(a,b), a = row offset, b = col offset */
+function makeKernel(kind, k){
+  const c = (k-1)/2, taps = new Float64Array(k*k), sig = Math.max(0.6, k/5);
+  const at = (a,b) => (a+c)*k + (b+c);
+  if(kind === 'impulse'){
+    taps[at(0,0)] = 1;
+  } else if(kind === 'box'){
+    taps.fill(1/(k*k));
+  } else if(kind === 'gauss'){
+    let s = 0;
+    for(let a=-c;a<=c;a++) for(let b=-c;b<=c;b++){
+      const v = Math.exp(-(a*a+b*b)/(2*sig*sig)); taps[at(a,b)] = v; s += v;
+    }
+    for(let i=0;i<taps.length;i++) taps[i] /= s;
+  } else if(kind === 'sharpen'){
+    let s = 0;
+    for(let a=-c;a<=c;a++) for(let b=-c;b<=c;b++){
+      const v = Math.exp(-(a*a+b*b)/(2*sig*sig)); taps[at(a,b)] = v; s += v;
+    }
+    for(let i=0;i<taps.length;i++) taps[i] = -taps[i]/s;
+    taps[at(0,0)] += 2;
+  } else if(kind === 'dogx'){
+    let s = 0;
+    for(let a=-c;a<=c;a++) for(let b=-c;b<=c;b++){
+      const v = -(b/(sig*sig)) * Math.exp(-(a*a+b*b)/(2*sig*sig));
+      taps[at(a,b)] = v; s += Math.abs(v);
+    }
+    for(let i=0;i<taps.length;i++) taps[i] *= 2/s;
+  } else if(kind === 'motion'){
+    for(let b=-c;b<=c;b++) taps[at(0,b)] = 1/k;
+  } else if(kind === 'log'){
+    let s = 0;
+    for(let a=-c;a<=c;a++) for(let b=-c;b<=c;b++){
+      const r2 = a*a+b*b;
+      const v = ((r2 - 2*sig*sig)/(sig*sig*sig*sig)) * Math.exp(-r2/(2*sig*sig));
+      taps[at(a,b)] = v; s += v;
+    }
+    const m = s/(k*k);
+    let s2 = 0;
+    for(let i=0;i<taps.length;i++){ taps[i] -= m; s2 += Math.abs(taps[i]); }
+    for(let i=0;i<taps.length;i++) taps[i] *= 2/s2;
+  }
+  return { taps: taps, k: k, c: c };
+}
+
+/* ================= render helpers ================= */
+function grayTo(ctx, arr, lo, hi){
+  const img = ctx.createImageData(N, N), d = img.data;
+  const span = (hi - lo) || 1;
+  for(let i=0;i<N2;i++){
+    let t = (arr[i] - lo)/span;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const v = Math.round(t*255);
+    d[i*4] = v; d[i*4+1] = v; d[i*4+2] = v; d[i*4+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+/* diverging: teal (negative) → paper (zero) → ochre (positive) */
+function signedTo(ctx, arr, mag, w, h, get){
+  const img = ctx.createImageData(w, h), d = img.data;
+  const m = mag || 1;
+  for(let i=0;i<w*h;i++){
+    const t = Math.max(-1, Math.min(1, get(i)/m));
+    let r,g,b;
+    if(t >= 0){ r = 246 + (169-246)*t; g = 247 + (97-247)*t; b = 248 + (42-248)*t; }
+    else { const u = -t; r = 246 + (13-246)*u; g = 247 + (141-247)*u; b = 248 + (156-248)*u; }
+    d[i*4] = r; d[i*4+1] = g; d[i*4+2] = b; d[i*4+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+/* frequency ramp: ink → teal → white */
+function spectrumTo(ctx, mag, useLog){
+  const img = ctx.createImageData(N, N), d = img.data;
+  let mx = 0;
+  for(let i=0;i<N2;i++) if(mag[i] > mx) mx = mag[i];
+  if(mx <= 0) mx = 1;
+  const K = 900;
+  for(let sy=0; sy<N; sy++) for(let sx=0; sx<N; sx++){
+    const y = (sy + N/2) % N, x = (sx + N/2) % N;   /* fftshift */
+    const m = mag[y*N+x]/mx;
+    let t = useLog ? Math.log(1 + K*m)/Math.log(1 + K) : m;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    let r,g,b;
+    if(t < 0.55){ const u = t/0.55; r = 8 + (13-8)*u; g = 16 + (141-16)*u; b = 24 + (156-24)*u; }
+    else { const u = (t-0.55)/0.45; r = 13 + (255-13)*u; g = 141 + (255-141)*u; b = 156 + (250-156)*u; }
+    const o = (sy*N+sx)*4;
+    d[o] = r; d[o+1] = g; d[o+2] = b; d[o+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ================= state ================= */
+const IMAGES = [
+  ['grating','Grating'], ['checker','Checker'], ['disk','Disk'],
+  ['shapes','Shapes'], ['scene','Scene']
+];
+const KERNELS = [
+  ['impulse','Impulse δ'], ['box','Box blur'], ['gauss','Gaussian'],
+  ['motion','Motion'], ['sharpen','Sharpen'], ['dogx','Deriv-x'], ['log','LoG']
+];
+
+const state = { img:'scene', ker:'gauss', k:9, log:true };
+const cache = {};
+function image(kind){
+  if(kind === 'upload') return uploaded || (cache.scene || (cache.scene = makeImage('scene')));
+  return cache[kind] || (cache[kind] = makeImage(kind));
+}
+
+const el = id => document.getElementById(id);
+const ctxOf = id => el(id).getContext('2d', { willReadFrequently:false });
+
+/* buffers */
+const fRe = new Float64Array(N2), fIm = new Float64Array(N2);
+const gRe = new Float64Array(N2), gIm = new Float64Array(N2);
+const pRe = new Float64Array(N2), pIm = new Float64Array(N2);
+const magF = new Float64Array(N2), magG = new Float64Array(N2), magP = new Float64Array(N2);
+const direct = new Float64Array(N2), viaFFT = new Float64Array(N2), diff = new Float64Array(N2);
+let gPad = new Float64Array(N2);
+let kern = makeKernel('gauss', 9);
+let srcImage = null;
+let resLo = 0, resHi = 1, diffMax = 0;
+
+function compute(){
+  srcImage = image(state.img);
+  kern = makeKernel(state.ker, state.k);
+  const taps = kern.taps, c = kern.c, k = kern.k;
+
+  /* f → F */
+  fRe.set(srcImage); fIm.fill(0);
+  fft2(fRe, fIm, false);
+
+  /* g zero-padded with center at (0,0), wrapped into the corners */
+  gPad.fill(0);
+  for(let a=-c;a<=c;a++) for(let b=-c;b<=c;b++){
+    const y = (a + N) % N, x = (b + N) % N;
+    gPad[y*N+x] = taps[(a+c)*k + (b+c)];
+  }
+  gRe.set(gPad); gIm.fill(0);
+  fft2(gRe, gIm, false);
+
+  /* F · G */
+  for(let i=0;i<N2;i++){
+    pRe[i] = fRe[i]*gRe[i] - fIm[i]*gIm[i];
+    pIm[i] = fRe[i]*gIm[i] + fIm[i]*gRe[i];
+    magF[i] = Math.hypot(fRe[i], fIm[i]);
+    magG[i] = Math.hypot(gRe[i], gIm[i]);
+    magP[i] = Math.hypot(pRe[i], pIm[i]);
+  }
+
+  /* inverse */
+  const iRe = pRe.slice(), iIm = pIm.slice();
+  fft2(iRe, iIm, true);
+  viaFFT.set(iRe);
+
+  /* direct circular convolution */
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      let acc = 0;
+      for(let a=-c;a<=c;a++){
+        const row = ((y - a) % N + N) % N;
+        const base = row*N, trow = (a+c)*k + c;
+        for(let b=-c;b<=c;b++){
+          const w = taps[trow + b];
+          if(w !== 0) acc += srcImage[base + (((x - b) % N + N) % N)] * w;
+        }
+      }
+      direct[y*N+x] = acc;
+    }
+  }
+
+  resLo = Infinity; resHi = -Infinity; diffMax = 0;
+  for(let i=0;i<N2;i++){
+    if(direct[i] < resLo) resLo = direct[i];
+    if(direct[i] > resHi) resHi = direct[i];
+    const d = Math.abs(direct[i] - viaFFT[i]);
+    diff[i] = d;
+    if(d > diffMax) diffMax = d;
+  }
+  if(resHi - resLo < 1e-9){ resLo -= 0.5; resHi += 0.5; }
+}
+
+function draw(){
+  grayTo(ctxOf('cf'), srcImage, 0, 1);
+
+  /* kernel panel: recentered, zoomed crop */
+  const zoomSpan = Math.min(N, Math.max(16, (kern.k + 6)));
+  const z = Math.max(1, Math.floor(N / zoomSpan));
+  const span = Math.ceil(N / z);
+  const half = Math.floor(span / 2);
+  let kmax = 0;
+  for(let i=0;i<kern.taps.length;i++) kmax = Math.max(kmax, Math.abs(kern.taps[i]));
+  const gctx = ctxOf('cg');
+  const small = document.createElement('canvas');
+  small.width = span; small.height = span;
+  const sctx = small.getContext('2d');
+  signedTo(sctx, null, kmax, span, span, function(i){
+    const sy = (i/span|0) - half, sx = (i%span) - half;
+    const y = (sy + N) % N, x = (sx + N) % N;
+    return gPad[y*N+x];
+  });
+  gctx.imageSmoothingEnabled = false;
+  gctx.clearRect(0,0,N,N);
+  gctx.drawImage(small, 0, 0, span, span, 0, 0, span*z, span*z);
+  el('gzoom').textContent = 'kernel · ×' + z;
+
+  grayTo(ctxOf('cfg'), direct, resLo, resHi);
+  spectrumTo(ctxOf('cF'), magF, state.log);
+  spectrumTo(ctxOf('cG'), magG, state.log);
+  spectrumTo(ctxOf('cFG'), magP, state.log);
+
+  grayTo(el('tA').getContext('2d'), direct, resLo, resHi);
+  grayTo(el('tB').getContext('2d'), viaFFT, resLo, resHi);
+
+  const amp = diffMax > 0 ? Math.pow(10, Math.min(16, Math.max(0, Math.round(-Math.log10(diffMax))))) : 1;
+  grayTo(el('tD').getContext('2d'), diff, 0, diffMax > 0 ? diffMax : 1);
+  el('tDlabel').innerHTML = 'difference<br>stretched ×' + amp.toExponential(0).replace('e+','e');
+
+  el('resnum').textContent = 'max |difference| = ' + (diffMax === 0 ? '0' : diffMax.toExponential(2));
+  const rel = diffMax / Math.max(1e-12, Math.max(Math.abs(resLo), Math.abs(resHi)));
+  el('resnote').textContent = rel < 1e-10
+    ? 'The two panels are computed independently and agree to about ' + Math.round(-Math.log10(Math.max(rel,1e-18))) + ' decimal digits, which is the precision of a double.'
+    : 'Values here span ' + resLo.toFixed(3) + ' to ' + resHi.toFixed(3) + '. The residual is rounding noise from the transform.';
+}
+
+function update(){ compute(); draw(); }
+
+/* ================= probes ================= */
+const probe = el('probe');
+document.querySelectorAll('canvas.panel').forEach(function(cv){
+  cv.addEventListener('pointermove', function(e){
+    const r = cv.getBoundingClientRect();
+    const x = Math.min(N-1, Math.max(0, Math.floor((e.clientX - r.left)/r.width * N)));
+    const y = Math.min(N-1, Math.max(0, Math.floor((e.clientY - r.top)/r.height * N)));
+    const mode = cv.dataset.probe, name = cv.dataset.name;
+    let txt = '';
+    if(mode === 'spatial'){
+      txt = '<b>' + name + '</b>  pixel (' + x + ', ' + y + ')   value = ' + srcImage[y*N+x].toFixed(4);
+    } else if(mode === 'result'){
+      txt = '<b>' + name + '</b>  pixel (' + x + ', ' + y + ')   direct = ' + direct[y*N+x].toFixed(6)
+          + '   via FFT = ' + viaFFT[y*N+x].toFixed(6);
+    } else if(mode === 'kernel'){
+      txt = '<b>g</b>  ' + kern.k + ' × ' + kern.k + ' taps, zero-padded to 128 × 128, sum = '
+          + kern.taps.reduce(function(a,b){return a+b;},0).toFixed(4);
+    } else {
+      const u = x - N/2, v = y - N/2;
+      const yy = (y + N/2) % N, xx = (x + N/2) % N;
+      const i = yy*N + xx;
+      const m = name === 'F' ? magF[i] : name === 'G' ? magG[i] : magP[i];
+      txt = '<b>|' + name + '|</b>  u = ' + u + ', v = ' + v + ' cycles/image   |value| = ' + m.toExponential(3);
+    }
+    probe.innerHTML = txt;
+  });
+  cv.addEventListener('pointerleave', function(){
+    probe.textContent = 'Hover any panel to read its values.';
+  });
+});
+
+/* ================= controls ================= */
+function buildSeg(host, items, current, onPick){
+  host.innerHTML = '';
+  items.forEach(function(it){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = it[1];
+    b.dataset.val = it[0];
+    b.setAttribute('aria-pressed', String(it[0] === current));
+    b.addEventListener('click', function(){ onPick(it[0]); });
+    host.appendChild(b);
+  });
+}
+function markSeg(host, val){
+  host.querySelectorAll('button').forEach(function(b){
+    b.setAttribute('aria-pressed', String(b.dataset.val === val));
+  });
+}
+function setImage(kind){
+  state.img = kind;
+  markSeg(el('imgseg'), kind);
+  update();
+}
+buildSeg(el('imgseg'), IMAGES, state.img, setImage);
+buildSeg(el('kerseg'), KERNELS, state.ker, function(v){
+  state.ker = v;
+  markSeg(el('kerseg'), v);
+  el('ksize').disabled = (v === 'impulse');
+  update();
+});
+el('ksize').addEventListener('input', function(){
+  state.k = parseInt(this.value, 10);
+  el('ksizeout').textContent = state.k + ' × ' + state.k;
+  update();
+});
+el('logscale').addEventListener('change', function(){ state.log = this.checked; draw(); });
+el('upload').addEventListener('change', function(){
+  if(this.files && this.files[0]) loadUpload(this.files[0]);
+});
+document.querySelector('label.file').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); el('upload').click(); }
+});
+
+update();
+
+/* ================= annotate ================= */
+const ink = el('ink'), ictx = ink.getContext('2d');
+const PENS = ['#E0483B', '#1E88E5', '#14A05A', '#F2B01E'];
+let pen = 0, drawing = false, strokes = [];
+function sizeInk(){
+  const dpr = window.devicePixelRatio || 1;
+  ink.width = Math.round(innerWidth*dpr);
+  ink.height = Math.round(innerHeight*dpr);
+  ictx.setTransform(dpr,0,0,dpr,0,0);
+  repaintInk();
+}
+function repaintInk(){
+  ictx.clearRect(0,0,innerWidth,innerHeight);
+  ictx.lineCap = 'round'; ictx.lineJoin = 'round'; ictx.lineWidth = 3;
+  strokes.forEach(function(s){
+    if(s.pts.length < 2) return;
+    ictx.strokeStyle = s.color;
+    ictx.beginPath();
+    ictx.moveTo(s.pts[0].x, s.pts[0].y);
+    for(let i=1;i<s.pts.length;i++) ictx.lineTo(s.pts[i].x, s.pts[i].y);
+    ictx.stroke();
+  });
+}
+addEventListener('resize', function(){ if(document.body.classList.contains('annot')) sizeInk(); });
+ink.addEventListener('pointerdown', function(e){
+  drawing = true; ink.setPointerCapture(e.pointerId);
+  strokes.push({ color: PENS[pen], pts:[{x:e.clientX,y:e.clientY}] });
+});
+ink.addEventListener('pointermove', function(e){
+  if(!drawing) return;
+  strokes[strokes.length-1].pts.push({x:e.clientX,y:e.clientY});
+  repaintInk();
+});
+ink.addEventListener('pointerup', function(){ drawing = false; });
+document.querySelectorAll('#inkbar .swatch').forEach(function(s, i){
+  s.style.background = PENS[i];
+  s.addEventListener('click', function(){ pen = i; markPen(); });
+});
+function markPen(){
+  document.querySelectorAll('#inkbar .swatch').forEach(function(s, i){
+    s.style.outline = i === pen ? '2px solid ' + PENS[i] : 'none';
+    s.style.outlineOffset = '2px';
+  });
+}
+markPen();
+addEventListener('keydown', function(e){
+  const tag = (e.target.tagName || '').toLowerCase();
+  if(tag === 'input' || tag === 'select' || tag === 'textarea') return;
+  const on = document.body.classList.contains('annot');
+  if(e.key === 'a' || e.key === 'A'){
+    document.body.classList.toggle('annot');
+    if(document.body.classList.contains('annot')) sizeInk();
+  } else if(on && e.key === 'Escape'){
+    document.body.classList.remove('annot');
+  } else if(on && (e.key === 'c' || e.key === 'C')){
+    strokes = []; repaintInk();
+  } else if(on && e.key >= '1' && e.key <= '4'){
+    pen = parseInt(e.key,10) - 1; markPen();
+  }
+});
+})();
+</script>
+
+</body></html>

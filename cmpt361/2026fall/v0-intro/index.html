@@ -1,0 +1,1282 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>V0: Intro to Computer Vision</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap">
+<style>
+  /* === TOKENS === */
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f7;
+    --text: #1a1a1a;
+    --text2: #555555;
+    --text3: #999999;
+    --accent: #E87722;
+    --accent-light: #fdf0e6;
+    --border: #e4e4e4;
+    --slide-pad-x: 80px;
+    --slide-pad-y: 60px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141414;
+      --bg2: #1e1e1e;
+      --text: #f0f0f0;
+      --text2: #aaaaaa;
+      --text3: #666666;
+      --border: #2e2e2e;
+      --accent-light: #1f1007;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141414;
+    --bg2: #1e1e1e;
+    --text: #f0f0f0;
+    --text2: #aaaaaa;
+    --text3: #666666;
+    --border: #2e2e2e;
+    --accent-light: #1f1007;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+
+  /* === SLIDESHOW ENGINE === */
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    padding: var(--slide-pad-y) var(--slide-pad-x);
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.28s ease, transform 0.28s ease;
+    pointer-events: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+
+  .slide.exit {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  /* === TYPOGRAPHY === */
+  .slide-title {
+    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 36px;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .accent { color: var(--accent); }
+
+  .big-q {
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 300;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* === BULLET LIST === */
+  ul.pts {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  ul.pts li {
+    font-size: clamp(1.05rem, 2vw, 1.45rem);
+    font-weight: 400;
+    color: var(--text);
+    padding-left: 24px;
+    position: relative;
+    line-height: 1.45;
+  }
+
+  ul.pts li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 1.1em;
+  }
+
+  ul.pts li span.sub {
+    display: block;
+    font-size: 0.78em;
+    color: var(--text2);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  /* === COVER SLIDE === */
+  .slide-cover {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+    padding: var(--slide-pad-y) var(--slide-pad-x);
+  }
+
+  .cover-eyebrow {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+
+  .cover-title {
+    font-size: clamp(2.8rem, 6vw, 4.8rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 48px;
+    text-wrap: balance;
+  }
+
+  .cover-byline {
+    font-size: 1.1rem;
+    color: var(--text2);
+    font-weight: 400;
+  }
+
+  /* === DIAGRAM (CV vs CG) === */
+  .diagram-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    flex: 1;
+  }
+
+  .diagram-box {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    min-width: 260px;
+  }
+
+  .diagram-box.active-box {
+    border-color: var(--accent);
+  }
+
+  .diagram-box .label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+  }
+
+  .diagram-box.active-box .label {
+    color: var(--accent);
+  }
+
+  .diagram-arrow {
+    font-size: 2rem;
+    color: var(--text3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .diagram-arrow span {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  /* === GRADING TABLE === */
+  .grade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .grade-card {
+    background: var(--bg2);
+    border-radius: 10px;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .grade-card .gc-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .grade-card .gc-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .grade-card .gc-pct {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-top: 4px;
+  }
+
+  .grade-card .gc-detail {
+    font-size: 0.85rem;
+    color: var(--text2);
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+
+  /* === CALLOUT === */
+  .callout {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    font-size: 1rem;
+    color: var(--text2);
+    line-height: 1.55;
+    margin-top: 24px;
+  }
+
+  .callout strong {
+    color: var(--accent);
+  }
+
+  /* === TWO-COLUMN === */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    flex: 1;
+  }
+
+  .col-head {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  /* === TAG === */
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  /* === CHROME === */
+  .progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    width: 0;
+    transition: width 0.3s ease;
+    z-index: 1000;
+  }
+
+  .counter {
+    position: fixed;
+    bottom: 18px;
+    right: 28px;
+    font-size: 0.8rem;
+    color: var(--text3);
+    z-index: 1000;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-hint {
+    position: fixed;
+    bottom: 18px;
+    left: 28px;
+    font-size: 0.72rem;
+    color: var(--text3);
+    z-index: 1000;
+    letter-spacing: 0.04em;
+  }
+
+  .fullscreen-btn {
+    position: fixed;
+    top: 18px;
+    right: 20px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    color: var(--text2);
+    cursor: pointer;
+    z-index: 1000;
+    font-family: inherit;
+    letter-spacing: 0.03em;
+    transition: background 0.15s;
+  }
+  .fullscreen-btn:hover { background: var(--border); }
+
+  /* === SVG PIXEL GRID icon === */
+  .icon-pixel {
+    width: 64px;
+    height: 64px;
+  }
+
+  /* === BIO SLIDE === */
+  .bio-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    flex: 1;
+    align-items: start;
+  }
+
+  .bio-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .bio-row {
+    display: flex;
+    gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .bio-row:first-child { padding-top: 0; }
+  .bio-row:last-child { border-bottom: none; }
+
+  .bio-year {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    min-width: 48px;
+    padding-top: 2px;
+  }
+
+  .bio-fact {
+    font-size: 1rem;
+    color: var(--text);
+    line-height: 1.45;
+  }
+
+  .bio-fact .detail {
+    display: block;
+    font-size: 0.82em;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  .award-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .award-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 14px 16px;
+    background: var(--bg2);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .award-item .aw-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .award-item .aw-year {
+    font-size: 0.78rem;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+
+  /* === RESEARCH PROJECT CARDS === */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    flex: 1;
+    align-content: stretch;
+  }
+
+  .project-card {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+  }
+
+  .project-card .card-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* YouTube iframe wrapper — fills card like card-img */
+  .card-yt-wrap {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .card-yt-wrap iframe {
+    position: absolute;
+    /* scale up to hide controls/letterbox, center the action */
+    top: 50%; left: 50%;
+    width: 177.78%;   /* 16/9 * 100% */
+    height: 100%;
+    min-width: 100%;
+    min-height: 56.25%;
+    transform: translate(-50%, -50%);
+    border: none;
+  }
+
+  .project-card .card-gradient {
+    position: absolute;
+    inset: 0;
+    background: var(--card-grad);
+  }
+
+  .project-card .card-body {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    padding: 20px;
+    color: #fff;
+  }
+
+  .project-card .card-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .project-card .card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .project-card .card-desc {
+    font-size: 0.82rem;
+    opacity: 0.85;
+    line-height: 1.45;
+  }
+
+  .card-lingo  { --card-grad: linear-gradient(160deg, rgba(14,90,80,0.55) 0%, rgba(0,0,0,0.85) 100%); background: linear-gradient(160deg, #0e5a50 0%, #0a2e2a 100%); }
+  .card-gaia   { --card-grad: linear-gradient(160deg, rgba(45,30,90,0.55) 0%, rgba(0,0,0,0.85) 100%); background: linear-gradient(160deg, #2d1e5a 0%, #0d0820 100%); }
+  .card-rig3r  { --card-grad: linear-gradient(160deg, rgba(10,40,90,0.55) 0%, rgba(0,0,0,0.85) 100%); background: linear-gradient(160deg, #0a285a 0%, #050e1f 100%); }
+
+  /* === VIDEO PLAY BUTTON === */
+  .play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -65%); /* offset up from center to avoid text overlap */
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 2px solid rgba(255,255,255,0.55);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+    pointer-events: none; /* card handles click */
+    transition: transform 0.18s, background 0.18s;
+  }
+
+  .play-btn::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 0 10px 18px;
+    border-color: transparent transparent transparent rgba(255,255,255,0.95);
+    margin-left: 5px;
+  }
+
+  .project-card.yt-card {
+    cursor: pointer;
+  }
+
+  .project-card.yt-card:hover .play-btn {
+    background: rgba(255,255,255,0.35);
+  }
+
+  .project-card.playing .play-btn {
+    display: none;
+  }
+
+  .card-video-iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    z-index: 10;
+    display: none;
+  }
+
+  .project-card.playing .card-video-iframe {
+    display: block;
+  }
+
+  /* === SHARED ITEMS LIST === */
+  .shared-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    align-content: center;
+  }
+
+  .shared-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px;
+    background: var(--bg2);
+    border-radius: 10px;
+  }
+
+  .shared-item .si-head {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .shared-item .si-body {
+    font-size: 0.88rem;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide { transition: none; }
+  }
+</style>
+
+<div class="deck" id="deck">
+
+  <!-- 1. COVER -->
+  <div class="slide slide-cover active" id="s0">
+    <div class="cover-eyebrow">CMPT 361 — Introduction to Visual Computing — Fall 2026</div>
+    <div class="cover-title">V0: Intro to <span class="accent">Computer Vision</span></div>
+    <div class="cover-byline">Yasutaka Furukawa</div>
+  </div>
+
+  <!-- 2. AGENDA -->
+  <div class="slide" id="s1">
+    <div class="slide-title">V0: Intro to Computer Vision</div>
+    <div class="content">
+      <ul class="pts">
+        <li>Who am I?</li>
+        <li>What is Visual Computing — and how does CG relate to CV?</li>
+        <li>SFU is one of the strongest VC programs in North America</li>
+        <li>Your professors are active researchers — go visit their pages</li>
+        <li>VC is applied math — make sure your linear algebra is solid</li>
+        <li>How to take this course</li>
+        <li>Course overview: exams, assignments, grading</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 3. WHO AM I — BIO -->
+  <div class="slide" id="s-bio">
+    <div class="slide-title">Who am <span class="accent">I</span>?</div>
+    <div class="content" style="justify-content:flex-start;">
+      <div class="bio-layout">
+        <div class="bio-timeline">
+          <div class="bio-row">
+            <div class="bio-year">NOW</div>
+            <div class="bio-fact">
+              Associate Professor, SFU
+              <span class="detail">GrUVi Lab — Visual Computing group</span>
+            </div>
+          </div>
+          <div class="bio-row">
+            <div class="bio-year">NOW</div>
+            <div class="bio-fact">
+              Principal Scientist, <strong>Wayve</strong>
+              <span class="detail">Embodied AI &amp; autonomous driving</span>
+            </div>
+          </div>
+          <div class="bio-row">
+            <div class="bio-year">PREV</div>
+            <div class="bio-fact">
+              Software Engineer, Google
+            </div>
+          </div>
+          <div class="bio-row">
+            <div class="bio-year">PREV</div>
+            <div class="bio-fact">
+              Assistant Professor, Washington University in St. Louis
+            </div>
+          </div>
+          <div class="bio-row">
+            <div class="bio-year">2008</div>
+            <div class="bio-fact">
+              PhD, University of Illinois at Urbana-Champaign
+              <span class="detail">Advisor: Prof. Jean Ponce · 3D reconstruction</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="col-head" style="margin-bottom:16px;">Awards</div>
+          <div class="award-list">
+            <div class="award-item">
+              <div class="aw-name">PAMI Longuet-Higgins Prize</div>
+              <div class="aw-year">2020 — highest honour in computer vision</div>
+            </div>
+            <div class="award-item">
+              <div class="aw-name">CS-CAN Outstanding Young CS Researcher</div>
+              <div class="aw-year">2018</div>
+            </div>
+            <div class="award-item">
+              <div class="aw-name">NSF CAREER Award</div>
+              <div class="aw-year">2015</div>
+            </div>
+            <div class="award-item">
+              <div class="aw-name">Google Faculty Research Awards</div>
+              <div class="aw-year">2016 · 2017 · 2018</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. WHO AM I — RESEARCH AT WAYVE -->
+  <div class="slide" id="s-research">
+    <div class="slide-title">What I work on — <span class="accent">Wayve</span></div>
+    <div class="content" style="justify-content:flex-start;">
+      <div class="project-grid">
+
+        <!-- LINGO — highlight clip: LINGO-2 London drive with language commentary -->
+        <div class="project-card card-lingo">
+          <video class="card-img" autoplay loop muted playsinline>
+            <source src="https://wayve.ai/wp-content/uploads/2024/04/LINGO-220London20Clip_processed_20240418114725z.mp4" type="video/mp4">
+          </video>
+          <div class="card-body">
+            <div class="card-tag">NeurIPS 2023 · Language + Driving</div>
+            <div class="card-title">LINGO</div>
+            <div class="card-desc">Natural language to train and explain AI driving models — vision, language &amp; action in one model.</div>
+          </div>
+        </div>
+
+        <!-- GAIA — highlight clip: GAIA-1 generated driving scenes (MP4) -->
+        <div class="project-card card-gaia">
+          <video class="card-img" autoplay loop muted playsinline>
+            <source src="https://wayve.ai/wp-content/uploads/2023/09/Watch-GAIA-1-go-Twitter-Video-FINAL-2.mp4" type="video/mp4">
+          </video>
+          <div class="card-body">
+            <div class="card-tag">ICLR 2024 · World Model</div>
+            <div class="card-title">GAIA</div>
+            <div class="card-desc">Generative world model for autonomous driving — realistic video synthesis from text prompts.</div>
+          </div>
+        </div>
+
+        <!-- RIG3R — hero visualization: predicted poses + 3D pointmaps -->
+        <div class="project-card card-rig3r">
+          <video class="card-img" autoplay loop muted playsinline>
+            <source src="https://wayve.ai/wp-content/uploads/2025/10/2_hero_Video.mp4" type="video/mp4">
+          </video>
+          <div class="card-body">
+            <div class="card-tag">NeurIPS 2025 Spotlight · 3D Perception</div>
+            <div class="card-title">RIG3R</div>
+            <div class="card-desc">Rig-aware 3D reconstruction from multi-camera rigs — 17–45% accuracy gains on driving benchmarks.</div>
+          </div>
+        </div>
+
+      </div>
+      <p style="font-size:0.8rem; color:var(--text3); margin-top:14px;">
+        wayve.ai/thinking → LINGO · GAIA · RIG3R
+      </p>
+    </div>
+  </div>
+
+  <!-- 5. BIG QUESTION -->
+  <div class="slide" id="s2">
+    <div class="content" style="justify-content:center;">
+      <p class="big-q">What is <span class="accent">visual computing</span>?</p>
+    </div>
+  </div>
+
+  <!-- 4. CG vs CV DIAGRAM -->
+  <div class="slide" id="s3">
+    <div class="slide-title">Visual computing: vision and graphics</div>
+    <div class="content">
+      <div class="diagram-row">
+
+        <!-- Vision box -->
+        <div class="diagram-box active-box">
+          <div class="label">Computer Vision</div>
+          <svg class="icon-pixel" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- pixel grid (image) -->
+            <rect x="2" y="2" width="60" height="60" rx="4" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+            <line x1="22" y1="2" x2="22" y2="62" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+            <line x1="42" y1="2" x2="42" y2="62" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+            <line x1="2" y1="22" x2="62" y2="22" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+            <line x1="2" y1="42" x2="62" y2="42" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+            <rect x="8" y="8" width="8" height="8" rx="1" fill="var(--accent)" opacity="0.3"/>
+            <rect x="28" y="8" width="8" height="8" rx="1" fill="var(--accent)" opacity="0.6"/>
+            <rect x="48" y="28" width="8" height="8" rx="1" fill="var(--accent)" opacity="0.8"/>
+            <rect x="8" y="48" width="8" height="8" rx="1" fill="var(--accent)" opacity="0.4"/>
+            <rect x="28" y="28" width="8" height="8" rx="1" fill="var(--accent)" opacity="0.9"/>
+          </svg>
+          <svg width="32" height="16" viewBox="0 0 32 16"><path d="M4 8 L28 8 M22 2 L28 8 L22 14" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          <!-- cube -->
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="28,6 50,18 50,38 28,50 6,38 6,18" fill="none" stroke="var(--text)" stroke-width="2"/>
+            <line x1="28" y1="6" x2="28" y2="28" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <line x1="6" y1="18" x2="28" y2="28" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <line x1="50" y1="18" x2="28" y2="28" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          </svg>
+          <div style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.4;">
+            pixels → <strong style="color:var(--text);">understanding</strong>
+          </div>
+        </div>
+
+        <div style="font-size: 1.6rem; color: var(--border); font-weight:300;">↔</div>
+
+        <!-- Graphics box -->
+        <div class="diagram-box">
+          <div class="label">Computer Graphics</div>
+          <!-- cube -->
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="28,6 50,18 50,38 28,50 6,38 6,18" fill="none" stroke="var(--text)" stroke-width="2"/>
+            <line x1="28" y1="6" x2="28" y2="28" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <line x1="6" y1="18" x2="28" y2="28" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <line x1="50" y1="18" x2="28" y2="28" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          </svg>
+          <svg width="32" height="16" viewBox="0 0 32 16"><path d="M4 8 L28 8 M22 2 L28 8 L22 14" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          <svg class="icon-pixel" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="60" height="60" rx="4" fill="none" stroke="var(--text3)" stroke-width="2.5"/>
+            <line x1="22" y1="2" x2="22" y2="62" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.4"/>
+            <line x1="42" y1="2" x2="42" y2="62" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.4"/>
+            <line x1="2" y1="22" x2="62" y2="22" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.4"/>
+            <line x1="2" y1="42" x2="62" y2="42" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.4"/>
+            <rect x="8" y="8" width="8" height="8" rx="1" fill="var(--text3)" opacity="0.25"/>
+            <rect x="28" y="8" width="8" height="8" rx="1" fill="var(--text3)" opacity="0.45"/>
+            <rect x="48" y="28" width="8" height="8" rx="1" fill="var(--text3)" opacity="0.55"/>
+            <rect x="8" y="48" width="8" height="8" rx="1" fill="var(--text3)" opacity="0.35"/>
+            <rect x="28" y="28" width="8" height="8" rx="1" fill="var(--text3)" opacity="0.65"/>
+          </svg>
+          <div style="font-size:0.85rem; color:var(--text2); text-align:center; line-height:1.4;">
+            scene → <strong style="color:var(--text);">image</strong>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. WHAT THEY SHARE -->
+  <div class="slide" id="s4">
+    <div class="slide-title">Visual computing: <span class="accent">what they share</span></div>
+    <div class="content">
+      <div class="shared-list">
+        <div class="shared-item">
+          <div class="si-head">Linear algebra</div>
+          <div class="si-body">Matrices, vectors, and transforms are the common language of both fields.</div>
+        </div>
+        <div class="shared-item">
+          <div class="si-head">Image representations</div>
+          <div class="si-body">Pixels, color spaces, filters — the raw material of both rendering and perception.</div>
+        </div>
+        <div class="shared-item">
+          <div class="si-head">3D geometry</div>
+          <div class="si-body">Camera models, depth, and spatial structure appear in CV and CG alike.</div>
+        </div>
+        <div class="shared-item">
+          <div class="si-head">Machine learning</div>
+          <div class="si-body">Modern CV and CG both rely heavily on neural networks — increasingly, the boundary blurs.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. SFU RANKINGS -->
+  <div class="slide" id="s5">
+    <div class="slide-title">SFU is very strong in visual computing</div>
+    <div class="content" style="justify-content:flex-start; padding-top: 8px;">
+      <p style="font-size: 1.25rem; color: var(--text2); line-height: 1.6; max-width: 680px;">
+        Let's look at <strong style="color:var(--text);">csrankings.org</strong> — a ranking of CS programs
+        by research output in top venues.
+      </p>
+      <div class="callout" style="margin-top: 32px; max-width: 680px;">
+        <strong>North America → Computer Vision / Graphics</strong><br>
+        SFU consistently appears near the top. You're in a program with world-class
+        researchers. That matters for your education — and for your career.
+      </div>
+      <div class="callout" style="margin-top: 16px; max-width: 680px; border-left-color: var(--border); background: var(--bg2);">
+        <span style="color: var(--text2);">→ <em>We'll pull this up live during lecture.</em></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. PROFESSORS ARE RESEARCHERS -->
+  <div class="slide" id="s6">
+    <div class="slide-title">Your professors are <span class="accent">researchers</span></div>
+    <div class="content">
+      <p style="font-size: 1.3rem; color: var(--text2); line-height: 1.65; max-width: 700px; margin-bottom: 32px;">
+        We're not just instructors. We run active research groups and publish at
+        venues like CVPR, ICCV, SIGGRAPH, and NeurIPS.
+      </p>
+      <ul class="pts" style="max-width: 700px;">
+        <li>Visit our lab pages. Understand what we actually work on.
+          <span class="sub">Computer vision, 3D reconstruction, generative models, rendering…</span>
+        </li>
+        <li>Office hours are a real resource — use them.
+          <span class="sub">Most students don't. The ones who do get much more out of the course.</span>
+        </li>
+        <li>Curious about research? Ask us about it.
+          <span class="sub">Undergrad research opportunities exist. Grad school is worth thinking about.</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 8. APPLIED MATH -->
+  <div class="slide" id="s7">
+    <div class="slide-title">Visual computing is <span class="accent">applied math</span></div>
+    <div class="content">
+      <p style="font-size: 1.3rem; color: var(--text2); line-height: 1.65; max-width: 700px; margin-bottom: 32px;">
+        If you're shaky on linear algebra, now is the time to fix that.
+        Everything in this course — from image filters to 3D transforms to optimization — builds on it.
+      </p>
+      <div class="callout" style="max-width: 700px;">
+        <strong>Watch before Week 2:</strong> The linked linear algebra video series on the course page.
+        3Blue1Brown's <em>Essence of Linear Algebra</em> is an excellent supplement.
+      </div>
+      <div class="tag-row" style="margin-top: 24px;">
+        <span class="tag">Linear Algebra</span>
+        <span class="tag">Calculus</span>
+        <span class="tag">Probability</span>
+        <span class="tag">Optimization</span>
+        <span class="tag">Statistics</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. HOW TO TAKE THE COURSE -->
+  <div class="slide" id="s8">
+    <div class="slide-title">How to take this course</div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <div class="col-head">Before lecture</div>
+          <ul class="pts">
+            <li>Watch the assigned video lecture
+              <span class="sub">Not optional — live sessions assume you've seen it.</span>
+            </li>
+            <li>Note what confused you
+              <span class="sub">Those are exactly the questions to bring to class.</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="col-head">During lecture</div>
+          <ul class="pts">
+            <li>We go deeper, not over the same ground
+              <span class="sub">Live time is for Q&amp;A, intuition, worked examples.</span>
+            </li>
+            <li>Hybrid — Wednesdays 15:30, Fridays 14:30
+              <span class="sub">Sick? Join on Zoom. Don't come in person.</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="col-head">Between lectures</div>
+          <ul class="pts">
+            <li>Coursys discussion forum
+              <span class="sub">Ask questions publicly — your classmates benefit too.</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="col-head">Course website</div>
+          <ul class="pts">
+            <li>yaksoy.github.io/introvc/2026Fall
+              <span class="sub">Schedule, videos, assignments, all resources live here.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. COURSE OVERVIEW / GRADING -->
+  <div class="slide" id="s9">
+    <div class="slide-title">Course overview</div>
+    <div class="content">
+      <div class="grade-grid">
+        <div class="grade-card">
+          <div class="gc-label">Assignments</div>
+          <div class="gc-name">4 programming projects</div>
+          <div class="gc-pct">40%</div>
+          <div class="gc-detail">Vision: MATLAB · Graphics: WebGL<br>4 late days total, no questions asked</div>
+        </div>
+        <div class="grade-card">
+          <div class="gc-label">Midterm</div>
+          <div class="gc-name">In-person, pen &amp; paper</div>
+          <div class="gc-pct">20%</div>
+          <div class="gc-detail">Problem-solving — not memorization.<br>Date on course page.</div>
+        </div>
+        <div class="grade-card">
+          <div class="gc-label">Final Exam</div>
+          <div class="gc-name">In-person, pen &amp; paper</div>
+          <div class="gc-pct">40%</div>
+          <div class="gc-detail">Cumulative. Covers both CV and CG halves.</div>
+        </div>
+        <div class="grade-card">
+          <div class="gc-label">Grading</div>
+          <div class="gc-name">Curved at the end</div>
+          <div class="gc-pct" style="font-size:1.3rem; padding-top:4px;">Curved</div>
+          <div class="gc-detail">Final grades adjusted to reflect course difficulty. Work hard; don't stress raw numbers.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. NO LLMs -->
+  <div class="slide" id="s10">
+    <div class="slide-title">A note on academic integrity</div>
+    <div class="content" style="justify-content:flex-start; padding-top:8px;">
+      <p style="font-size: 1.3rem; color: var(--text2); line-height: 1.65; max-width: 700px; margin-bottom: 28px;">
+        Code must be your own original work — written by you, understood by you.
+      </p>
+      <ul class="pts" style="max-width: 700px;">
+        <li>No LLMs for code generation
+          <span class="sub">Using GitHub Copilot, ChatGPT, Claude, etc. to write assignment code is not permitted.</span>
+        </li>
+        <li>Close paraphrasing counts as copying
+          <span class="sub">"Following" existing code line-by-line is not okay, even without copy-paste.</span>
+        </li>
+        <li>Discuss concepts freely — submit your own implementation
+          <span class="sub">Talking through ideas with classmates is encouraged. Sharing code is not.</span>
+        </li>
+      </ul>
+      <div class="callout" style="margin-top:28px; max-width:700px;">
+        <strong>Why?</strong> The math and coding skills this course builds are foundational.
+        Shortcuts now mean gaps later — in interviews, in research, and in your work.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- Chrome -->
+<div class="progress" id="progress"></div>
+<div class="counter"><span id="cur">1</span> / <span id="tot">13</span></div>
+<div class="nav-hint">← → space to navigate · F fullscreen · A draw</div>
+<button class="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">⛶ Fullscreen</button>
+
+<!-- Annotation layer -->
+<canvas id="annot-canvas"></canvas>
+<div id="annot-toolbar">
+  <button id="annot-toggle" title="Draw mode (A)" onclick="toggleDraw()">✏️</button>
+  <div id="annot-tools" hidden>
+    <button class="ac" data-color="#ff2d2d" style="background:#ff2d2d" title="Red" onclick="setColor('#ff2d2d')"></button>
+    <button class="ac" data-color="#ffcc00" style="background:#ffcc00" title="Yellow" onclick="setColor('#ffcc00')"></button>
+    <button class="ac" data-color="#00d4ff" style="background:#00d4ff" title="Cyan" onclick="setColor('#00d4ff')"></button>
+    <button class="ac" data-color="#00e676" style="background:#00e676" title="Green" onclick="setColor('#00e676')"></button>
+    <button class="ac" data-color="#ffffff" style="background:#ffffff;border:1px solid #999" title="White" onclick="setColor('#ffffff')"></button>
+    <button class="ac" data-color="#111111" style="background:#111111" title="Black" onclick="setColor('#111111')"></button>
+    <button id="annot-eraser" title="Eraser" onclick="setEraser()">⬜</button>
+    <input type="range" id="annot-size" min="2" max="30" value="5" title="Pen size" oninput="penSize=+this.value">
+    <button id="annot-clear" title="Clear slide" onclick="clearAnnot()">🗑️</button>
+  </div>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+
+  document.getElementById('tot').textContent = total;
+
+  function goTo(n) {
+    if (n < 0 || n >= total) return;
+    // save annotation for current slide before leaving
+    if (typeof saveAnnot === 'function') saveAnnot();
+    slides[current].classList.remove('active');
+    slides[current].classList.add('exit');
+    setTimeout(() => slides[current < total ? current : 0].classList.remove('exit'), 220);
+    current = n;
+    slides[current].classList.add('active');
+    document.getElementById('cur').textContent = current + 1;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+    // restore annotation for new slide
+    if (typeof loadAnnot === 'function') loadAnnot(current);
+  }
+
+  // init progress
+  document.getElementById('progress').style.width = (1 / total * 100) + '%';
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
+    if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End') goTo(total - 1);
+  });
+
+  // Touch/swipe
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 40) { dx < 0 ? goTo(current + 1) : goTo(current - 1); }
+  });
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  /* ── Annotation layer ── */
+  const annotCanvas = document.getElementById('annot-canvas');
+  const actx = annotCanvas.getContext('2d');
+  let drawMode = false;
+  let isDrawing = false;
+  let penSize = 5;
+  let penColor = '#ff2d2d';
+  let eraserMode = false;
+  let lastX = 0, lastY = 0;
+  // Per-slide drawing storage
+  const annotData = {};
+
+  function resizeAnnotCanvas() {
+    const prev = actx.getImageData(0, 0, annotCanvas.width, annotCanvas.height);
+    annotCanvas.width  = window.innerWidth;
+    annotCanvas.height = window.innerHeight;
+    actx.putImageData(prev, 0, 0);
+  }
+  resizeAnnotCanvas();
+  window.addEventListener('resize', resizeAnnotCanvas);
+
+  function saveAnnot() {
+    annotData[current] = actx.getImageData(0, 0, annotCanvas.width, annotCanvas.height);
+  }
+  function loadAnnot(idx) {
+    actx.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
+    if (annotData[idx]) actx.putImageData(annotData[idx], 0, 0);
+  }
+  function clearAnnot() {
+    actx.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
+    delete annotData[current];
+  }
+
+  function toggleDraw() {
+    drawMode = !drawMode;
+    annotCanvas.style.pointerEvents = drawMode ? 'all' : 'none';
+    document.getElementById('annot-toggle').style.background = drawMode ? 'var(--accent)' : '';
+    document.getElementById('annot-toggle').style.color = drawMode ? '#fff' : '';
+    document.getElementById('annot-tools').hidden = !drawMode;
+    document.body.style.cursor = drawMode ? 'crosshair' : '';
+  }
+  function setColor(c) {
+    penColor = c;
+    eraserMode = false;
+    document.getElementById('annot-eraser').style.background = '';
+    document.querySelectorAll('.ac').forEach(b => b.style.outline = b.dataset.color === c ? '3px solid var(--accent)' : '');
+  }
+  function setEraser() {
+    eraserMode = true;
+    document.getElementById('annot-eraser').style.background = 'var(--accent)';
+    document.querySelectorAll('.ac').forEach(b => b.style.outline = '');
+  }
+
+  function getPos(e) {
+    const r = annotCanvas.getBoundingClientRect();
+    if (e.touches) {
+      return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top, pressure: 0.5 };
+    }
+    return { x: e.clientX - r.left, y: e.clientY - r.top, pressure: e.pressure || 0.5 };
+  }
+
+  function startStroke(e) {
+    if (!drawMode) return;
+    // On iPad: let finger pan/navigate, only draw with Apple Pencil or mouse
+    if (e.pointerType === 'touch') return;
+    e.preventDefault();
+    isDrawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    actx.beginPath();
+    actx.moveTo(lastX, lastY);
+  }
+  function drawStroke(e) {
+    if (!isDrawing) return;
+    if (e.pointerType === 'touch') return;
+    e.preventDefault();
+    const p = getPos(e);
+    const pressure = Math.max(0.1, p.pressure);
+    const size = eraserMode ? penSize * 6 : penSize * (0.5 + pressure);
+    actx.globalCompositeOperation = eraserMode ? 'destination-out' : 'source-over';
+    actx.strokeStyle = penColor;
+    actx.lineWidth = size;
+    actx.lineCap = 'round';
+    actx.lineJoin = 'round';
+    actx.lineTo(p.x, p.y);
+    actx.stroke();
+    actx.beginPath();
+    actx.moveTo(p.x, p.y);
+    lastX = p.x; lastY = p.y;
+  }
+  function endStroke(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+    actx.globalCompositeOperation = 'source-over';
+  }
+
+  annotCanvas.addEventListener('pointerdown', startStroke);
+  annotCanvas.addEventListener('pointermove', drawStroke);
+  annotCanvas.addEventListener('pointerup',   endStroke);
+  annotCanvas.addEventListener('pointerleave',endStroke);
+  // Prevent default touch scroll when drawing
+  annotCanvas.addEventListener('touchstart', e => { if (drawMode) e.preventDefault(); }, { passive: false });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'a' || e.key === 'A') toggleDraw();
+    if (e.key === 'Escape' && drawMode) toggleDraw();
+    if ((e.key === 'Delete' || e.key === 'Backspace') && drawMode) clearAnnot();
+  });
+</script>
+
+<style>
+  #annot-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 50;
+    touch-action: none;
+  }
+  #annot-toolbar {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(20,20,20,0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 40px;
+    padding: 6px 12px;
+    z-index: 60;
+  }
+  #annot-toolbar button, #annot-toolbar .ac {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+  #annot-toolbar button:hover { transform: scale(1.15); }
+  #annot-tools { display: flex; align-items: center; gap: 5px; }
+  #annot-size {
+    width: 70px;
+    accent-color: var(--accent);
+  }
+</style>
+
+</body></html>

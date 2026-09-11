@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CMPT 361 Figures — Fall 2026</title>
+<link rel="icon" type="image/png" href="/newimages/favicon.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper:      #eef1f5;
+    --surface:    #ffffff;
+    --ink:        #131820;
+    --ink-2:      #4d5a67;
+    --ink-3:      #7c8895;
+    --rule:       #d4dbe3;
+    --rule-soft:  #e3e8ee;
+    --ochre:      #a4661d;
+    --ochre-soft: #f4e8d7;
+    --teal:       #17656e;
+
+    --display: "Zilla Slab", Georgia, "Times New Roman", serif;
+    --sans:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0e1219;
+      --surface:    #151b23;
+      --ink:        #e7edf3;
+      --ink-2:      #9aa7b5;
+      --ink-3:      #6c7886;
+      --rule:       #26303b;
+      --rule-soft:  #1d2530;
+      --ochre:      #d99d55;
+      --ochre-soft: #2b2015;
+      --teal:       #5cb8bf;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img { max-width: 100%; }
+
+  .page {
+    max-width: 940px;
+    margin: 0 auto;
+    padding-inline: 24px;
+    padding-block: 44px 72px;
+  }
+
+  a { color: var(--ochre); }
+  a:focus-visible { outline: 2px solid var(--ochre); outline-offset: 3px; border-radius: 2px; }
+
+  /* ---------- masthead ---------- */
+
+  .home-link {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    text-decoration: none;
+    color: var(--ink-3);
+    display: inline-block;
+    margin-bottom: 30px;
+  }
+  .home-link:hover { color: var(--ochre); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2rem, 4.6vw, 2.75rem);
+    line-height: 1.14;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 14px 0 0;
+  }
+
+  .lead {
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: 1.06rem;
+    margin: 16px 0 0;
+  }
+
+  /* ---------- contents ---------- */
+
+  .contents {
+    margin-top: 34px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 4px 28px;
+  }
+
+  .contents a {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    text-decoration: none;
+    color: var(--ink-2);
+    display: flex;
+    gap: 10px;
+    padding: 3px 0;
+  }
+  .contents a:hover { color: var(--ochre); }
+  .contents a .n { color: var(--ink-3); }
+
+  /* ---------- sections ---------- */
+
+  section { margin-top: 64px; }
+
+  h2 {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.76rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 0 0 6px;
+  }
+
+  .section-note {
+    color: var(--ink-3);
+    font-size: 0.92rem;
+    max-width: 62ch;
+    margin: 0 0 8px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 22px;
+  }
+
+  /* ---------- entries ---------- */
+
+  .entry {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 0 28px;
+    padding-block: 34px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .entry:last-child { border-bottom: none; }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 8px;
+    line-height: 1.5;
+  }
+  .tag.step { color: var(--ochre); }
+  .tag.freq { color: var(--teal); }
+
+  h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.36rem;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 0.86rem;
+    color: var(--ink-2);
+    background: var(--surface);
+    border-left: 2px solid var(--ochre);
+    padding: 7px 12px;
+    margin-top: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .formula.freq { border-left-color: var(--teal); }
+
+  .desc {
+    max-width: 64ch;
+    color: var(--ink-2);
+    margin: 14px 0 0;
+  }
+
+  .try-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 20px 0 0;
+  }
+
+  .try {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 64ch;
+  }
+
+  .try li {
+    position: relative;
+    padding-left: 20px;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+  .try li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 8px;
+    height: 1px;
+    background: var(--ochre);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    color: var(--ink);
+  }
+
+  kbd {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    border: 1px solid var(--rule);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 5px;
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .keys {
+    margin: 18px 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-3);
+    max-width: 64ch;
+  }
+
+  .open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    color: var(--ochre);
+    border: 1px solid var(--ochre);
+    border-radius: 3px;
+    padding: 7px 14px;
+    transition: background 0.15s ease;
+  }
+  .open:hover { background: var(--ochre-soft); }
+  .open .arrow { transition: transform 0.15s ease; }
+  .open:hover .arrow { transform: translateX(3px); }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    margin-top: 70px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-3);
+    font-size: 0.86rem;
+    max-width: 64ch;
+  }
+
+  @media (max-width: 640px) {
+    .page { padding-block: 32px 56px; }
+    .entry { grid-template-columns: 1fr; gap: 10px; }
+    .tag { padding-top: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <a class="home-link" href="/">&larr; Yasutaka Furukawa</a>
+
+  <header>
+    <p class="eyebrow">SFU &middot; CMPT 361 &middot; Fall 2026</p>
+    <h1>Interactive figures for Introduction to Visual Computing</h1>
+    <p class="lead">
+      Slide decks and interactive figures from lecture, collected in one place.
+      All of them run in your browser. There is nothing to install and nothing to submit.
+      Open one, move the sliders, and watch which numbers change.
+    </p>
+
+    <nav class="contents" aria-label="Contents">
+      <a href="#v0"><span class="n">01</span> Intro to Computer Vision</a>
+      <a href="#images-color"><span class="n">02</span> Images and Color</a>
+      <a href="#hue"><span class="n">03</span> The Hue Hexagon</a>
+      <a href="#corr"><span class="n">04</span> Convolution vs Correlation</a>
+      <a href="#smi"><span class="n">05</span> Slide, Multiply, Integrate</a>
+      <a href="#theorem"><span class="n">06</span> The Convolution Theorem</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>Lecture decks</h2>
+    <p class="section-note">
+      The slides from class, in the order they were given. Both decks let you draw on top
+      of a slide while you work through it.
+    </p>
+
+    <article class="entry" id="v0">
+      <div class="tag">Deck<br>V0</div>
+      <div>
+        <h3>V0: Intro to Computer Vision</h3>
+        <p class="desc">
+          Thirteen slides on what visual computing is and how its two halves relate.
+          Vision runs pixels to understanding. Graphics runs a scene to an image.
+          The rest covers the shared toolkit, why linear algebra matters here, how to take
+          the course, and the grading breakdown.
+        </p>
+        <p class="try-label">What to look at</p>
+        <ul class="try">
+          <li>Slide 4 plays three research clips. LINGO drives London with running language
+            commentary, GAIA generates driving video from a text prompt, and RIG3R
+            reconstructs 3D from a multi-camera rig.</li>
+          <li>Slide 10 has the full grade split. Four programming projects at 40 percent,
+            midterm 20, final 40, with four late days total.</li>
+          <li>Slide 11 is the academic integrity policy. Read it before assignment 1.</li>
+        </ul>
+        <p class="keys">
+          <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>space</kbd> to navigate &middot;
+          <kbd>F</kbd> fullscreen &middot; <kbd>A</kbd> to draw
+        </p>
+        <a class="open" href="v0-intro/">Open deck <span class="arrow">&rarr;</span></a>
+      </div>
+    </article>
+
+    <article class="entry" id="images-color">
+      <div class="tag">Deck<br>V1</div>
+      <div>
+        <h3>Images and Color</h3>
+        <p class="desc">
+          Ten slides from an image as the function <code>I(x, c)</code> through to CIELAB.
+          Along the way: the MATLAB <code>uint8</code> to <code>im2double</code> conversion,
+          histograms, the cone and rod response curves, Bayer demosaicing, alpha compositing,
+          and perceptual uniformity.
+        </p>
+        <p class="try-label">Try this</p>
+        <ul class="try">
+          <li>On slide 5, compare the three cone peaks. S sits at 420 nm, M at 534 nm,
+            L at 564 nm. Notice how close M and L are, and that rods peak at 498 nm
+            between them while carrying no hue at all.</li>
+          <li>On slide 6, count the green cells in the Bayer tile. Green appears twice as
+            often as red or blue, which is why demosaicing has to interpolate two missing
+            channels at every pixel.</li>
+          <li>On slide 8, read <code>I = &alpha;F + (1&minus;&alpha;)B</code> against the
+            three thumbnails, then think about a soft hair edge. Both F and B are unknown
+            there, so the system is underdetermined.</li>
+          <li>Press <kbd>A</kbd>, mark up the histogram on slide 4, arrow away and come back.
+            The strokes are stored per slide. <kbd>C</kbd> clears only the slide you are on.</li>
+        </ul>
+        <p class="keys">
+          <kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> to navigate &middot;
+          <kbd>A</kbd> annotate &middot; <kbd>C</kbd> clear the current slide
+        </p>
+        <a class="open" href="images-and-color/">Open deck <span class="arrow">&rarr;</span></a>
+      </div>
+    </article>
+  </section>
+
+  <section>
+    <h2>Color</h2>
+    <p class="section-note">
+      Where the 360 degrees of hue actually come from.
+    </p>
+
+    <article class="entry" id="hue">
+      <div class="tag">Figure</div>
+      <div>
+        <h3>The Hue Hexagon</h3>
+        <div class="formula">H = atan2( &radic;3&middot;(G &minus; B)/2 ,  R &minus; (G + B)/2 )</div>
+        <p class="desc">
+          A tilt slider rotates the camera around the RGB cube, from side-on with the gray
+          axis vertical to straight down that axis. RGB sliders drop a point onto the
+          midplane and draw its radius and hue arc, with live readouts for V, C, S,
+          hexagonal H, and the true atan2 angle.
+        </p>
+        <p class="try-label">Try this</p>
+        <ul class="try">
+          <li>Drag tilt all the way from side-on to top-down. The six chromatic corners are
+            not coplanar. They alternate above and below the midplane and form a crown.
+            Only the view straight down the gray axis flattens them into a regular hexagon.</li>
+          <li>Set R = G = B and watch H. Hue is undefined on the gray axis, where chroma
+            is zero.</li>
+          <li>Park the point exactly on a corner, then slide it partway toward the next one.
+            Hexagonal H and the true angle agree at all six corners and drift apart by up
+            to about 1.2 degrees in between.</li>
+        </ul>
+        <a class="open" href="hue-hexagon/">Open figure <span class="arrow">&rarr;</span></a>
+      </div>
+    </article>
+  </section>
+
+  <section>
+    <h2>Filtering, in three steps</h2>
+    <p class="section-note">
+      These three build on each other. Impulses in 1D show which algebraic properties
+      survive, continuous 1D shows the sliding integral producing a whole function, and
+      2D discrete pays it off in the frequency domain. Work through them in order.
+    </p>
+
+    <article class="entry" id="corr">
+      <div class="tag step">Step 1<br>1D discrete</div>
+      <div>
+        <h3>Convolution vs Correlation</h3>
+        <div class="formula">(f * g)[n] = &Sigma; f[k]&middot;g[n &minus; k]      (f &#8902; g)[n] = &Sigma; f[k]&middot;g[n + k]</div>
+        <p class="desc">
+          The two sums sit side by side with the one differing sign colored. Three sliders
+          place unit impulses at a, b, and c. Two panels show where correlating them lands
+          and flag live whether commutativity and associativity hold, checked against
+          convolution doing the same thing.
+        </p>
+        <p class="try-label">Try this</p>
+        <ul class="try">
+          <li>Set a and b apart, then swap their values. Correlation gives
+            <code>&delta;<sub>a</sub> &#8902; &delta;<sub>b</sub> = &delta;<sub>b&minus;a</sub></code>,
+            so swapping reflects the result. Convolution gives
+            <code>&delta;<sub>a+b</sub></code> either way.</li>
+          <li>Slide a until it equals b. The commutativity flag for correlation flips to
+            true, and that is the only case where it does, because both results land at 0.</li>
+          <li>Set a to something nonzero and read the associativity panel. The two groupings
+            differ by exactly 2a. Set a to 0 and they collapse onto each other.</li>
+        </ul>
+        <p class="keys">
+          <kbd>A</kbd> to annotate &middot; <kbd>1</kbd>&ndash;<kbd>4</kbd> pen color &middot;
+          <kbd>C</kbd> clear &middot; <kbd>Esc</kbd> exit
+        </p>
+        <a class="open" href="convolution-vs-correlation/">Open figure <span class="arrow">&rarr;</span></a>
+      </div>
+    </article>
+
+    <article class="entry" id="smi">
+      <div class="tag step">Step 2<br>1D continuous</div>
+      <div>
+        <h3>Slide, Multiply, Integrate</h3>
+        <div class="formula">(f * g)(t) = &int; f(&tau;)&middot;g(t &minus; &tau;) d&tau;</div>
+        <p class="desc">
+          Two panels hold f(&tau;) and g(&tau;), each a rect, triangle, ramp, or gaussian set
+          by a center and a width. Dragging t slides g past f, shades the product under both
+          curves, and reads out the integral. A panel underneath plots the whole result
+          curve, solid up to the current t and faint beyond it.
+        </p>
+        <p class="try-label">Try this</p>
+        <ul class="try">
+          <li>Press Play and watch the lower panel fill in. Every t you sweep past adds one
+            more point. The result of convolving two functions is itself a function, not a
+            single number.</li>
+          <li>Flip the convolution and correlation toggle with the default shapes. The only
+            thing that changes is <code>g(t &minus; &tau;)</code> becoming
+            <code>g(t + &tau;)</code>. That flip is the entire mechanical difference between
+            the two integrals.</li>
+          <li>Now make g a centered gaussian and flip again. The difference vanishes, which
+            is why the default g is an asymmetric ramp.</li>
+        </ul>
+        <a class="open" href="slide-multiply-integrate/">Open figure <span class="arrow">&rarr;</span></a>
+      </div>
+    </article>
+
+    <article class="entry" id="theorem">
+      <div class="tag freq">Step 3<br>2D discrete</div>
+      <div>
+        <h3>The Convolution Theorem</h3>
+        <div class="formula freq">f &#8859; g   &#10231;   F &#8857; G</div>
+        <p class="desc">
+          A commutative diagram with the spatial route across the top and the frequency
+          route across the bottom, closed by three arrows for FFT, FFT, and inverse FFT.
+          Both routes are computed live in the page at 128 &times; 128 with a hand-written
+          radix-2 FFT. Five procedural images plus upload, seven kernels from impulse to
+          Laplacian of Gaussian, and a size slider from 3 to 21.
+        </p>
+        <p class="try-label">Try this</p>
+        <ul class="try">
+          <li>Read the residual card. Two independent computations, and the maximum absolute
+            difference lands near 1e-15. That number is the proof of the theorem, not an
+            assertion about it.</li>
+          <li>Cycle the kernels and watch |G| by itself. Box and gaussian are bright in the
+            middle and fade outward, so they are low-pass. LoG is a ring that goes dark at
+            DC, so it is band-pass. The impulse &delta; gives 1 everywhere.</li>
+          <li>Hover any spectrum panel to read (u, v) in cycles per image. DC sits at the
+            center because the spectra are fftshifted, so distance from the middle is
+            frequency.</li>
+          <li>Push the kernel size up and look at the border of the result. The direct sum
+            is deliberately circular so that it matches the FFT exactly. The note explains
+            the zero-padding to N + K &minus; 1 you need for the honest non-circular answer.</li>
+        </ul>
+        <p class="keys">
+          <kbd>A</kbd> to annotate &middot; <kbd>1</kbd>&ndash;<kbd>4</kbd> pen color &middot;
+          <kbd>C</kbd> clear &middot; <kbd>Esc</kbd> exit
+        </p>
+        <a class="open" href="convolution-theorem/">Open figure <span class="arrow">&rarr;</span></a>
+      </div>
+    </article>
+  </section>
+
+  <footer>
+    These figures supplement the lectures. They are not graded and there is nothing to hand in.
+    Course schedule, videos and assignments live on the
+    <a href="https://yaksoy.github.io/introvc/2026Fall/">course page</a>.
+  </footer>
+
+</div>
+
+</body>
+</html>
