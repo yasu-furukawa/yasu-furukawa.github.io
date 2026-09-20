@@ -1,0 +1,754 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Hue Hexagon</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #EDEDF1;
+    --surface: #FFFFFF;
+    --stage: #F7F7FA;
+    --ink: #16161B;
+    --ink-2: #54545F;
+    --ink-3: #8A8A96;
+    --rule: #D6D6DE;
+    --line: #24242C;
+    --sel: #33994d;
+    --sel-ink: #FFFFFF;
+  }
+  :root:not([data-theme="light"]) {
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0D11;
+      --surface: #15151B;
+      --stage: #0F0F14;
+      --ink: #ECECF2;
+      --ink-2: #A3A3B0;
+      --ink-3: #6B6B79;
+      --rule: #282830;
+      --line: #E6E6EE;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D0D11;
+    --surface: #15151B;
+    --stage: #0F0F14;
+    --ink: #ECECF2;
+    --ink-2: #A3A3B0;
+    --ink-3: #6B6B79;
+    --rule: #282830;
+    --line: #E6E6EE;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin-inline: auto;
+    padding-inline: 20px;
+    padding-block: 40px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-family: 'Zilla Slab', Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.4vw, 3.2rem);
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 12px;
+  }
+  .standfirst {
+    margin: 0;
+    max-width: 64ch;
+    color: var(--ink-2);
+    font-size: 1.04rem;
+  }
+
+  /* ---- stage ---- */
+  .stage {
+    position: relative;
+    background: var(--stage);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #view {
+    display: block;
+    width: 100%;
+    height: clamp(330px, 50vh, 520px);
+    touch-action: none;
+    cursor: grab;
+  }
+  #view:active { cursor: grabbing; }
+  .stage-hint {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+
+  /* ---- tilt ---- */
+  .tilt-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-3);
+    margin-bottom: 6px;
+  }
+  .tilt-row { display: flex; align-items: center; gap: 14px; }
+  #tilt { flex: 1; accent-color: var(--ink); }
+  .btn {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 7px 11px;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--ink-3); }
+  :where(input, button):focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* ---- rail ---- */
+  .rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+  }
+  .panel-label {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+  }
+  .chan { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+  .chan span:first-child {
+    font-family: 'Zilla Slab', Georgia, serif;
+    font-weight: 600;
+    width: 1.1em;
+  }
+  .chan input { flex: 1; min-width: 0; }
+  .chan output {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    width: 3.2ch;
+    text-align: right;
+    color: var(--ink-2);
+  }
+  #cR { accent-color: #D6342C; }
+  #cG { accent-color: #1D9E4B; }
+  #cB { accent-color: #2B62D9; }
+
+  .swatch {
+    margin-top: 16px;
+    height: 46px;
+    border-radius: 2px;
+    background: var(--sel);
+    display: flex;
+    align-items: center;
+    padding-inline: 12px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--sel-ink);
+  }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+
+  .readout { border-top: 1px solid var(--rule); }
+  .readout div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .readout dt {
+    font-size: 0.86rem;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .readout dd {
+    margin: 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.92rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .readout .hl { color: var(--ink); font-weight: 500; }
+  .note-small {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    max-width: 42ch;
+  }
+
+  /* ---- notes ---- */
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .note { border-top: 1px solid var(--ink-3); padding-top: 12px; }
+  .note button {
+    display: block;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: none;
+    border: 0;
+    padding: 0 0 8px;
+    cursor: pointer;
+  }
+  .note button:hover { color: var(--ink); }
+  .note h3 {
+    font-family: 'Zilla Slab', Georgia, serif;
+    font-weight: 600;
+    font-size: 1.12rem;
+    margin: 0 0 6px;
+  }
+  .note p { margin: 0; font-size: 0.92rem; color: var(--ink-2); }
+
+  .colophon {
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.74rem;
+    line-height: 1.8;
+    color: var(--ink-3);
+    overflow-x: auto;
+  }
+
+  @media (max-width: 760px) {
+    .rail { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .notes { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">CMPT 361 &nbsp;·&nbsp; Color</p>
+    <h1>The Hue Hexagon</h1>
+    <p class="standfirst">Stand the RGB cube on its black corner and look straight down the gray diagonal. The cube's outline collapses into a hexagon with six colored corners, 60&deg; apart. That is where hue's 360&deg; comes from. Drag the tilt to watch it happen.</p>
+  </header>
+
+  <div class="stage">
+    <canvas id="view"></canvas>
+    <div class="stage-hint">drag to spin</div>
+  </div>
+
+  <div>
+    <div class="tilt-labels">
+      <span id="tiltLo">side on &mdash; gray axis vertical</span>
+      <span id="tiltHi">down the axis &mdash; hue plane flat</span>
+    </div>
+    <div class="tilt-row">
+      <input type="range" id="tilt" min="0" max="1000" value="0" aria-label="camera tilt">
+      <button class="btn" id="animate">Tilt it</button>
+    </div>
+  </div>
+
+  <div class="rail">
+    <section>
+      <p class="panel-label">Pick a color</p>
+      <label class="chan"><span>R</span><input type="range" id="cR" min="0" max="255" value="51"><output id="oR">51</output></label>
+      <label class="chan"><span>G</span><input type="range" id="cG" min="0" max="255" value="153"><output id="oG">153</output></label>
+      <label class="chan"><span>B</span><input type="range" id="cB" min="0" max="255" value="102"><output id="oB">102</output></label>
+      <div class="swatch" id="swatch">#339966</div>
+      <div class="presets" id="presets"></div>
+    </section>
+
+    <section>
+      <p class="panel-label">What comes out</p>
+      <dl class="readout">
+        <div><dt>Value &nbsp;<span style="color:var(--ink-3)">V = max</span></dt><dd class="hl" id="rV">0.600</dd></div>
+        <div><dt>Chroma &nbsp;<span style="color:var(--ink-3)">C = max &minus; min</span></dt><dd id="rC">0.400</dd></div>
+        <div><dt>Saturation &nbsp;<span style="color:var(--ink-3)">S = C / V</span></dt><dd class="hl" id="rS">0.667</dd></div>
+        <div><dt>Hue &nbsp;<span style="color:var(--ink-3)">hexagonal</span></dt><dd class="hl" id="rH">150.0&deg;</dd></div>
+        <div><dt>Hue &nbsp;<span style="color:var(--ink-3)">true angle, atan2</span></dt><dd id="rH2">150.0&deg;</dd></div>
+      </dl>
+      <p class="note-small" id="gap">The two hue numbers agree at the six corners and drift by up to 1.2&deg; in between.</p>
+    </section>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <button type="button" data-tilt="0">Tilt 0&deg;</button>
+      <h3>Stand it on black</h3>
+      <p>The cube rests on the black corner, white directly above it. The dashed line through them is the gray axis, length &radic;3. Value measures height along it.</p>
+    </div>
+    <div class="note">
+      <button type="button" data-tilt="0.5">Tilt 45&deg;</button>
+      <h3>Six corners, two heights</h3>
+      <p>Red, green and blue sit below the midplane. Yellow, cyan and magenta sit the same distance above it. The six corners form a crown, not a flat ring.</p>
+    </div>
+    <div class="note">
+      <button type="button" data-tilt="1">Tilt 90&deg;</button>
+      <h3>Look down the axis</h3>
+      <p>Height disappears and the crown becomes a regular hexagon. Hue is the angle of your color around it, measured from red. Gray lands dead center, where no angle exists.</p>
+    </div>
+  </div>
+
+  <p class="colophon">
+    plane basis &nbsp; e&#8321; = (1, &minus;&frac12;, &minus;&frac12;) / &radic;1.5 &nbsp;&nbsp; e&#8322; = (0, &radic;3/2, &minus;&radic;3/2) / &radic;1.5 &nbsp;&nbsp; axis e&#8323; = (1, 1, 1) / &radic;3<br>
+    corner radius &radic;(2/3) &asymp; 0.8165 &nbsp;&nbsp; corner height &plusmn;1/(2&radic;3) &asymp; &plusmn;0.2887 &nbsp;&nbsp; hue undefined when C = 0
+  </p>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var cv = document.getElementById('view');
+  var ctx = cv.getContext('2d');
+  var S15 = Math.sqrt(1.5), SQ32 = Math.sqrt(3) / 2, SQ3 = Math.sqrt(3);
+
+  /* ---- palette read from CSS tokens ---- */
+  var pal = {};
+  function readPal() {
+    var cs = getComputedStyle(document.documentElement);
+    pal.line = cs.getPropertyValue('--line').trim() || '#222';
+    pal.ink2 = cs.getPropertyValue('--ink-2').trim() || '#555';
+    pal.ink3 = cs.getPropertyValue('--ink-3').trim() || '#888';
+    pal.stage = cs.getPropertyValue('--stage').trim() || '#fff';
+  }
+  readPal();
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', function () { readPal(); draw(); });
+  }
+  new MutationObserver(function () { readPal(); draw(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ---- geometry ---- */
+  function world(r, g, b, centered) {
+    var o = centered ? 0.5 : 0;
+    var dr = r - o, dg = g - o, db = b - o;
+    return [
+      (dr - 0.5 * dg - 0.5 * db) / S15,
+      (SQ32 * dg - SQ32 * db) / S15,
+      (dr + dg + db) / SQ3
+    ];
+  }
+
+  var CORNERS = [
+    { rgb: [1, 0, 0], label: 'R 0' },
+    { rgb: [1, 1, 0], label: 'Y 60' },
+    { rgb: [0, 1, 0], label: 'G 120' },
+    { rgb: [0, 1, 1], label: 'C 180' },
+    { rgb: [0, 0, 1], label: 'B 240' },
+    { rgb: [1, 0, 1], label: 'M 300' }
+  ];
+
+  /* cube surface cells, built once in RGB space */
+  var N = 20, CELLS = [];
+  (function build() {
+    for (var ax = 0; ax < 3; ax++) {
+      for (var side = 0; side < 2; side++) {
+        var u = (ax + 1) % 3, v = (ax + 2) % 3;
+        var nrm = [0, 0, 0];
+        nrm[ax] = side ? 1 : -1;
+        var nw = world(nrm[0], nrm[1], nrm[2], false);
+        for (var i = 0; i < N; i++) {
+          for (var j = 0; j < N; j++) {
+            var quad = [], k;
+            var uv = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]];
+            for (k = 0; k < 4; k++) {
+              var p = [0, 0, 0];
+              p[ax] = side;
+              p[u] = uv[k][0] / N;
+              p[v] = uv[k][1] / N;
+              quad.push(p);
+            }
+            var c = [0, 0, 0];
+            c[ax] = side;
+            c[u] = (i + 0.5) / N;
+            c[v] = (j + 0.5) / N;
+            CELLS.push({
+              q: quad.map(function (p) { return world(p[0], p[1], p[2], true); }),
+              col: 'rgb(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ')',
+              n: nw,
+              d: 0
+            });
+          }
+        }
+      }
+    }
+  })();
+
+  /* ---- state ---- */
+  var tilt = 0, theta = -Math.PI / 2;
+  var rgb = [51 / 255, 153 / 255, 102 / 255];
+  var cam = {};
+
+  function setCam() {
+    var phi = tilt * Math.PI / 2;
+    var cp = Math.cos(phi), sp = Math.sin(phi), ct = Math.cos(theta), st = Math.sin(theta);
+    cam.f = [cp * ct, cp * st, sp];
+    cam.r = [-st, ct, 0];
+    cam.u = [-sp * ct, -sp * st, cp];
+  }
+
+  var W = 0, H = 0, cx = 0, cy = 0, sc = 1;
+
+  function proj(p) {
+    return [
+      cx + (p[0] * cam.r[0] + p[1] * cam.r[1] + p[2] * cam.r[2]) * sc,
+      cy - (p[0] * cam.u[0] + p[1] * cam.u[1] + p[2] * cam.u[2]) * sc
+    ];
+  }
+  function depth(p) { return p[0] * cam.f[0] + p[1] * cam.f[1] + p[2] * cam.f[2]; }
+
+  /* ---- color math ---- */
+  function hsv(c) {
+    var mx = Math.max(c[0], c[1], c[2]), mn = Math.min(c[0], c[1], c[2]);
+    var C = mx - mn, h = null;
+    if (C > 1e-9) {
+      if (mx === c[0]) h = ((c[1] - c[2]) / C % 6 + 6) % 6;
+      else if (mx === c[1]) h = (c[2] - c[0]) / C + 2;
+      else h = (c[0] - c[1]) / C + 4;
+      h *= 60;
+    }
+    var al = c[0] - (c[1] + c[2]) / 2, be = SQ32 * (c[1] - c[2]);
+    var h2 = (C > 1e-9) ? (Math.atan2(be, al) * 180 / Math.PI + 360) % 360 : null;
+    return { V: mx, C: C, S: mx > 0 ? C / mx : 0, H: h, H2: h2 };
+  }
+  function hex(c) {
+    return '#' + c.map(function (v) {
+      return ('0' + Math.round(v * 255).toString(16)).slice(-2);
+    }).join('');
+  }
+
+  /* ---- draw ---- */
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = W / 2; cy = H / 2;
+    sc = Math.min(W / 2.9, H / 2.35);
+    draw();
+  }
+
+  function draw() {
+    if (!W) return;
+    setCam();
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = pal.stage;
+    ctx.fillRect(0, 0, W, H);
+
+    /* cube, painter's algorithm over back-facing-culled cells */
+    var vis = [], i;
+    for (i = 0; i < CELLS.length; i++) {
+      var ce = CELLS[i];
+      if (ce.n[0] * cam.f[0] + ce.n[1] * cam.f[1] + ce.n[2] * cam.f[2] <= 0.001) continue;
+      ce.d = depth(ce.q[0]) + depth(ce.q[2]);
+      vis.push(ce);
+    }
+    vis.sort(function (a, b) { return a.d - b.d; });
+    ctx.lineWidth = 1;
+    for (i = 0; i < vis.length; i++) {
+      var q = vis[i].q, a = proj(q[0]), b = proj(q[1]), c = proj(q[2]), d = proj(q[3]);
+      ctx.beginPath();
+      ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]);
+      ctx.closePath();
+      ctx.fillStyle = ctx.strokeStyle = vis[i].col;
+      ctx.fill(); ctx.stroke();
+    }
+
+    var lineW = Math.max(1, Math.min(W, H) / 420);
+    ctx.lineWidth = lineW * 1.4;
+    ctx.font = "500 12px 'IBM Plex Mono', ui-monospace, monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    /* gray axis */
+    var blk = proj(world(0, 0, 0, true)), wht = proj(world(1, 1, 1, true));
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = pal.line;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(blk[0], blk[1]); ctx.lineTo(wht[0], wht[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = pal.ink3;
+    if (tilt < 0.82) {
+      ctx.fillText('black', blk[0], blk[1] + 16);
+      ctx.fillText('white', wht[0], wht[1] - 16);
+    }
+    ctx.restore();
+
+    /* crown ring through the six chromatic corners */
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = pal.line;
+    ctx.lineWidth = lineW * 1.6;
+    ctx.beginPath();
+    for (i = 0; i < 6; i++) {
+      var pw = world(CORNERS[i].rgb[0], CORNERS[i].rgb[1], CORNERS[i].rgb[2], true);
+      var sp2 = proj(pw);
+      if (i === 0) ctx.moveTo(sp2[0], sp2[1]); else ctx.lineTo(sp2[0], sp2[1]);
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.restore();
+
+    /* flat hexagon in the midplane */
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    ctx.strokeStyle = pal.ink3;
+    ctx.lineWidth = lineW;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    for (i = 0; i < 6; i++) {
+      var cw = world(CORNERS[i].rgb[0], CORNERS[i].rgb[1], CORNERS[i].rgb[2], true);
+      var fp = proj([cw[0], cw[1], 0]);
+      if (i === 0) ctx.moveTo(fp[0], fp[1]); else ctx.lineTo(fp[0], fp[1]);
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.restore();
+
+    /* corner dots and labels, nudged apart when the view stacks them */
+    var tags = [];
+    for (i = 0; i < 6; i++) {
+      var k = CORNERS[i];
+      var kw = world(k.rgb[0], k.rgb[1], k.rgb[2], true), ks = proj(kw);
+      ctx.beginPath();
+      ctx.arc(ks[0], ks[1], lineW * 3, 0, 6.2832);
+      ctx.fillStyle = 'rgb(' + k.rgb[0] * 255 + ',' + k.rgb[1] * 255 + ',' + k.rgb[2] * 255 + ')';
+      ctx.fill();
+      ctx.lineWidth = lineW;
+      ctx.strokeStyle = pal.stage;
+      ctx.stroke();
+      var vx = ks[0] - cx, vy = ks[1] - cy, m = Math.hypot(vx, vy) || 1;
+      tags.push({
+        x: ks[0] + vx / m * 24,
+        y: ks[1] + vy / m * 20,
+        t: k.label + '°',
+        d: depth(kw)
+      });
+    }
+    tags.sort(function (a, b) { return b.d - a.d; });
+    for (i = 1; i < tags.length; i++) {
+      for (var g = 0; g < 4; g++) {
+        var hit = false;
+        for (var j = 0; j < i; j++) {
+          if (Math.abs(tags[i].x - tags[j].x) < 52 && Math.abs(tags[i].y - tags[j].y) < 15) { hit = true; break; }
+        }
+        if (!hit) break;
+        tags[i].y += 17;
+      }
+    }
+    ctx.fillStyle = pal.ink2;
+    for (i = 0; i < tags.length; i++) ctx.fillText(tags[i].t, tags[i].x, tags[i].y);
+
+    /* construction: point, dropline, radius, arc */
+    var v = hsv(rgb);
+    var pw2 = world(rgb[0], rgb[1], rgb[2], true);
+    var foot = [pw2[0], pw2[1], 0];
+    var ps = proj(pw2), fs = proj(foot), os = proj([0, 0, 0]);
+    var css = 'rgb(' + Math.round(rgb[0] * 255) + ',' + Math.round(rgb[1] * 255) + ',' + Math.round(rgb[2] * 255) + ')';
+
+    ctx.save();
+    ctx.lineWidth = lineW * 1.4;
+    ctx.strokeStyle = pal.line;
+    ctx.globalAlpha = 0.75;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(ps[0], ps[1]); ctx.lineTo(fs[0], fs[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    if (v.H2 !== null) {
+      /* reference ray toward red */
+      var rw = world(CORNERS[0].rgb[0], CORNERS[0].rgb[1], CORNERS[0].rgb[2], true);
+      var rlen = Math.hypot(rw[0], rw[1]);
+      var rr = proj([rw[0] / rlen * 0.62, rw[1] / rlen * 0.62, 0]);
+      var flat = 0.12 + 0.88 * tilt; /* the angle only reads once the plane faces you */
+      ctx.save();
+      ctx.globalAlpha = 0.5 * flat;
+      ctx.strokeStyle = pal.ink3;
+      ctx.lineWidth = lineW;
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(os[0], os[1]); ctx.lineTo(rr[0], rr[1]); ctx.stroke();
+      ctx.restore();
+
+      /* arc from red direction to the color's direction */
+      var ang = v.H2 * Math.PI / 180, ar = 0.34;
+      ctx.save();
+      ctx.globalAlpha = flat;
+      ctx.strokeStyle = pal.ink2;
+      ctx.lineWidth = lineW * 1.6;
+      ctx.beginPath();
+      for (i = 0; i <= 60; i++) {
+        var t = ang * i / 60;
+        var ap = proj([Math.cos(t) * ar, Math.sin(t) * ar, 0]);
+        if (i === 0) ctx.moveTo(ap[0], ap[1]); else ctx.lineTo(ap[0], ap[1]);
+      }
+      ctx.stroke();
+      var mid = proj([Math.cos(ang / 2) * (ar + 0.13), Math.sin(ang / 2) * (ar + 0.13), 0]);
+      ctx.fillStyle = pal.ink2;
+      ctx.font = "500 13px 'IBM Plex Mono', ui-monospace, monospace";
+      ctx.fillText('H ' + v.H.toFixed(0) + '°', mid[0], mid[1]);
+      ctx.restore();
+
+      /* radius from center to the foot */
+      ctx.save();
+      ctx.strokeStyle = css;
+      ctx.lineWidth = lineW * 2.6;
+      ctx.beginPath(); ctx.moveTo(os[0], os[1]); ctx.lineTo(fs[0], fs[1]); ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.fillStyle = pal.ink2;
+      ctx.font = "500 13px 'IBM Plex Mono', ui-monospace, monospace";
+      ctx.fillText('C = 0, hue undefined', cx, cy + sc * 0.55);
+    }
+
+    /* foot marker */
+    ctx.beginPath();
+    ctx.arc(fs[0], fs[1], lineW * 3.4, 0, 6.2832);
+    ctx.fillStyle = pal.stage; ctx.fill();
+    ctx.lineWidth = lineW * 1.6; ctx.strokeStyle = css; ctx.stroke();
+
+    /* the color itself */
+    ctx.beginPath();
+    ctx.arc(ps[0], ps[1], lineW * 6, 0, 6.2832);
+    ctx.fillStyle = css; ctx.fill();
+    ctx.lineWidth = lineW * 1.8; ctx.strokeStyle = pal.line; ctx.stroke();
+  }
+
+  /* ---- controls ---- */
+  var ids = ['cR', 'cG', 'cB'], outs = ['oR', 'oG', 'oB'];
+  function syncColor() {
+    for (var i = 0; i < 3; i++) {
+      var val = +document.getElementById(ids[i]).value;
+      rgb[i] = val / 255;
+      document.getElementById(outs[i]).textContent = val;
+    }
+    var v = hsv(rgb), hx = hex(rgb);
+    var lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    document.documentElement.style.setProperty('--sel', hx);
+    document.documentElement.style.setProperty('--sel-ink', lum > 0.5 ? '#101014' : '#FFFFFF');
+    document.getElementById('swatch').textContent = hx.toUpperCase();
+    document.getElementById('rV').textContent = v.V.toFixed(3);
+    document.getElementById('rC').textContent = v.C.toFixed(3);
+    document.getElementById('rS').textContent = v.S.toFixed(3);
+    document.getElementById('rH').textContent = v.H === null ? 'undefined' : v.H.toFixed(1) + '°';
+    document.getElementById('rH2').textContent = v.H2 === null ? 'undefined' : v.H2.toFixed(1) + '°';
+    var g = document.getElementById('gap');
+    if (v.H === null) {
+      g.textContent = 'All three channels are equal, so the color sits on the gray axis. It has no direction, so it has no hue.';
+    } else {
+      var d = Math.abs(v.H - v.H2);
+      g.textContent = 'Difference here: ' + d.toFixed(2) + '°. The two agree exactly at the six corners and drift by up to 1.2° in between.';
+    }
+    draw();
+  }
+  for (var i = 0; i < 3; i++) document.getElementById(ids[i]).addEventListener('input', syncColor);
+
+  var tiltIn = document.getElementById('tilt');
+  tiltIn.addEventListener('input', function () { tilt = +tiltIn.value / 1000; draw(); });
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function goTo(target) {
+    if (reduce) { tilt = target; tiltIn.value = Math.round(target * 1000); draw(); return; }
+    var from = tilt, t0 = performance.now(), dur = 1100;
+    (function step(now) {
+      var k = Math.min(1, (now - t0) / dur);
+      var e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      tilt = from + (target - from) * e;
+      tiltIn.value = Math.round(tilt * 1000);
+      draw();
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  document.getElementById('animate').addEventListener('click', function () {
+    goTo(tilt > 0.5 ? 0 : 1);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.note button'), function (b) {
+    b.addEventListener('click', function () { goTo(+b.dataset.tilt); });
+  });
+
+  /* presets */
+  var PRESETS = [
+    ['worked example', [51, 153, 102]],
+    ['pure red', [255, 0, 0]],
+    ['cyan', [0, 255, 255]],
+    ['olive', [128, 128, 0]],
+    ['sky', [90, 166, 242]],
+    ['gray', [153, 153, 153]]
+  ];
+  var pbox = document.getElementById('presets');
+  PRESETS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.className = 'btn';
+    b.type = 'button';
+    b.textContent = p[0];
+    b.addEventListener('click', function () {
+      for (var i = 0; i < 3; i++) document.getElementById(ids[i]).value = p[1][i];
+      syncColor();
+    });
+    pbox.appendChild(b);
+  });
+
+  /* drag to spin */
+  var drag = null;
+  cv.addEventListener('pointerdown', function (e) {
+    drag = { x: e.clientX, t: theta };
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    theta = drag.t + (e.clientX - drag.x) * 0.008;
+    draw();
+  });
+  cv.addEventListener('pointerup', function () { drag = null; });
+  cv.addEventListener('pointercancel', function () { drag = null; });
+
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv);
+  window.addEventListener('resize', resize);
+  resize();
+  syncColor();
+})();
+</script>
+
+</body></html>

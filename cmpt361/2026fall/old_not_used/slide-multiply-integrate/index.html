@@ -1,0 +1,614 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Slide, Multiply, Integrate</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #EDEDF1;
+    --surface: #FFFFFF;
+    --stage: #F7F7FA;
+    --ink: #16161B;
+    --ink-2: #54545F;
+    --ink-3: #8A8A96;
+    --rule: #D6D6DE;
+    --f-hue: #2B62D9;
+    --g-hue: #B9762A;
+    --prod: rgba(107,79,160,0.20);
+    --prod-line: #6B4FA0;
+    --hold: #1D8A46;
+    --hold-bg: #E3F3E8;
+    --break: #C7302A;
+    --break-bg: #FBE8E6;
+  }
+  :root:not([data-theme="light"]) { color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D0D11;
+      --surface: #15151B;
+      --stage: #0F0F14;
+      --ink: #ECECF2;
+      --ink-2: #A3A3B0;
+      --ink-3: #6B6B79;
+      --rule: #282830;
+      --f-hue: #6FA0FF;
+      --g-hue: #E3A54B;
+      --prod: rgba(183,156,232,0.22);
+      --prod-line: #B79CE8;
+      --hold: #3FCB72;
+      --hold-bg: rgba(63,203,114,0.14);
+      --break: #FF6E63;
+      --break-bg: rgba(255,110,99,0.14);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D0D11;
+    --surface: #15151B;
+    --stage: #0F0F14;
+    --ink: #ECECF2;
+    --ink-2: #A3A3B0;
+    --ink-3: #6B6B79;
+    --rule: #282830;
+    --f-hue: #6FA0FF;
+    --g-hue: #E3A54B;
+    --prod: rgba(183,156,232,0.22);
+    --prod-line: #B79CE8;
+    --hold: #3FCB72;
+    --hold-bg: rgba(63,203,114,0.14);
+    --break: #FF6E63;
+    --break-bg: rgba(255,110,99,0.14);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin-inline: auto;
+    padding-inline: 20px;
+    padding-block: 36px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-family: 'Zilla Slab', Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.9rem, 4vw, 2.7rem);
+    line-height: 1.03;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 10px;
+  }
+  .standfirst { margin: 0; max-width: 66ch; color: var(--ink-2); font-size: 1.03rem; }
+
+  .panel-label {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+  }
+
+  /* ---- function pickers ---- */
+  .pickers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .fcard {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 16px 18px 18px;
+  }
+  .fcard .fhead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .fcard .swatch { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .fcard .fname { font-family: 'Zilla Slab', Georgia, serif; font-weight: 600; font-size: 1.08rem; }
+  .shapes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .shape-btn {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+    padding: 6px 11px;
+    border-radius: 2px;
+    border: 1px solid var(--rule);
+    background: var(--stage);
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .shape-btn.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .prow { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .prow .pname { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.82rem; color: var(--ink-2); width: 4.4em; flex: none; }
+  .prow input[type="range"] { flex: 1; min-width: 0; }
+  .prow output {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+    width: 2.8ch;
+    text-align: right;
+  }
+
+  /* ---- mode toggle ---- */
+  .modebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .toggle {
+    display: inline-flex;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .toggle button {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.76rem;
+    letter-spacing: 0.02em;
+    padding: 7px 13px;
+    border: 0;
+    background: var(--surface);
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .toggle button.on.conv { background: var(--hold-bg); color: var(--hold); }
+  .toggle button.on.corr { background: var(--break-bg); color: var(--break); }
+
+  /* ---- stage ---- */
+  .stagebox {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 16px 18px 18px;
+  }
+  .stage { position: relative; background: var(--stage); border-radius: 2px; }
+  #plot { display: block; width: 100%; height: clamp(220px, 30vw, 300px); }
+  #trace { display: block; width: 100%; height: clamp(110px, 16vw, 150px); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 10px 0 0; font-size: 0.8rem; color: var(--ink-2); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  .readout-row { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 14px 0 2px; }
+  .readout {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+    font-variant-numeric: tabular-nums;
+  }
+  .readout .lbl { color: var(--ink-2); font-size: 0.62em; margin-right: 8px; }
+  .readout .val { font-weight: 600; }
+
+  .tctrl { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+  .tctrl input[type="range"] { flex: 1; min-width: 0; }
+  .tctrl output {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    width: 3.6ch;
+    text-align: right;
+  }
+  .playbtn {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    padding: 7px 13px;
+    border-radius: 2px;
+    border: 1px solid var(--rule);
+    background: var(--stage);
+    color: var(--ink);
+    cursor: pointer;
+    flex: none;
+  }
+  .playbtn:hover { border-color: var(--ink-3); }
+
+  .trace-label { font-size: 0.8rem; color: var(--ink-2); margin: 16px 0 8px; }
+  .trace-label .mono { color: var(--ink); }
+
+  :where(input, button):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .colophon {
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 2;
+    color: var(--ink-3);
+    overflow-x: auto;
+  }
+  .colophon .sig-h { color: var(--hold); }
+  .colophon .sig-b { color: var(--break); }
+
+  @media (max-width: 720px) {
+    .pickers { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">CMPT 361 &nbsp;&middot;&nbsp; Filtering</p>
+    <h1>Slide, Multiply, Integrate</h1>
+    <p class="standfirst">Pick two simple shapes for f and g. Dragging t slides one past the other along &tau;. The shaded overlap is the integral, which lands as a single point on a new function of t.</p>
+  </header>
+
+  <section class="pickers">
+    <div class="fcard">
+      <div class="fhead"><span class="swatch" style="background:var(--f-hue)"></span><span class="fname">f(&tau;)</span></div>
+      <div class="shapes" data-target="f">
+        <button class="shape-btn" data-shape="rect">rect</button>
+        <button class="shape-btn" data-shape="tri">triangle</button>
+        <button class="shape-btn" data-shape="ramp">ramp</button>
+        <button class="shape-btn" data-shape="gauss">gaussian</button>
+      </div>
+      <label class="prow"><span class="pname">center</span><input type="range" id="fc" min="-3" max="3" step="0.1" value="-1.5"><output id="ofc"></output></label>
+      <label class="prow"><span class="pname">width</span><input type="range" id="fw" min="0.4" max="4" step="0.1" value="2"><output id="ofw"></output></label>
+    </div>
+    <div class="fcard">
+      <div class="fhead"><span class="swatch" style="background:var(--g-hue)"></span><span class="fname">g(&tau;)</span></div>
+      <div class="shapes" data-target="g">
+        <button class="shape-btn" data-shape="rect">rect</button>
+        <button class="shape-btn" data-shape="tri">triangle</button>
+        <button class="shape-btn" data-shape="ramp">ramp</button>
+        <button class="shape-btn" data-shape="gauss">gaussian</button>
+      </div>
+      <label class="prow"><span class="pname">center</span><input type="range" id="gc" min="-3" max="3" step="0.1" value="0.5"><output id="ogc"></output></label>
+      <label class="prow"><span class="pname">width</span><input type="range" id="gw" min="0.4" max="4" step="0.1" value="2"><output id="ogw"></output></label>
+    </div>
+  </section>
+
+  <section class="stagebox">
+    <div class="modebar">
+      <p class="panel-label" style="margin:0">t = <span id="teq" class="mono">0.0</span></p>
+      <div class="toggle" id="modeToggle">
+        <button type="button" data-mode="conv" class="on conv">flip g &nbsp;&middot;&nbsp; convolution</button>
+        <button type="button" data-mode="corr" class="corr">no flip &nbsp;&middot;&nbsp; correlation</button>
+      </div>
+    </div>
+    <div class="stage"><canvas id="plot"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--f-hue)"></i> f(&tau;)</span>
+      <span><i style="background:var(--g-hue)"></i> g(t&minus;&tau;), shifted &amp; flipped</span>
+      <span><i style="background:var(--prod-line)"></i> product f&middot;g, shaded = the integral</span>
+    </div>
+
+    <div class="readout-row">
+      <p class="readout"><span class="lbl">(f&nbsp;*&nbsp;g)(t)&nbsp;=</span><span class="val" id="rval">0.000</span></p>
+    </div>
+    <div class="tctrl">
+      <button type="button" class="playbtn" id="playBtn">&#9654; play</button>
+      <input type="range" id="tSlider" min="-8" max="8" step="0.02" value="0">
+      <output id="ot">0.00</output>
+    </div>
+
+    <p class="trace-label">Every t you try adds one point here &mdash; the result of sliding, multiplying and integrating is itself a function of <span class="mono">t</span>.</p>
+    <div class="stage"><canvas id="trace"></canvas></div>
+  </section>
+
+  <p class="colophon">
+    <span class="sig-h">(f * g)(t) = &int; f(&tau;) g(t &minus; &tau;) d&tau;</span> &nbsp;&nbsp;
+    <span class="sig-b">(f &#8902; g)(t) = &int; f(&tau;) g(t + &tau;) d&tau;</span><br>
+    t plays the part of n, &tau; the part of k &nbsp;&mdash;&nbsp; g(t&minus;&tau;) is the continuous g[n&minus;k]
+  </p>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ shapes ============ */
+  function shapeValue(shape, tau, c, w) {
+    var h = w / 2;
+    switch (shape) {
+      case 'rect':
+        return (tau >= c - h && tau <= c + h) ? 1 : 0;
+      case 'tri': {
+        var d = Math.abs(tau - c);
+        return d <= h ? (1 - d / h) : 0;
+      }
+      case 'ramp': {
+        if (tau < c - h || tau > c + h) return 0;
+        return (tau - (c - h)) / w;
+      }
+      case 'gauss': {
+        var sigma = w / 5;
+        return Math.exp(-((tau - c) * (tau - c)) / (2 * sigma * sigma));
+      }
+    }
+    return 0;
+  }
+
+  var state = {
+    f: { shape: 'rect', c: -1.5, w: 2 },
+    g: { shape: 'ramp', c: 0.5, w: 2 },
+    mode: 'conv', /* 'conv' flips g, 'corr' does not */
+    t: 0
+  };
+
+  function fVal(tau) { return shapeValue(state.f.shape, tau, state.f.c, state.f.w); }
+  function gShifted(tau, t) {
+    return state.mode === 'conv' ? shapeValue(state.g.shape, t - tau, state.g.c, state.g.w)
+                                  : shapeValue(state.g.shape, t + tau, state.g.c, state.g.w);
+  }
+
+  /* ============ numeric integral ============ */
+  var TAU_MIN = -8, TAU_MAX = 8, TAU_N = 640;
+  var dtau = (TAU_MAX - TAU_MIN) / TAU_N;
+
+  function integralAt(t) {
+    var sum = 0;
+    for (var i = 0; i <= TAU_N; i++) {
+      var tau = TAU_MIN + i * dtau;
+      sum += fVal(tau) * gShifted(tau, t);
+    }
+    return sum * dtau;
+  }
+
+  var T_MIN = -8, T_MAX = 8, T_N = 320;
+  var dt = (T_MAX - T_MIN) / T_N;
+  var resultCurve = new Float64Array(T_N + 1);
+
+  function recomputeCurve() {
+    for (var i = 0; i <= T_N; i++) {
+      resultCurve[i] = integralAt(T_MIN + i * dt);
+    }
+  }
+
+  /* ============ rendering ============ */
+  var pal = {};
+  function readPal() {
+    var cs = getComputedStyle(document.documentElement);
+    ['ink', 'ink-2', 'ink-3', 'rule', 'f-hue', 'g-hue', 'prod', 'prod-line'].forEach(function (k) {
+      pal[k.replace('-', '')] = cs.getPropertyValue('--' + k).trim();
+    });
+  }
+
+  var plotCv = document.getElementById('plot'), pctx = plotCv.getContext('2d');
+  var traceCv = document.getElementById('trace'), tctx = traceCv.getContext('2d');
+  var W = 0, PH = 0, TH = 0, MARGIN = 34, dpr = 1;
+
+  function X(tau) { return MARGIN + (tau - TAU_MIN) / (TAU_MAX - TAU_MIN) * (W - 2 * MARGIN); }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = plotCv.clientWidth;
+    PH = plotCv.clientHeight;
+    TH = traceCv.clientHeight;
+    plotCv.width = Math.round(W * dpr); plotCv.height = Math.round(PH * dpr);
+    traceCv.width = Math.round(W * dpr); traceCv.height = Math.round(TH * dpr);
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    render();
+  }
+
+  function drawAxis(ctx, y0, h) {
+    ctx.strokeStyle = pal.rule;
+    ctx.lineWidth = 1;
+    ctx.font = "11px 'IBM Plex Mono', monospace";
+    ctx.fillStyle = pal.ink3;
+    ctx.textAlign = 'center';
+    for (var tau = TAU_MIN; tau <= TAU_MAX; tau += 2) {
+      var x = X(tau);
+      ctx.beginPath(); ctx.moveTo(x, y0 - 3); ctx.lineTo(x, y0 + 3); ctx.stroke();
+      ctx.fillText(String(tau), x, y0 + 16);
+    }
+    ctx.beginPath(); ctx.moveTo(MARGIN, y0); ctx.lineTo(W - MARGIN, y0); ctx.stroke();
+  }
+
+  function pathFor(ctx, fn, y0, scale) {
+    ctx.beginPath();
+    for (var i = 0; i <= TAU_N; i++) {
+      var tau = TAU_MIN + i * dtau;
+      var x = X(tau), y = y0 - fn(tau) * scale;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+  }
+
+  function render() {
+    readPal();
+    var y0 = PH - 30, scale = (PH - 60);
+
+    pctx.clearRect(0, 0, W, PH);
+    drawAxis(pctx, y0, PH);
+
+    /* product fill */
+    pctx.save();
+    pctx.beginPath();
+    for (var i = 0; i <= TAU_N; i++) {
+      var tau = TAU_MIN + i * dtau;
+      var x = X(tau), y = y0 - fVal(tau) * gShifted(tau, state.t) * scale;
+      if (i === 0) pctx.moveTo(x, y); else pctx.lineTo(x, y);
+    }
+    pctx.lineTo(X(TAU_MAX), y0); pctx.lineTo(X(TAU_MIN), y0); pctx.closePath();
+    pctx.fillStyle = pal.prod;
+    pctx.fill();
+    pctx.restore();
+
+    /* f curve */
+    pathFor(pctx, fVal, y0, scale);
+    pctx.strokeStyle = pal.fhue; pctx.lineWidth = 2.4; pctx.stroke();
+
+    /* g shifted curve */
+    pathFor(pctx, function (tau) { return gShifted(tau, state.t); }, y0, scale);
+    pctx.strokeStyle = pal.ghue; pctx.lineWidth = 2.4; pctx.stroke();
+
+    /* guide line at t */
+    var xt = X(state.t);
+    pctx.save();
+    pctx.strokeStyle = pal.ink3; pctx.lineWidth = 1; pctx.setLineDash([3, 3]);
+    pctx.beginPath(); pctx.moveTo(xt, 8); pctx.lineTo(xt, y0); pctx.stroke();
+    pctx.restore();
+    pctx.fillStyle = pal.ink2;
+    pctx.font = "11px 'IBM Plex Mono', monospace";
+    pctx.textAlign = 'center';
+    pctx.fillText('t', xt, 20);
+
+    /* trace */
+    var ty0 = TH - 24, tscale;
+    var maxAbs = 0.001;
+    for (var k = 0; k <= T_N; k++) maxAbs = Math.max(maxAbs, Math.abs(resultCurve[k]));
+    tscale = (TH - 42) / maxAbs / 2;
+    var tmid = TH / 2 + 6;
+
+    tctx.clearRect(0, 0, W, TH);
+    tctx.strokeStyle = pal.rule; tctx.lineWidth = 1;
+    tctx.beginPath(); tctx.moveTo(MARGIN, tmid); tctx.lineTo(W - MARGIN, tmid); tctx.stroke();
+    for (var tt = TAU_MIN; tt <= TAU_MAX; tt += 2) {
+      var xx = X(tt);
+      tctx.beginPath(); tctx.moveTo(xx, tmid - 3); tctx.lineTo(xx, tmid + 3); tctx.stroke();
+    }
+
+    /* faint full curve preview */
+    tctx.beginPath();
+    for (var i2 = 0; i2 <= T_N; i2++) {
+      var tv = T_MIN + i2 * dt, xv = X(tv), yv = tmid - resultCurve[i2] * tscale;
+      if (i2 === 0) tctx.moveTo(xv, yv); else tctx.lineTo(xv, yv);
+    }
+    tctx.strokeStyle = pal.ink3; tctx.globalAlpha = 0.35; tctx.lineWidth = 1.2; tctx.stroke();
+    tctx.globalAlpha = 1;
+
+    /* solid built portion, tau <= t */
+    tctx.beginPath();
+    var started = false;
+    for (var i3 = 0; i3 <= T_N; i3++) {
+      var tv2 = T_MIN + i3 * dt;
+      if (tv2 > state.t) break;
+      var xv2 = X(tv2), yv2 = tmid - resultCurve[i3] * tscale;
+      if (!started) { tctx.moveTo(xv2, yv2); started = true; } else tctx.lineTo(xv2, yv2);
+    }
+    if (started) { tctx.strokeStyle = pal.prodline; tctx.lineWidth = 2.4; tctx.stroke(); }
+
+    /* marker */
+    var idxNow = Math.round((state.t - T_MIN) / dt);
+    idxNow = Math.max(0, Math.min(T_N, idxNow));
+    var mx = X(state.t), my = tmid - resultCurve[idxNow] * tscale;
+    tctx.beginPath(); tctx.arc(mx, my, 4.5, 0, 6.2832);
+    tctx.fillStyle = pal.prodline; tctx.fill();
+    tctx.strokeStyle = pal.ink; tctx.lineWidth = 1; tctx.stroke();
+
+    tctx.save();
+    tctx.strokeStyle = pal.ink3; tctx.lineWidth = 1; tctx.setLineDash([3, 3]);
+    tctx.beginPath(); tctx.moveTo(mx, 6); tctx.lineTo(mx, TH - 6); tctx.stroke();
+    tctx.restore();
+
+    /* readouts */
+    document.getElementById('rval').textContent = integralAt(state.t).toFixed(3);
+    document.getElementById('teq').textContent = state.t.toFixed(1);
+  }
+
+  /* ============ wiring ============ */
+  function setShapeButtons(target, shape) {
+    var group = document.querySelector('.shapes[data-target="' + target + '"]');
+    Array.prototype.forEach.call(group.children, function (b) {
+      b.classList.toggle('on', b.dataset.shape === shape);
+    });
+  }
+
+  var fc = document.getElementById('fc'), fw = document.getElementById('fw');
+  var gc = document.getElementById('gc'), gw = document.getElementById('gw');
+  var ofc = document.getElementById('ofc'), ofw = document.getElementById('ofw');
+  var ogc = document.getElementById('ogc'), ogw = document.getElementById('ogw');
+  var tSlider = document.getElementById('tSlider'), ot = document.getElementById('ot');
+
+  function onShapeParamsChanged() {
+    state.f.c = +fc.value; state.f.w = +fw.value;
+    state.g.c = +gc.value; state.g.w = +gw.value;
+    ofc.textContent = state.f.c.toFixed(1); ofw.textContent = state.f.w.toFixed(1);
+    ogc.textContent = state.g.c.toFixed(1); ogw.textContent = state.g.w.toFixed(1);
+    recomputeCurve();
+    render();
+  }
+
+  [fc, fw, gc, gw].forEach(function (el) { el.addEventListener('input', onShapeParamsChanged); });
+
+  document.querySelectorAll('.shape-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.parentElement.dataset.target;
+      state[target].shape = btn.dataset.shape;
+      setShapeButtons(target, btn.dataset.shape);
+      recomputeCurve();
+      render();
+    });
+  });
+
+  var modeToggle = document.getElementById('modeToggle');
+  modeToggle.querySelectorAll('button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.mode = btn.dataset.mode;
+      modeToggle.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b === btn); });
+      recomputeCurve();
+      render();
+    });
+  });
+
+  tSlider.addEventListener('input', function () {
+    state.t = +tSlider.value;
+    ot.textContent = state.t.toFixed(2);
+    render();
+  });
+
+  var playing = false, playReq = null;
+  var playBtn = document.getElementById('playBtn');
+  function stepPlay() {
+    if (!playing) return;
+    var v = +tSlider.value + 0.06;
+    if (v > T_MAX) { playing = false; playBtn.innerHTML = '&#9654; play'; return; }
+    tSlider.value = v;
+    state.t = v;
+    ot.textContent = v.toFixed(2);
+    render();
+    playReq = requestAnimationFrame(stepPlay);
+  }
+  playBtn.addEventListener('click', function () {
+    playing = !playing;
+    if (playing) {
+      if (+tSlider.value >= T_MAX - 0.1) { tSlider.value = T_MIN; state.t = T_MIN; }
+      playBtn.innerHTML = '&#10074;&#10074; stop';
+      stepPlay();
+    } else {
+      playBtn.innerHTML = '&#9654; play';
+      if (playReq) cancelAnimationFrame(playReq);
+    }
+  });
+
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', render);
+  }
+  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(plotCv);
+  window.addEventListener('resize', resize);
+
+  /* init */
+  setShapeButtons('f', state.f.shape);
+  setShapeButtons('g', state.g.shape);
+  ofc.textContent = state.f.c.toFixed(1); ofw.textContent = state.f.w.toFixed(1);
+  ogc.textContent = state.g.c.toFixed(1); ogw.textContent = state.g.w.toFixed(1);
+  ot.textContent = state.t.toFixed(2);
+  recomputeCurve();
+  resize();
+})();
+</script>
+
+</body></html>
