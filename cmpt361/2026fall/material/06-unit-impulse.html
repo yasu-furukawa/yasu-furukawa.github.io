@@ -1,0 +1,971 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Unit Impulse</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+  :root{
+    --bg:#eceff3;
+    --surface:#ffffff;
+    --surface-2:#f5f7f9;
+    --ink:#14202c;
+    --muted:#5b6a79;
+    --line:#d3dae1;
+    --grid:#e3e8ee;
+    --c-f:#2d4a8a;
+    --c-k:#b4531c;
+    --c-p:#0e7268;
+    --c-f-soft:#2d4a8a26;
+    --c-k-soft:#b4531c26;
+    --c-p-soft:#0e726826;
+    --focus:#b4531c;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#10161c;
+      --surface:#18212a;
+      --surface-2:#141c24;
+      --ink:#e6edf3;
+      --muted:#94a5b4;
+      --line:#2a3742;
+      --grid:#232f3a;
+      --c-f:#8aa6f0;
+      --c-k:#f0954a;
+      --c-p:#46c0b2;
+      --c-f-soft:#8aa6f02e;
+      --c-k-soft:#f0954a2e;
+      --c-p-soft:#46c0b22e;
+      --focus:#f0954a;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10161c;
+    --surface:#18212a;
+    --surface-2:#141c24;
+    --ink:#e6edf3;
+    --muted:#94a5b4;
+    --line:#2a3742;
+    --grid:#232f3a;
+    --c-f:#8aa6f0;
+    --c-k:#f0954a;
+    --c-p:#46c0b2;
+    --c-f-soft:#8aa6f02e;
+    --c-k-soft:#f0954a2e;
+    --c-p-soft:#46c0b22e;
+    --focus:#f0954a;
+    color-scheme:dark;
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:16px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1040px;
+    margin:0 auto;
+    padding-inline:20px;
+    padding-block:40px 64px;
+    display:flex;
+    flex-direction:column;
+    gap:34px;
+  }
+  .col{max-width:660px;display:flex;flex-direction:column;gap:16px}
+  h1{
+    font-family:Newsreader,Georgia,serif;
+    font-weight:500;
+    font-size:clamp(2.1rem,5.4vw,3.05rem);
+    line-height:1.08;
+    letter-spacing:-.012em;
+    margin:0;
+    text-wrap:balance;
+  }
+  h2{
+    font-family:Newsreader,Georgia,serif;
+    font-weight:500;
+    font-size:clamp(1.42rem,3.2vw,1.78rem);
+    line-height:1.22;
+    margin:0;
+    text-wrap:balance;
+  }
+  p{margin:0}
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.685rem;
+    letter-spacing:.17em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0;
+  }
+  .lede{font-size:1.09rem;color:var(--ink)}
+  .muted{color:var(--muted)}
+  .small{font-size:.9rem}
+
+  /* inline math */
+  .m{font-family:Newsreader,Georgia,serif;font-size:1.07em;line-height:1}
+  .m i,var{font-family:Newsreader,Georgia,serif;font-style:italic;font-size:1.06em}
+  .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  .kf{color:var(--c-k);font-weight:500}
+  .ff{color:var(--c-f);font-weight:500}
+  .pf{color:var(--c-p);font-weight:500}
+
+  /* figure panels */
+  figure{
+    margin:0;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .fig-head{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:6px 14px;
+    padding:13px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface-2);
+  }
+  .fig-head .t{font-weight:600;font-size:.93rem}
+  .fig-head .d{font-size:.85rem;color:var(--muted)}
+  .canvas-box{padding:12px 10px 4px}
+  canvas{display:block;width:100%;max-width:100%}
+  #c1{height:280px}
+  #c6{height:400px}
+  #c7{height:470px}
+  @media (max-width:560px){
+    #c1{height:210px}
+    #c6{height:340px}
+    #c7{height:430px}
+  }
+
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px 22px;
+    padding:14px 18px 18px;
+    border-top:1px solid var(--line);
+  }
+  .ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .ctl > .lab{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.68rem;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:baseline;
+  }
+  .lab .v{color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--c-k);margin:0;background:transparent}
+  input[type=range]:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:3px}
+
+  .seg{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;width:fit-content;max-width:100%}
+  .seg label{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.74rem;
+    padding:6px 11px;
+    cursor:pointer;
+    color:var(--muted);
+    border-right:1px solid var(--line);
+    white-space:nowrap;
+    background:var(--surface);
+  }
+  .seg label:last-child{border-right:0}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg input:checked + span{color:var(--surface)}
+  .seg label:has(input:checked){background:var(--c-k);color:var(--surface)}
+  .seg label:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:-2px}
+
+  button{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.74rem;
+    padding:6px 12px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    border-radius:3px;
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--c-k);color:var(--c-k)}
+  button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+  .readout{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+    gap:2px 20px;
+    padding:12px 18px 14px;
+    border-top:1px dashed var(--line);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.8rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .readout div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--grid);padding:3px 0}
+  .readout .k{color:var(--muted);letter-spacing:.02em}
+  .readout .val{font-weight:500}
+
+  figcaption{padding:13px 18px 16px;font-size:.9rem;color:var(--muted);border-top:1px solid var(--line);background:var(--surface-2)}
+  figcaption strong{color:var(--ink);font-weight:600}
+
+  .note{
+    border-left:2px solid var(--c-k);
+    padding:2px 0 2px 16px;
+    font-size:.95rem;
+    color:var(--muted);
+  }
+  .note strong{color:var(--ink)}
+
+  .takeaway{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-top:3px solid var(--c-p);
+    border-radius:4px;
+    padding:22px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .takeaway ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:9px}
+  .takeaway li::marker{font-family:"IBM Plex Mono",monospace;font-size:.85em;color:var(--muted)}
+
+  .display{
+    font-family:Newsreader,Georgia,serif;
+    font-size:1.3rem;
+    text-align:center;
+    padding:6px 0 4px;
+    line-height:1.5;
+  }
+  hr{border:0;border-top:1px solid var(--line);margin:0}
+  a{color:var(--c-k)}
+</style>
+
+<div class="wrap">
+
+  <header class="col">
+    <p class="eyebrow">Introduction to visual computing · figure</p>
+    <h1>The unit impulse</h1>
+    <p class="lede">An impulse is not “a very tall spike.” It is a spike whose <em>area</em> is one. Everything confusing about <span class="m"><i>δ</i></span> comes from reading its height instead of its area — so this page never lets you see one without the other.</p>
+  </header>
+
+  <section class="col">
+    <h2>1 · Squeeze any unit-area bump</h2>
+    <p>Start with a function that already has area 1 and a width knob <span class="m"><i>σ</i></span>. Shrink <span class="m"><i>σ</i></span>. The bump must grow taller at exactly the rate it grows narrower, because the area it encloses is not allowed to change. In the limit the height runs off to infinity and the area is still, stubbornly, 1.</p>
+  </section>
+
+  <figure>
+    <div class="fig-head">
+      <span class="t">Fig. 1 — The limit <span class="m"><i>σ</i> → 0</span></span>
+      <span class="d">shaded region = area under the curve</span>
+    </div>
+    <div class="canvas-box"><canvas id="c1" aria-label="A unit-area bump narrowing as sigma shrinks"></canvas></div>
+    <div class="controls">
+      <div class="ctl" style="grid-column:1/-1">
+        <span class="lab">Family</span>
+        <div class="seg" id="fam1" role="radiogroup" aria-label="Kernel family">
+          <label><input type="radio" name="fam1" id="fam1-gauss" value="gauss" checked><span>Gaussian</span></label>
+          <label><input type="radio" name="fam1" id="fam1-box" value="box"><span>Box</span></label>
+          <label><input type="radio" name="fam1" id="fam1-tri" value="tri"><span>Triangle</span></label>
+          <label><input type="radio" name="fam1" id="fam1-sinc" value="sinc"><span>Sinc</span></label>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab">Width <span class="m"><i>σ</i></span> <span class="v" id="v-sig1">0.400</span></span>
+        <input type="range" id="sig1" min="0" max="1000" value="694" aria-label="sigma">
+      </div>
+      <div class="ctl">
+        <span class="lab">Vertical axis</span>
+        <div class="seg" id="ax1" role="radiogroup" aria-label="Vertical axis mode">
+          <label><input type="radio" name="ax1" id="ax1-fixed" value="fixed" checked><span>Fixed</span></label>
+          <label><input type="radio" name="ax1" id="ax1-auto" value="auto"><span>Auto-fit</span></label>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab">&nbsp;</span>
+        <div class="btnrow"><button id="anim1" type="button">Animate σ → 0</button></div>
+      </div>
+    </div>
+    <div class="readout">
+      <div><span class="k">peak height</span><span class="val" id="r-peak">0.997</span></div>
+      <div><span class="k">width (FWHM)</span><span class="val" id="r-fwhm">0.942</span></div>
+      <div><span class="k">height × width</span><span class="val" id="r-prod">0.939</span></div>
+      <div><span class="k">area on screen</span><span class="val" id="r-area">1.000</span></div>
+    </div>
+    <figcaption><strong>Watch the two numbers on the left fight each other.</strong> Peak height climbs, width collapses, and their product barely moves — the area readout does not move at all. Switch the vertical axis to <em>auto-fit</em> and the Gaussian stops changing shape entirely: every step of the limit is the same picture with a different number on the axis. The sinc is the honest outlier — its area only reaches 1 once you include tails far off screen, which is why the readout says “on screen.”</figcaption>
+  </figure>
+
+  <section class="col">
+    <p>So the limit object is not a function you can evaluate. Asking “what is <span class="m"><i>δ</i>(0)</span>?” has no useful answer. The only question <span class="m"><i>δ</i></span> answers is <em>how much area sits here</em>, and that answer is 1.</p>
+    <p class="note"><strong>Notation.</strong> We draw <span class="m"><i>δ</i></span> as an arrow, and the number we write beside the arrow is its <em>area</em>, never its height. An arrow labelled 3 means <span class="m">3<i>δ</i></span>: area 3, height still infinite.</p>
+  </section>
+
+  <section class="col">
+    <h2>2 · A finite train, and its exact spectrum</h2>
+    <p>Put <span class="m"><i>N</i></span> boxes of width <span class="m"><i>w</i></span> in a row, spaced <span class="m"><i>T</i></span>. This object is finite, ordinary, and completely non-controversial, so its transform can be written down exactly with no distributions anywhere:</p>
+    <p class="display"><span class="m">Ŝ<sub><i>N</i></sub>(<i>u</i>) = sinc(<i>wu</i>) · <sup>sin(π<i>NuT</i>)</sup>⁄<sub>sin(π<i>uT</i>)</sub></span></p>
+    <p>One factor per ingredient. The <em>box</em> contributes the sinc — a fixed envelope that depends on <span class="m"><i>w</i></span> and nothing else. The <em>repetition</em> contributes the second factor, which is what builds the peaks: tall and narrow near <span class="m"><i>u</i> = <i>k</i>/<i>T</i></span>, small everywhere else. It is a perfectly ordinary continuous curve at every finite <span class="m"><i>N</i></span>.</p>
+    <p>One slider takes the whole limit. Pull it and two things happen together: more boxes, each one thinner. The boxes climb toward impulses in <span class="m"><i>x</i></span>, and in <span class="m"><i>u</i></span> the peaks do exactly what the bumps in Fig. 1 did — height rises as <span class="m"><i>N</i></span>, lobe width falls as <span class="m">1/<i>NT</i></span>, and the area under each peak does not move. A quantity that concentrates without changing its area has only one place to go.</p>
+    <p>At the far end of the slider both halves of the picture are the same shape: a row of spikes spaced <span class="m"><i>T</i></span> below, a row of spikes spaced <span class="m">1/<i>T</i></span> above. Nothing was ever declared to be an impulse — the curve simply got there.</p>
+  </section>
+
+  <figure>
+    <div class="fig-head">
+      <span class="t">Fig. 2 — <span class="m"><i>N</i></span> boxes, exact transform</span>
+      <span class="d">a continuous curve — no impulses in this figure</span>
+    </div>
+    <div class="canvas-box"><canvas id="c6" aria-label="A finite train of N boxes and its exact continuous Fourier transform"></canvas></div>
+    <div class="controls">
+      <div class="ctl" style="grid-column:1/-1">
+        <span class="lab">Take the limit <span class="v" id="v-lim">N = 9, w = 0.238</span></span>
+        <input type="range" id="lim" min="0" max="1000" value="158" aria-label="take the limit: more boxes, thinner boxes">
+      </div>
+      <div class="ctl">
+        <span class="lab">Period <span class="m"><i>T</i></span> <span class="v" id="v-per2">1.00</span></span>
+        <input type="range" id="per2" min="60" max="200" value="100" aria-label="period T">
+      </div>
+      <div class="ctl">
+        <span class="lab">&nbsp;</span>
+        <div class="btnrow"><button id="anim-lim" type="button">Animate to the limit</button></div>
+      </div>
+    </div>
+    <div class="readout">
+      <div><span class="k">boxes N</span><span class="val" id="r-len">9</span></div>
+      <div><span class="k">box height</span><span class="val" id="r-bh2">4.20</span></div>
+      <div><span class="k">peak height</span><span class="val" id="r-ph">9.00</span></div>
+      <div><span class="k">lobe width</span><span class="val" id="r-lw">0.111</span></div>
+      <div><span class="k">k=0 area</span><span class="val" id="r-a0">1.000</span></div>
+      <div><span class="k">1/T</span><span class="val" id="r-inv">1.000</span></div>
+    </div>
+    <figcaption><strong>Everything on screen is an ordinary function, and the readout to keep an eye on is the second from the right.</strong> As the slider travels, peak height tracks <span class="m"><i>N</i></span> and lobe width tracks <span class="m">1/<i>NT</i></span>, while the area under each peak sits on <span class="m">1/<i>T</i></span> and stays there — the Fig. 1 trade-off, now happening in frequency instead of space. The dashed curve is <span class="m"><i>N</i> sinc(<i>wu</i>)</span>, which the peaks touch at every <span class="m"><i>u</i> = <i>k</i>/<i>T</i></span>; thinning the boxes flattens it, and that is what levels the peaks out. <span class="m"><i>T</i></span> keeps its own slider because it is not part of the limit — it only sets the two spacings, and they are reciprocal.</figcaption>
+  </figure>
+
+  <section class="col">
+    <h2>3 · Sampling an image is this product</h2>
+    <p>A sensor does not evaluate the world at a point. Each photosite is a little square window of width <span class="m"><i>w</i></span>, sitting on a grid of pitch <span class="m">Δ</span>, and the number it reports is the light falling inside that window — which is the scene multiplied by the window and integrated. Lay the windows out across the row and you have a box train, one box per pixel. Sampling is that product, read off one box at a time.</p>
+    <p class="display"><span class="m">pixel[<i>k</i>] = ∫ <span class="ff"><i>f</i></span>(<i>x</i>) box<sub><i>w</i></sub>(<i>x</i> − <i>k</i>Δ) d<i>x</i></span></p>
+    <p>Two knobs, two familiar limits. The <em>pitch</em> <span class="m">Δ</span> decides how many pixels you get. The <em>aperture</em> <span class="m"><i>w</i></span> decides what each one means: at full width each pixel is an honest average over its cell, and as <span class="m"><i>w</i></span> shrinks toward zero the box becomes an impulse and the pixel becomes a bare point sample of <span class="m ff"><i>f</i></span>. In between sits the whole story of the page: the box has area 1 either way, and it is the area — never the height — that decides what the pixel reads.</p>
+    <p>The signal is a chirp — slow on the left, faster and faster to the right — because it makes the difference visible. Drop the aperture to a point and the fast end of the row comes back as a lazy, entirely fictional wave. Open the aperture and that region averages toward flat grey, which is the honest answer for detail the grid cannot hold.</p>
+  </section>
+
+  <figure>
+    <div class="fig-head">
+      <span class="t">Fig. 3 — One row, sampled</span>
+      <span class="d">grey strips: the row as light, before and after</span>
+    </div>
+    <div class="canvas-box"><canvas id="c7" aria-label="A one-dimensional image row multiplied by a train of aperture boxes, giving pixel values"></canvas></div>
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Pixels <span class="v" id="v-npx">24</span></span>
+        <input type="range" id="npx" min="6" max="64" value="24" aria-label="number of pixels">
+      </div>
+      <div class="ctl">
+        <span class="lab">Aperture <span class="m"><i>w</i></span>/Δ <span class="v" id="v-fill">1.00</span></span>
+        <input type="range" id="fill" min="10" max="1000" value="1000" aria-label="aperture as a fraction of the pixel pitch">
+      </div>
+      <div class="ctl">
+        <span class="lab">Row content</span>
+        <div class="seg" id="rowpick" role="radiogroup" aria-label="Choice of row signal">
+          <label><input type="radio" name="rowpick" id="rp-chirp" value="chirp" checked><span>Chirp</span></label>
+          <label><input type="radio" name="rowpick" id="rp-edges" value="edges"><span>Edges</span></label>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab">&nbsp;</span>
+        <div class="btnrow"><button id="anim-fill" type="button">Animate w → 0</button></div>
+      </div>
+    </div>
+    <div class="readout">
+      <div><span class="k">pitch Δ</span><span class="val" id="r-pitch">0.042</span></div>
+      <div><span class="k">aperture w</span><span class="val" id="r-ap">0.042</span></div>
+      <div><span class="k">Nyquist 1/2Δ</span><span class="val" id="r-nyq">12.0</span></div>
+      <div><span class="k">top row freq</span><span class="val" id="r-top">26.0</span></div>
+    </div>
+    <figcaption><strong>The third panel is the element-wise product, and the fourth is what the sensor keeps.</strong> Each pixel is one box's worth of that product — multiply, integrate, move to the next box. Compare the two grey strips: at full aperture the right-hand end of the row goes flat, because detail finer than the grid genuinely is not there; at a near-zero aperture it comes back as a slow ripple that exists nowhere in the original. Both strips are the same row. Only the width of the window changed.</figcaption>
+  </figure>
+
+  <div class="takeaway">
+    <p class="eyebrow">What to carry out of here</p>
+    <ol>
+      <li><strong>An impulse is an area, drawn as an arrow.</strong> Its height is not a number you are allowed to use.</li>
+      <li><strong>Any unit-area bump works.</strong> Gaussian, box, triangle, sinc — the limit is the same object, so choose whichever is convenient for the algebra in front of you.</li>
+      <li><strong>Repetition spaced <span class="m"><i>T</i></span> gives peaks spaced <span class="m">1/<i>T</i></span>, and more repeats make them sharper without making them bigger.</strong> Peak height rises, width falls, area holds — the same trade-off as the bump, now in frequency. Push it far enough and you have a train of impulses on both sides.</li>
+      <li><strong>Multiplying by <span class="m"><i>δ</i>(<i>x</i>−<i>a</i>)</span> and integrating samples <span class="m ff"><i>f</i></span> at <span class="m"><i>a</i></span>.</strong> Scale the impulse by <span class="m"><i>c</i></span> and you get <span class="m"><i>c</i> <span class="ff"><i>f</i></span>(<i>a</i>)</span>: the scale factor is an area, so it comes straight through.</li>
+      <li><strong>Sampling is this product.</strong> A pixel is the scene times its aperture box, integrated — an area average that only becomes a point sample as the aperture shrinks. The width of that window is what stands between you and aliasing.</li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- palette ---------- */
+  var C = {};
+  function readColors(){
+    var s = getComputedStyle(document.documentElement);
+    function g(n){ return s.getPropertyValue(n).trim(); }
+    C = { grid:g('--grid'), line:g('--line'), ink:g('--ink'), muted:g('--muted'),
+          f:g('--c-f'), k:g('--c-k'), p:g('--c-p'),
+          fs:g('--c-f-soft'), ks:g('--c-k-soft'), ps:g('--c-p-soft'),
+          surface:g('--surface') };
+  }
+  readColors();
+
+  var MONO = '"IBM Plex Mono", ui-monospace, monospace';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- kernel families (all unit area) ---------- */
+  var SQ2PI = Math.sqrt(2*Math.PI);
+  var FAM = {
+    gauss:{ label:'Gaussian',
+      f:function(x,s){ return Math.exp(-x*x/(2*s*s))/(s*SQ2PI); },
+      peak:function(s){ return 1/(s*SQ2PI); },
+      fwhm:function(s){ return 2.35482*s; } },
+    box:{ label:'Box',
+      f:function(x,s){ return Math.abs(x) <= s/2 ? 1/s : 0; },
+      peak:function(s){ return 1/s; },
+      fwhm:function(s){ return s; } },
+    tri:{ label:'Triangle',
+      f:function(x,s){ var t = Math.abs(x)/s; return t < 1 ? (1-t)/s : 0; },
+      peak:function(s){ return 1/s; },
+      fwhm:function(s){ return s; } },
+    sinc:{ label:'Sinc',
+      f:function(x,s){ if (Math.abs(x) < 1e-12) return 1/(Math.PI*s); return Math.sin(x/s)/(Math.PI*x); },
+      peak:function(s){ return 1/(Math.PI*s); },
+      fwhm:function(s){ return 3.7909*s; } }
+  };
+
+  /* ---------- signals ---------- */
+
+  var XMIN = -2.5, XMAX = 2.5;
+
+  function integrate(fn, lo, hi, n){
+    // composite Simpson
+    if (hi <= lo) return 0;
+    if (n % 2) n++;
+    var h = (hi-lo)/n, s = fn(lo) + fn(hi), i;
+    for (i = 1; i < n; i++) s += fn(lo + i*h) * (i % 2 ? 4 : 2);
+    return s * h / 3;
+  }
+
+  // Integrate across known breakpoints (kernel edges and kinks) so box and
+  // triangle kernels integrate exactly instead of smearing over a jump.
+  function integrateBreaks(fn, lo, hi, breaks, n){
+    var cuts = [lo], i, total = 0;
+    for (i = 0; i < breaks.length; i++){
+      if (breaks[i] > lo && breaks[i] < hi) cuts.push(breaks[i]);
+    }
+    cuts.push(hi);
+    cuts.sort(function(a,b){ return a-b; });
+    for (i = 0; i < cuts.length-1; i++){
+      var span = cuts[i+1]-cuts[i];
+      var sub = Math.max(40, Math.round(n*span/(hi-lo)));
+      total += integrate(fn, cuts[i], cuts[i+1], sub);
+    }
+    return total;
+  }
+
+  function breaksOf(fam, s, a){
+    a = a || 0;
+    if (fam.label === 'Box') return [a-s/2, a+s/2];
+    if (fam.label === 'Triangle') return [a-s, a, a+s];
+    return [];
+  }
+
+  /* ---------- canvas plumbing ---------- */
+  function Stage(id){
+    var cv = document.getElementById(id);
+    var st = { cv:cv, ctx:cv.getContext('2d'), w:0, h:0 };
+    st.fit = function(){
+      var r = cv.getBoundingClientRect();
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      st.w = Math.max(1, r.width); st.h = Math.max(1, r.height);
+      cv.width = Math.round(st.w*dpr); cv.height = Math.round(st.h*dpr);
+      st.ctx.setTransform(dpr,0,0,dpr,0,0);
+    };
+    return st;
+  }
+
+  function frame(box, xr, yr){
+    var L = box.x + box.pl, R = box.x + box.w - box.pr;
+    var T = box.y + box.pt, B = box.y + box.h - box.pb;
+    return {
+      L:L, R:R, T:T, B:B, xr:xr, yr:yr,
+      X:function(x){ return L + (x-xr[0])/(xr[1]-xr[0])*(R-L); },
+      Y:function(y){ return B - (y-yr[0])/(yr[1]-yr[0])*(B-T); }
+    };
+  }
+
+  function niceStep(span, target){
+    var raw = span/target, mag = Math.pow(10, Math.floor(Math.log10(raw))), n = raw/mag;
+    var m = n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10;
+    return m*mag;
+  }
+
+  function fmt(v){
+    var a = Math.abs(v);
+    if (a >= 1000) return v.toFixed(0);
+    if (a >= 100) return v.toFixed(1);
+    if (a >= 1) return v.toFixed(2);
+    if (a === 0) return '0';
+    return v.toFixed(3);
+  }
+
+  function grid(ctx, fr, opt){
+    opt = opt || {};
+    ctx.save();
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.font = '11px ' + MONO; ctx.fillStyle = C.muted;
+    var sx = niceStep(fr.xr[1]-fr.xr[0], 8), x;
+    if (opt.xticks !== false){
+      for (x = Math.ceil(fr.xr[0]/sx)*sx; x <= fr.xr[1]+1e-9; x += sx){
+        var px = Math.round(fr.X(x)) + 0.5;
+        ctx.beginPath(); ctx.moveTo(px, fr.T); ctx.lineTo(px, fr.B); ctx.stroke();
+      }
+    }
+    var sy = niceStep(fr.yr[1]-fr.yr[0], opt.ydiv || 4), y;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (y = Math.ceil(fr.yr[0]/sy)*sy; y <= fr.yr[1]+1e-9; y += sy){
+      var py = Math.round(fr.Y(y)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(fr.L, py); ctx.lineTo(fr.R, py); ctx.stroke();
+      if (opt.ylabels !== false) ctx.fillText(fmt(y), fr.L - 7, py);
+    }
+    // axes
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(fr.L+0.5, fr.T); ctx.lineTo(fr.L+0.5, fr.B); ctx.stroke();
+    var zy = Math.round(fr.Y(Math.max(fr.yr[0], Math.min(fr.yr[1], 0)))) + 0.5;
+    ctx.beginPath(); ctx.moveTo(fr.L, zy); ctx.lineTo(fr.R, zy); ctx.stroke();
+    if (opt.xlabels){
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (x = Math.ceil(fr.xr[0]/sx)*sx; x <= fr.xr[1]+1e-9; x += sx){
+        if (Math.abs(x) < 1e-9 && opt.skipZero) continue;
+        ctx.fillText(fmt(x), fr.X(x), fr.B + 6);
+      }
+    }
+    ctx.restore();
+  }
+
+  function curve(ctx, fr, fn, color, fill, width, samples){
+    var N = samples || 1400, i, x, y, px, py, started = false;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(fr.L, fr.T - 2, fr.R - fr.L, fr.B - fr.T + 4);
+    ctx.clip();
+    if (fill){
+      ctx.beginPath();
+      ctx.moveTo(fr.X(fr.xr[0]), fr.Y(0));
+      for (i = 0; i <= N; i++){
+        x = fr.xr[0] + (fr.xr[1]-fr.xr[0])*i/N;
+        y = fn(x);
+        ctx.lineTo(fr.X(x), fr.Y(y));
+      }
+      ctx.lineTo(fr.X(fr.xr[1]), fr.Y(0));
+      ctx.closePath();
+      ctx.fillStyle = fill; ctx.fill();
+    }
+    ctx.beginPath();
+    for (i = 0; i <= N; i++){
+      x = fr.xr[0] + (fr.xr[1]-fr.xr[0])*i/N;
+      y = fn(x);
+      px = fr.X(x); py = fr.Y(y);
+      if (!started){ ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = width || 2;
+    ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.restore();
+  }
+
+  function tag(ctx, fr, text, color, align){
+    ctx.save();
+    ctx.font = '500 11.5px ' + MONO;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    if (align === 'right'){ ctx.textAlign = 'right'; ctx.fillText(text, fr.R - 2, fr.T + 2); }
+    else { ctx.textAlign = 'left'; ctx.fillText(text, fr.L + 6, fr.T + 2); }
+    ctx.restore();
+  }
+
+  /* =======================================================
+     FIG 1
+     ======================================================= */
+  var s1 = Stage('c1');
+  var sig1El = document.getElementById('sig1');
+  var SIG_MIN = 0.02, SIG_MAX = 1.5;
+  function sigFrom(el, lo, hi){
+    var t = (+el.value) / 1000;
+    return lo * Math.pow(hi/lo, t);
+  }
+  function famOf(name){
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return FAM[el ? el.value : 'gauss'];
+  }
+
+  function draw1(){
+    var st = s1, ctx = st.ctx;
+    ctx.clearRect(0,0,st.w,st.h);
+    var fam = famOf('fam1');
+    var s = sigFrom(sig1El, SIG_MIN, SIG_MAX);
+    var auto = document.getElementById('ax1-auto').checked;
+    var peak = fam.peak(s);
+    var isSinc = fam.label === 'Sinc';
+    var ymax = auto ? peak*1.18 : 3;
+    var ymin = isSinc ? (auto ? -0.28*peak : -0.85) : 0;
+
+    var box = { x:0, y:0, w:st.w, h:st.h, pl:52, pr:14, pt:10, pb:24 };
+    var fr = frame(box, [XMIN, XMAX], [ymin, ymax]);
+    grid(ctx, fr, { xlabels:true, ydiv:4 });
+
+    var fn = function(x){ return fam.f(x, s); };
+    curve(ctx, fr, fn, C.k, C.ks, 2);
+
+    // clipped marker
+    if (peak > ymax){
+      ctx.save();
+      ctx.strokeStyle = C.k; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(fr.L, fr.T+1.5); ctx.lineTo(fr.R, fr.T+1.5); ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.font = '500 11.5px ' + MONO; ctx.fillStyle = C.k;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+      ctx.fillText('peak ' + fmt(peak) + ' — off the chart', fr.R - 4, fr.T + 6);
+      ctx.restore();
+    }
+    tag(ctx, fr, fam.label + '  σ = ' + s.toFixed(3), C.k, 'left');
+
+    // readouts
+    var area = integrateBreaks(fn, XMIN, XMAX, breaksOf(fam, s, 0), 6000);
+    document.getElementById('v-sig1').textContent = s.toFixed(3);
+    document.getElementById('r-peak').textContent = fmt(peak);
+    document.getElementById('r-fwhm').textContent = fam.fwhm(s).toFixed(3);
+    document.getElementById('r-prod').textContent = (peak*fam.fwhm(s)).toFixed(3);
+    document.getElementById('r-area').textContent = area.toFixed(3);
+  }
+
+  /* ---------- shared drawing helpers ---------- */
+  function sincn(z){ if (Math.abs(z) < 1e-10) return 1; var a = Math.PI*z; return Math.sin(a)/a; }
+
+  // A labelled measurement bracket between two x values, drawn at height y.
+  function span(ctx, fr, x0, x1, y, label, color){
+    var a = fr.X(x0), b = fr.X(x1), yy = fr.Y(y);
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(a, yy); ctx.lineTo(b, yy); ctx.stroke();
+    [[a, 1], [b, -1]].forEach(function(e){
+      ctx.beginPath();
+      ctx.moveTo(e[0], yy);
+      ctx.lineTo(e[0] + e[1]*5, yy - 3);
+      ctx.lineTo(e[0] + e[1]*5, yy + 3);
+      ctx.closePath(); ctx.fill();
+    });
+    ctx.font = '500 11.5px ' + MONO;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(label, (a+b)/2, yy - 4);
+    ctx.restore();
+  }
+
+  /* =======================================================
+     FIG 2 — finite train of N boxes, exact transform
+     ======================================================= */
+  var s6 = Stage('c6');
+  var limEl = document.getElementById('lim'), per2El = document.getElementById('per2');
+
+  // One control, both limits: more boxes AND thinner boxes, together.
+  function limitState(){
+    var t = (+limEl.value)/1000;
+    return { t:t, N: 2*Math.round(1 + t*19) + 1, w: 0.45*Math.pow(0.008/0.45, t) };
+  }
+
+  // Dirichlet kernel, N odd so every peak is +N and the transform stays real & even
+  function dirich(u, T, N){
+    var d = Math.sin(Math.PI*u*T);
+    if (Math.abs(d) < 1e-7) return N;
+    return Math.sin(Math.PI*N*u*T)/d;
+  }
+
+  function draw6(){
+    var st = s6, ctx = st.ctx;
+    ctx.clearRect(0,0,st.w,st.h);
+    var L = limitState(), N = L.N, w = L.w;
+    var T = (+per2El.value)/100;
+    var XR = [-6, 6], UR = [-4, 4];
+    var gap = 16, hh = (st.h - gap - 36)/2;
+    var mk = function(i, yr){
+      return frame({ x:0, y:i*(hh+18+gap), w:st.w, h:hh+18, pl:52, pr:14, pt:4, pb:20 }, i===0?XR:UR, yr);
+    };
+
+    /* ---- spatial: N boxes, centred ---- */
+    var H = 1/w, sYmax = 8;
+    var sp = mk(0, [0, sYmax]);
+    grid(ctx, sp, { xlabels:true, ydiv:2 });
+    ctx.save();
+    ctx.beginPath(); ctx.rect(sp.L, sp.T-2, sp.R-sp.L, sp.B-sp.T+4); ctx.clip();
+    var y0 = sp.Y(0), yTop = sp.Y(Math.min(H, sYmax)), n;
+    for (n = 0; n < N; n++){
+      var cx = (n - (N-1)/2)*T;
+      if (cx < XR[0]-w || cx > XR[1]+w) continue;
+      if (H > sYmax){
+        var ca = sp.X(cx - w/2), cb = sp.X(cx + w/2);
+        var bwid = Math.max(3.5, cb-ca), bx = sp.X(cx) - bwid/2, bt = sp.T + 14;
+        ctx.fillStyle = C.k + '2e'; ctx.fillRect(bx, bt, bwid, y0 - bt);
+        ctx.strokeStyle = C.k; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bx, y0); ctx.lineTo(bx, bt);
+        ctx.moveTo(bx + bwid, bt); ctx.lineTo(bx + bwid, y0);
+        ctx.stroke();
+        ctx.fillStyle = C.surface; ctx.fillRect(bx - 5, bt + 6, bwid + 10, 10);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx - 5, bt + 15); ctx.lineTo(bx + bwid + 5, bt + 8);
+        ctx.moveTo(bx - 5, bt + 13); ctx.lineTo(bx + bwid + 5, bt + 6);
+        ctx.stroke();
+        continue;
+      }
+      var xa = sp.X(cx - w/2), xb = sp.X(cx + w/2);
+      ctx.fillStyle = C.k + '2e';
+      ctx.fillRect(xa, yTop, Math.max(1.4, xb-xa), y0-yTop);
+      ctx.strokeStyle = C.k; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xa, y0); ctx.lineTo(xa, yTop); ctx.lineTo(xb, yTop); ctx.lineTo(xb, y0);
+      ctx.stroke();
+    }
+    ctx.restore();
+    tag(ctx, sp, N + (N === 1 ? ' box' : ' boxes') + ', each of area 1', C.k, 'left');
+    ctx.save();
+    ctx.font = '500 11.5px ' + MONO; ctx.fillStyle = C.muted;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText(N*T > 12 ? 'train runs past the window' : ('train length ' + (N*T).toFixed(2)), sp.R-2, sp.T+2);
+    ctx.restore();
+    if (N >= 3 && T <= 2.4) span(ctx, sp, 0, T, sYmax*0.62, 'T = ' + T.toFixed(2), C.muted);
+
+    /* ---- frequency: the exact curve ---- */
+    var spec = function(u){ return sincn(w*u)*dirich(u, T, N); };
+    var lo = 0, i, uu;
+    for (i = 0; i <= 3000; i++){ uu = UR[0] + (UR[1]-UR[0])*i/3000; lo = Math.min(lo, spec(uu)); }
+    var fq = mk(1, [Math.min(-0.12*N, lo*1.2), N*1.22]);
+    grid(ctx, fq, { xlabels:true, ydiv:3 });
+    var envU = function(u){ return N*sincn(w*u); };
+    ctx.setLineDash([4,4]);
+    curve(ctx, fq, envU, C.muted, null, 1.3, 1200);
+    ctx.setLineDash([]);
+    curve(ctx, fq, spec, C.p, C.ps, 2, 7000);
+    tag(ctx, fq, 'S_N(u) = sinc(wu) · sin(πNuT) / sin(πuT)', C.p, 'left');
+    ctx.save();
+    ctx.font = '500 11.5px ' + MONO; ctx.fillStyle = C.muted;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText('envelope N sinc(wu)', fq.R-2, fq.T+2);
+    ctx.restore();
+    if (T <= 2.4) span(ctx, fq, 0, 1/T, N*1.06, '1/T = ' + (1/T).toFixed(2), C.muted);
+
+    var a0 = integrate(spec, -0.5/T, 0.5/T, 4000);
+    document.getElementById('v-lim').textContent = 'N = ' + N + ', w = ' + w.toFixed(3);
+    document.getElementById('v-per2').textContent = T.toFixed(2);
+    document.getElementById('r-len').textContent = String(N);
+    document.getElementById('r-bh2').textContent = fmt(1/w);
+    document.getElementById('r-ph').textContent = fmt(N);
+    document.getElementById('r-lw').textContent = (1/(N*T)).toFixed(3);
+    document.getElementById('r-a0').textContent = a0.toFixed(3);
+    document.getElementById('r-inv').textContent = (1/T).toFixed(3);
+  }
+
+
+  /* =======================================================
+     FIG 3 — one image row, sampled by a train of apertures
+     ======================================================= */
+  var s7 = Stage('c7');
+  var npxEl = document.getElementById('npx'), fillEl = document.getElementById('fill');
+
+  var ROW = {
+    chirp: function(x){ return 0.5 + 0.42*Math.cos(2*Math.PI*13*x*x); },
+    edges: function(x){
+      return 0.5 + 0.30*Math.tanh(22*(x-0.28)) - 0.27*Math.tanh(18*(x-0.58)) + 0.10*Math.sin(2*Math.PI*4.5*x);
+    }
+  };
+  function rowFn(){
+    var el = document.querySelector('input[name="rowpick"]:checked');
+    return ROW[el ? el.value : 'chirp'];
+  }
+  function grey(v){
+    var g = Math.max(0, Math.min(255, Math.round(v*255)));
+    return 'rgb(' + g + ',' + g + ',' + g + ')';
+  }
+
+  function draw7(){
+    var st = s7, ctx = st.ctx;
+    ctx.clearRect(0,0,st.w,st.h);
+    var f = rowFn();
+    var Np = +npxEl.value, D = 1/Np, fill = (+fillEl.value)/1000, w = fill*D;
+    var PL = 52, PR = 24, strip = 20, gap = 8, xlab = 18;
+    var Hp = (st.h - 2*strip - 5*gap - xlab)/3.8;
+    var W = st.w - PL - PR;
+
+    // pixel values: the average of f over each aperture
+    var px = [], k, maxP = 0;
+    for (k = 0; k < Np; k++){
+      var c = (k+0.5)*D;
+      px.push(integrate(f, c - w/2, c + w/2, 24)/w);
+    }
+
+    function stripRow(y, kind){
+      var i, n;
+      if (kind === 'cont'){
+        n = Math.max(120, Math.round(W));
+        for (i = 0; i < n; i++){
+          ctx.fillStyle = grey(f((i+0.5)/n));
+          ctx.fillRect(PL + i*W/n, y, W/n + 1, strip - 6);
+        }
+      } else {
+        for (i = 0; i < Np; i++){
+          ctx.fillStyle = grey(px[i]);
+          ctx.fillRect(PL + i*W/Np, y, W/Np + 1, strip - 6);
+        }
+      }
+      ctx.save();
+      ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+      ctx.strokeRect(PL + 0.5, y + 0.5, W - 1, strip - 7);
+      ctx.font = '500 10.5px ' + MONO; ctx.fillStyle = C.muted;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(kind === 'cont' ? 'the row' : 'pixels', PL - 7, y + (strip-6)/2);
+      ctx.restore();
+    }
+
+    var yy = 0;
+    stripRow(yy, 'cont');
+    yy += strip + gap;
+
+    // panel 1 — f(x) with the aperture windows shaded
+    var p1 = frame({ x:0, y:yy, w:st.w, h:Hp, pl:PL, pr:PR, pt:4, pb:6 }, [0,1], [0,1.05]);
+    grid(ctx, p1, { ydiv:2, xticks:false });
+    if (fill < 0.98){
+      ctx.save();
+      ctx.fillStyle = C.k + '1f';
+      for (k = 0; k < Np; k++){
+        var cc = (k+0.5)*D;
+        ctx.fillRect(p1.X(cc - w/2), p1.T, Math.max(1, p1.X(cc+w/2)-p1.X(cc-w/2)), p1.B - p1.T);
+      }
+      ctx.restore();
+    }
+    curve(ctx, p1, f, C.f, null, 2, 2600);
+    tag(ctx, p1, 'f(x) — one row of the scene', C.f, 'left');
+    yy += Hp + gap;
+
+    // panel 2 — the box train
+    var tr = function(x){
+      var kk = Math.floor(x/D);
+      if (kk < 0 || kk >= Np) return 0;
+      return Math.abs(x - (kk+0.5)*D) <= w/2 ? 1/w : 0;
+    };
+    var p2 = frame({ x:0, y:yy, w:st.w, h:Hp*0.8, pl:PL, pr:PR, pt:4, pb:6 }, [0,1], [0, 1.3/w]);
+    grid(ctx, p2, { ydiv:1, xticks:false });
+    ctx.save();
+    ctx.fillStyle = C.k + '2e'; ctx.strokeStyle = C.k; ctx.lineWidth = 1.5;
+    for (k = 0; k < Np; k++){
+      var c2 = (k+0.5)*D, xa = p2.X(c2-w/2), xb = p2.X(c2+w/2), yt = p2.Y(1/w), yb = p2.Y(0);
+      ctx.fillRect(xa, yt, Math.max(1.2, xb-xa), yb-yt);
+      ctx.beginPath(); ctx.moveTo(xa, yb); ctx.lineTo(xa, yt); ctx.lineTo(xb, yt); ctx.lineTo(xb, yb); ctx.stroke();
+    }
+    ctx.restore();
+    tag(ctx, p2, 'box train — aperture w, pitch Δ, each box area 1', C.k, 'left');
+    yy += Hp*0.8 + gap;
+
+    // panel 3 — the element-wise product
+    var prod = function(x){ return f(x)*tr(x); };
+    var p3 = frame({ x:0, y:yy, w:st.w, h:Hp, pl:PL, pr:PR, pt:4, pb:6 }, [0,1], [0, 1.25/w]);
+    grid(ctx, p3, { ydiv:1, xticks:false });
+    curve(ctx, p3, prod, C.p, C.ps, 1.6, 4000);
+    tag(ctx, p3, 'f(x) · train(x)', C.p, 'left');
+    yy += Hp + gap;
+
+    // panel 4 — the pixel values
+    var p4 = frame({ x:0, y:yy, w:st.w, h:Hp + xlab, pl:PL, pr:PR, pt:4, pb:xlab + 2 }, [0,1], [0,1.05]);
+    grid(ctx, p4, { ydiv:2, xlabels:true, xticks:false });
+    ctx.save();
+    ctx.strokeStyle = C.p; ctx.fillStyle = C.p; ctx.lineWidth = 1.8;
+    for (k = 0; k < Np; k++){
+      var cx4 = p4.X((k+0.5)*D), y4 = p4.Y(px[k]), z4 = p4.Y(0);
+      ctx.beginPath(); ctx.moveTo(cx4, z4); ctx.lineTo(cx4, y4); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx4, y4, 2.6, 0, 6.2832); ctx.fill();
+    }
+    ctx.restore();
+    tag(ctx, p4, 'pixel[k] = ∫ f · box, one box at a time', C.p, 'left');
+    yy += Hp + xlab + gap;
+
+    stripRow(yy, 'px');
+
+    document.getElementById('v-npx').textContent = String(Np);
+    document.getElementById('v-fill').textContent = fill.toFixed(2);
+    document.getElementById('r-pitch').textContent = D.toFixed(3);
+    document.getElementById('r-ap').textContent = w.toFixed(3);
+    document.getElementById('r-nyq').textContent = (Np/2).toFixed(1);
+    var isChirp = document.getElementById('rp-chirp').checked;
+    document.getElementById('r-top').textContent = isChirp ? '26.0' : '~7';
+  }
+
+  /* ---------- wiring ---------- */
+  function drawAll(){ draw1(); draw6(); draw7(); }
+  function fitAll(){ s1.fit(); s6.fit(); s7.fit(); drawAll(); }
+
+  function on(id, ev, fn){ var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); }
+
+  on('sig1', 'input', draw1);
+  document.getElementById('fam1').addEventListener('change', draw1);
+  document.getElementById('ax1').addEventListener('change', draw1);
+
+  ['lim','per2'].forEach(function(id){ on(id,'input',draw6); });
+  document.getElementById('anim-lim').addEventListener('click', function(){
+    if (+limEl.value > 900) limEl.value = 0;
+    animate(limEl, 1000, draw6);
+  });
+
+  ['npx','fill'].forEach(function(id){ on(id,'input',draw7); });
+  document.getElementById('rowpick').addEventListener('change', draw7);
+  document.getElementById('anim-fill').addEventListener('click', function(){
+    if (+fillEl.value < 60) fillEl.value = 1000;
+    animate(fillEl, 10, draw7);
+  });
+
+  function animate(el, target, after){
+    var from = +el.value, dur = 2200, t0 = null;
+    if (reduce){ el.value = target; after(); return; }
+    function step(t){
+      if (t0 === null) t0 = t;
+      var u = Math.min(1, (t-t0)/dur);
+      var e = 1 - Math.pow(1-u, 3);
+      el.value = Math.round(from + (target-from)*e);
+      after();
+      if (u < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  document.getElementById('anim1').addEventListener('click', function(){
+    if (+sig1El.value < 60) sig1El.value = 1000;
+    animate(sig1El, 0, draw1);
+  });
+
+  if (window.ResizeObserver){
+    var ro = new ResizeObserver(function(){ fitAll(); });
+    ['c1','c6','c7'].forEach(function(id){ ro.observe(document.getElementById(id)); });
+  } else {
+    window.addEventListener('resize', fitAll);
+  }
+
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  (mq.addEventListener ? mq.addEventListener.bind(mq,'change') : mq.addListener.bind(mq))(function(){ readColors(); drawAll(); });
+  new MutationObserver(function(){ readColors(); drawAll(); })
+    .observe(document.documentElement, { attributes:true, attributeFilter:['data-theme','class','style'] });
+
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ drawAll(); });
+  fitAll();
+})();
+</script>
+
+</body></html>

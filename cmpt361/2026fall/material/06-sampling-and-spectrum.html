@@ -1,0 +1,1054 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sampling and Its Spectrum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script>
+window.MathJax = { tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]}, svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre']} };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#F5F7F4; --surface:#FFFFFF; --surface-2:#EFF2EE;
+  --ink:#14201E; --muted:#5C6B67; --faint:#8695918f;
+  --line:#D6DCD7; --grid:#E6EAE5;
+  --sig:#1B6F68; --ker:#A96300; --prod:#7A2A59; --warn:#B4341C; --ok:#1B6F68;
+  --shadow:0 1px 2px #14201e0d, 0 8px 24px #14201e0a;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1412; --surface:#151D1B; --surface-2:#1A2422;
+  --ink:#E7EFEC; --muted:#93A39E; --faint:#93a39e8f;
+  --line:#293533; --grid:#1F2A28;
+  --sig:#5FD3C4; --ker:#EBA340; --prod:#EE8DBE; --warn:#FF8A6B; --ok:#5FD3C4;
+  --shadow:0 1px 2px #00000040, 0 8px 24px #00000030; } }
+:root[data-theme="dark"]{
+  --bg:#0E1412; --surface:#151D1B; --surface-2:#1A2422;
+  --ink:#E7EFEC; --muted:#93A39E; --faint:#93a39e8f;
+  --line:#293533; --grid:#1F2A28;
+  --sig:#5FD3C4; --ker:#EBA340; --prod:#EE8DBE; --warn:#FF8A6B; --ok:#5FD3C4;
+  --shadow:0 1px 2px #00000040, 0 8px 24px #00000030; }
+
+body{ background:var(--bg); color:var(--ink); font-family:'Public Sans',ui-sans-serif,system-ui,sans-serif; font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+.wrap{ max-width:1480px; margin:0 auto; padding-inline:20px; padding-block:40px 72px; }
+h1,h2{ font-family:'Spectral',Georgia,serif; font-weight:600; margin:0; text-wrap:balance; }
+h1{ font-size:clamp(1.9rem,4.6vw,2.8rem); line-height:1.1; letter-spacing:-.015em; }
+h2{ font-size:clamp(1.22rem,3vw,1.5rem); }
+h3{ margin:0; font-size:.95rem; font-weight:600; }
+p{ margin:0; max-width:66ch; }
+.mono{ font-family:'JetBrains Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+.eyebrow{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+header.masthead{ display:flex; flex-direction:column; gap:13px; padding-bottom:30px; border-bottom:1px solid var(--line); }
+header.masthead .lede{ color:var(--muted); font-size:1.04rem; }
+section{ margin-top:42px; display:flex; flex-direction:column; gap:18px; }
+.sec-head{ display:flex; flex-direction:column; gap:7px; }
+
+.lab{ background:var(--surface); border:1px solid var(--line); border-radius:6px; box-shadow:var(--shadow); overflow:hidden; }
+.controls{ background:var(--surface-2); border-bottom:1px solid var(--line); padding:14px 16px; display:flex; flex-wrap:wrap; gap:14px 26px; align-items:flex-end; }
+.grp{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.ctl{ display:flex; flex-direction:column; gap:6px; }
+.ctl-label{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:.82rem; color:var(--muted); }
+.ctl-val{ color:var(--ink); font-size:.9rem; }
+input[type=range]{ width:100%; accent-color:var(--sig); height:22px; background:transparent; cursor:pointer; }
+input[type=range]:focus-visible{ outline:2px solid var(--sig); outline-offset:4px; border-radius:3px; }
+.seg{ display:flex; gap:6px; flex-wrap:wrap; }
+button{ font:inherit; font-size:.84rem; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:6px 12px; cursor:pointer; transition:border-color .15s,background .15s,color .15s; }
+button:hover{ border-color:var(--sig); }
+button:focus-visible{ outline:2px solid var(--sig); outline-offset:2px; }
+button[aria-pressed="true"]{ background:var(--sig); border-color:var(--sig); color:var(--surface); }
+.span2{ flex:1 1 100%; display:flex; gap:20px; flex-wrap:wrap; align-items:center; }
+.fieldlab{ font-size:.82rem; color:var(--muted); }
+
+.verdict{ padding:13px 16px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
+.verdict .badge{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600; padding:3px 9px; border-radius:3px; }
+.verdict.bad{ background:color-mix(in srgb,var(--warn) 11%,transparent); }
+.verdict.bad .badge{ background:var(--warn); color:var(--surface); }
+.verdict.good{ background:color-mix(in srgb,var(--ok) 10%,transparent); }
+.verdict.good .badge{ background:var(--ok); color:var(--surface); }
+.verdict.soft{ background:color-mix(in srgb,var(--ker) 11%,transparent); }
+.verdict.soft .badge{ background:var(--ker); color:var(--surface); }
+.verdict .txt{ font-size:.94rem; }
+.verdict2{ padding:11px 16px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
+.verdict2 .badge{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600; padding:3px 9px; border-radius:3px; }
+.verdict2 .txt{ font-size:.9rem; color:var(--muted); }
+.verdict2.ok .badge{ background:color-mix(in srgb,var(--ok) 18%,transparent); color:var(--ok); }
+.verdict2.warnish .badge{ background:color-mix(in srgb,var(--ker) 22%,transparent); color:var(--ker); }
+
+.grid2{ display:grid; grid-template-columns:1fr 1fr; }
+@media (max-width:820px){ .grid2{ grid-template-columns:1fr; } }
+.cell{ padding:13px 15px 14px; border-top:1px solid var(--grid); border-left:1px solid var(--grid); display:flex; flex-direction:column; gap:6px; min-width:0; }
+.grid2 > div:nth-child(odd){ border-left:none; }
+.opcell{ border-top:1px solid var(--grid); border-left:1px solid var(--grid); background:var(--surface-2); display:flex; align-items:center; justify-content:center; gap:9px; padding:5px 0; }
+.opcell .opg{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:1.05rem; color:var(--muted); line-height:1; }
+.opcell .opn{ font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
+.rowdiv{ grid-column:1/-1; border-top:2px solid var(--line); }
+@media (max-width:820px){ .cell{ border-left:none; } }
+.cellhead{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; }
+.step{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.66rem; letter-spacing:.09em; font-weight:600; color:var(--surface); background:var(--ink); padding:1px 6px; border-radius:3px; }
+.dom{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.68rem; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+canvas{ display:block; width:100%; height:auto; max-width:100%; }
+.cap{ font-size:.83rem; color:var(--muted); }
+.cap b{ color:var(--ink); font-weight:600; }
+
+table{ border-collapse:collapse; width:100%; font-size:.9rem; }
+.tablewrap{ overflow-x:auto; background:var(--surface); border:1px solid var(--line); border-radius:6px; }
+th,td{ text-align:left; padding:11px 14px; border-bottom:1px solid var(--grid); vertical-align:top; }
+th{ font-size:.72rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+tr:last-child td{ border-bottom:none; }
+td.k{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.84rem; }
+.math-card{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:20px 24px; display:flex; flex-direction:column; gap:12px; max-width:980px; }
+.math-card p{ color:var(--muted); } .math-card p strong{ color:var(--ink); font-weight:600; }
+mjx-container{ overflow-x:auto; overflow-y:hidden; max-width:100%; }
+.note{ border-left:3px solid var(--ker); background:color-mix(in srgb,var(--ker) 9%,transparent); padding:14px 18px; border-radius:0 5px 5px 0; display:flex; flex-direction:column; gap:9px; }
+.note .tag{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ker); }
+.note p{ color:var(--ink); }
+.split{ display:grid; grid-template-columns:1.5fr 1fr; align-items:start; }
+@media (max-width:940px){ .split{ grid-template-columns:1fr; } }
+.side{ display:flex; flex-direction:column; min-width:0; }
+.side.rt{ border-left:1px solid var(--grid); }
+@media (max-width:940px){ .side.rt{ border-left:none; } }
+.two{ display:grid; grid-template-columns:1.25fr 1fr; gap:18px; align-items:start; }
+@media (max-width:940px){ .two{ grid-template-columns:1fr; } }
+.two .prose{ display:flex; flex-direction:column; gap:11px; }
+.mrow{ border-top:1px solid var(--grid); padding:12px 15px 14px; display:flex; flex-direction:column; gap:7px; }
+.mrow canvas{ border-radius:3px; image-rendering:pixelated; }
+.mrow canvas.plot{ image-rendering:auto; }
+.mrow canvas.sharp{ image-rendering:auto; }
+.loupe{ display:grid; grid-template-columns:1fr; gap:12px; }
+.loupe > div{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+#imgA, #imgB{ cursor:crosshair; }
+.cards{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:760px){ .cards{ grid-template-columns:1fr; } }
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:8px; }
+.card .tag{ font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.68rem; letter-spacing:.11em; text-transform:uppercase; font-weight:600; }
+.card.a .tag{ color:var(--warn); } .card.b .tag{ color:var(--ker); }
+.card p{ font-size:.93rem; color:var(--muted); }
+.card dl{ margin:4px 0 0; display:grid; grid-template-columns:auto 1fr; gap:3px 10px; font-size:.87rem; }
+.card dt{ color:var(--faint); } .card dd{ margin:0; color:var(--ink); }
+ol.rows{ margin:0; padding-left:0; list-style:none; counter-reset:r; display:flex; flex-direction:column; gap:12px; }
+ol.rows li{ counter-increment:r; display:grid; grid-template-columns:auto 1fr; gap:11px; align-items:baseline; font-size:.94rem; }
+ol.rows li::before{ content:counter(r); font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.7rem; font-weight:600; color:var(--surface); background:var(--ink); border-radius:3px; padding:1px 6px; }
+ol.rows b{ font-weight:600; }
+ol.rows .g{ color:var(--muted); }
+footer{ margin-top:50px; padding-top:20px; border-top:1px solid var(--line); color:var(--faint); font-size:.84rem; }
+@media (prefers-reduced-motion:reduce){ *{ transition-duration:.01ms !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Convolution &middot; lecture demo</div>
+  <h1>Sampling, and what it does to the spectrum</h1>
+  <p class="lede">Sampling is two operations, not one. <b>Pick</b> &mdash; multiply by an impulse train, which copies the spectrum over and over. <b>Paint</b> &mdash; convolve with a reconstruction kernel, which tries to keep one copy and throw away the rest. Nyquist is the question of whether those copies overlap.</p>
+</header>
+
+<section>
+  <div class="sec-head">
+    <h2>Where you have already seen this</h2>
+    <p>Moir&eacute; is not a separate phenomenon. It is the picture below, in two dimensions. Keep every pixel and the pattern is fine; keep every k-th pixel and the fine detail folds down into broad slow bands that were never in the scene. The scanline under the two images is the same 1D signal the rest of this page is about &mdash; it lines up column for column, so you can read the 2D artifact and its 1D cause in the same vertical strip.</p>
+  </div>
+
+  <div class="lab">
+    <div class="controls">
+      <div class="grp">
+        <span class="fieldlab">Pattern</span>
+        <div class="seg" id="mpat" role="group" aria-label="Pattern">
+          <button type="button" data-p="zone" aria-pressed="true">Zone plate</button>
+          <button type="button" data-p="chirp" aria-pressed="false">Chirp stripes</button>
+          <button type="button" data-p="grate" aria-pressed="false">Fine grating</button>
+        </div>
+      </div>
+      <div class="grp">
+        <span class="fieldlab">Sensor</span>
+        <div class="seg" id="mres" role="group" aria-label="Source resolution">
+          <button type="button" data-r="80" aria-pressed="false">80 px</button>
+          <button type="button" data-r="160" aria-pressed="true">160 px</button>
+          <button type="button" data-r="320" aria-pressed="false">320 px</button>
+        </div>
+      </div>
+      <div class="grp">
+        <span class="fieldlab">Prefilter</span>
+        <div class="seg" id="mpre" role="group" aria-label="Prefilter">
+          <button type="button" data-q="off" aria-pressed="true">Off</button>
+          <button type="button" data-q="on" aria-pressed="false">Box average</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-label"><label for="mk">Keep every k-th pixel</label><span class="ctl-val mono" id="mkOut">k = 4</span></div>
+        <input type="range" id="mk" min="1" max="10" step="1" value="4">
+      </div>
+    </div>
+
+    <div class="verdict bad" id="mVerdict">
+      <span class="badge" id="mBadge">aliasing</span>
+      <span class="txt" id="mTxt">&mdash;</span>
+    </div>
+
+    <div class="split">
+      <div class="side">
+    <div class="mrow">
+      <div class="cellhead"><span class="step">FULL</span><h3>The pattern, every pixel kept</h3></div>
+      <canvas id="imgA"></canvas>
+      <div class="cap">A deliberately coarse sensor grid, blown up so one sensor pixel is a visible square. Dashed line: the row plotted at the bottom. White box: the loupe.</div>
+    </div>
+
+    <div class="mrow">
+      <div class="cellhead"><span class="step">SUBSAMPLED</span><h3>Every k-th pixel, shown at the same size</h3></div>
+      <canvas id="imgB"></canvas>
+      <div class="cap">Red boundary: where the pattern&rsquo;s local detail crosses the Nyquist limit for this k. Inside it the rings are real; outside, the phantom ring systems are folded frequencies. Each kept pixel is held across its whole k&times;k block &mdash; the box reconstruction from further down.</div>
+    </div>
+
+    <div class="mrow">
+      <div class="cellhead"><span class="step">1D</span><h3>One scanline through the middle</h3></div>
+      <canvas id="imgS" class="plot"></canvas>
+      <div class="cap">Teal: the pattern along the marked row. Plum: the same row after keeping every k-th sample. Left of the red line they agree; right of it the plum trace slows down while the teal one speeds up &mdash; that divergence is the moir&eacute; above, and the red stem in the spectrum below.</div>
+    </div>      </div>
+      <div class="side rt">
+    <div class="mrow">
+      <div class="cellhead"><span class="step">LOUPE</span><h3>The same patch, pixel by pixel</h3><span class="dom">move the pointer over either image to aim it</span></div>
+      <div class="loupe">
+        <div><canvas id="zoomA"></canvas><div class="cap">Every pixel. Ringed ones are the pixels that survive.</div></div>
+        <div><canvas id="zoomB"></canvas><div class="cap">After keeping every k-th. Each ringed pixel&rsquo;s value fills its whole block.</div></div>
+      </div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Multiply here, convolve there</h2>
+    <p>Left column is space, right column is frequency, and every row is the same object seen both ways. Multiplying the signal by the comb (left) <em>is</em> convolving its spectrum with the comb&rsquo;s spectrum (right) &mdash; which plants one copy of the whole spectrum at every tooth. Raise the signal frequency past the dashed Nyquist lines and watch a copy walk into the middle.</p>
+  </div>
+
+  <div class="lab">
+    <div class="controls">
+      <div class="ctl">
+        <div class="ctl-label"><label for="nu">Signal frequency &nu;</label><span class="ctl-val mono" id="nuOut">0.90 c/unit</span></div>
+        <input type="range" id="nu" min="5" max="250" value="90">
+      </div>
+      <div class="ctl">
+        <div class="ctl-label"><label for="T">Sample spacing T</label><span class="ctl-val mono" id="TOut">1.000</span></div>
+        <input type="range" id="T" min="0" max="1000" value="596">
+      </div>
+      <div class="span2">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="fieldlab">Reconstruction</span>
+          <div class="seg" id="kseg" role="group" aria-label="Reconstruction kernel">
+            <button type="button" data-k="box" aria-pressed="true">Box (hold)</button>
+            <button type="button" data-k="lin" aria-pressed="false">Linear</button>
+            <button type="button" data-k="sinc" aria-pressed="false">Sinc (ideal)</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span class="fieldlab">Anti-alias prefilter</span>
+          <div class="seg" id="pseg" role="group" aria-label="Prefilter">
+            <button type="button" data-p="off" aria-pressed="true">Off</button>
+            <button type="button" data-p="on" aria-pressed="false">On</button>
+          </div>
+        </div>
+        <button type="button" id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="verdict bad" id="verdict">
+      <span class="badge" id="vBadge">aliasing</span>
+      <span class="txt" id="vTxt">&mdash;</span>
+    </div>
+
+    <div class="verdict2 ok" id="verdict2">
+      <span class="badge" id="v2Badge">clean</span>
+      <span class="txt" id="v2Txt">&mdash;</span>
+    </div>
+
+    <div class="grid2">
+      <div class="cell">
+        <div class="cellhead"><span class="step">1</span><h3>The signal</h3><span class="dom">space</span></div>
+        <canvas id="cA1" height="150"></canvas>
+        <div class="cap">f(x) &mdash; a sum of cosines, so its spectrum is exact rather than estimated.</div>
+      </div>
+      <div class="cell">
+        <div class="cellhead"><span class="step">1</span><h3>Its spectrum</h3><span class="dom">frequency</span></div>
+        <canvas id="cB1" height="150"></canvas>
+        <div class="cap">F(&nu;): one line per cosine at &plusmn;&nu;, plus DC. Dashed: the Nyquist limit <b class="mono" id="nyq1">&mdash;</b>.</div>
+      </div>
+
+      <div class="opcell"><span class="opg">&times;</span><span class="opn">multiply</span></div>
+      <div class="opcell"><span class="opg">&lowast;</span><span class="opn">convolve</span></div>
+
+      <div class="cell">
+        <div class="cellhead"><span class="step">2</span><h3>The impulse train</h3><span class="dom">space</span></div>
+        <canvas id="cA2" height="150"></canvas>
+        <div class="cap">Arrows every <b class="mono" id="Tcap">&mdash;</b>, each of area 1. This is the comb you multiply by.</div>
+      </div>
+      <div class="cell">
+        <div class="cellhead"><span class="step">2</span><h3>Its spectrum &mdash; also a comb</h3><span class="dom">frequency</span></div>
+        <canvas id="cB2" height="150"></canvas>
+        <div class="cap">Teeth every <b class="mono" id="rate1">&mdash;</b>, with amplitude 1/T. <b>Reciprocal:</b> drag T and the two combs move in opposite directions &mdash; tighter in space, wider in frequency.</div>
+      </div>
+
+      <div class="opcell"><span class="opg">=</span><span class="opn">gives</span></div>
+      <div class="opcell"><span class="opg">=</span><span class="opn">gives</span></div>
+
+      <div class="cell">
+        <div class="cellhead"><span class="step">3</span><h3>The sampled signal</h3><span class="dom">space</span></div>
+        <canvas id="cA3" height="150"></canvas>
+        <div class="cap">Each arrow keeps the curve&rsquo;s value as its area. Everything between the arrows is gone.</div>
+      </div>
+      <div class="cell">
+        <div class="cellhead"><span class="step">3</span><h3>One copy per comb tooth</h3><span class="dom">frequency</span></div>
+        <canvas id="cB3" height="150"></canvas>
+        <div class="cap">Convolving with a comb plants a copy of the whole spectrum at every tooth. Colours match the teeth above: <span style="color:var(--sig)">&#9632;</span> k=0, <span style="color:var(--prod)">&#9632;</span> k=&plusmn;1, <span style="color:var(--ker)">&#9632;</span> k=&plusmn;2. Overlap inside the dashed lines is aliasing.</div>
+      </div>
+
+      <div class="rowdiv"></div>
+
+      <div class="cell">
+        <div class="cellhead"><span class="step">4</span><h3>Reconstruction vs. original</h3><span class="dom">space</span></div>
+        <canvas id="cA4" height="170"></canvas>
+        <div class="cap">Faint: the original. Solid: the samples painted back with the chosen kernel. The box kernel is the &ldquo;keep the height, widen the bin&rdquo; staircase.</div>
+      </div>
+      <div class="cell">
+        <div class="cellhead"><span class="step">4</span><h3>What the filter keeps</h3><span class="dom">frequency</span></div>
+        <canvas id="cB4" height="170"></canvas>
+        <div class="cap">Faint dotted: the copies from step 3. Solid: what survives K(&nu;) (dashed). Ochre survivors outside the band are <b>imaging</b>; red ones inside are <b>aliases</b>, and no filter can touch those.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>The step the blackboard leaves out</h2>
+  </div>
+
+  <div class="two">
+    <div class="prose">
+    <p>The objection is correct, and it is not a small one. The impulse-sampled signal <span class="mono">f&nbsp;&middot;&nbsp;comb</span> is a row of infinitely sharp spikes, so its spectrum really does run to infinity &mdash; copies of <em>everything</em>, including DC and the low frequencies, at &plusmn;1/T, &plusmn;2/T, and on forever. As a thing to look at, it would be hideous. That is true even when nothing has aliased.</p>
+    <p>The resolution is that <b>nobody ever looks at it.</b> It is an intermediate object that exists so the algebra can be written down. What reaches your eye is the reconstruction, and the reconstruction filter is not an optional nicety you apply if you feel like it &mdash; it is performed by hardware whether or not the diagram admits it. A monitor does not emit impulses. Each pixel is a small glowing rectangle of finite width, and that rectangle <em>is</em> the box kernel. Your eye&rsquo;s optics and retina lowpass it further.</p>
+    <p>Which gives the everyday example worth putting on the board: <b>the visible pixel grid of a low-resolution screen is the leftover copy at 1/T.</b> Sit close and you see the grid; step back, or defocus, and it disappears &mdash; you have just improved the reconstruction filter. Nothing about the samples changed.</p>
+    </div>
+  <ol class="rows">
+    <li><span><b>The signal.</b> <span class="g">Bandlimited, finite, well behaved.</span></span></li>
+    <li><span><b>Multiply by the comb.</b> <span class="g">Copies every 1/T, out to infinity. Aliasing is decided here and nowhere else. This object is never displayed.</span></span></li>
+    <li><span><b>Convolve with the reconstruction kernel.</b> <span class="g">The display aperture, the optics, the eye. The blackboard usually stops before this row.</span></span></li>
+    <li><span><b>What you actually see.</b> <span class="g">One copy, plus whatever the kernel failed to suppress.</span></span></li>
+  </ol>
+
+  </div>
+
+  <div class="cards">
+    <div class="card a">
+      <div class="tag">Failure at step 2</div>
+      <h3>Aliasing</h3>
+      <p>Copies overlapped before any filtering. High frequencies are now sitting inside the band wearing low frequencies&rsquo; clothes.</p>
+      <dl>
+        <dt>Cost</dt><dd>Information destroyed</dd>
+        <dt>Looks like</dt><dd>Moir&eacute;, wagon wheels, false detail</dd>
+        <dt>Fix</dt><dd>Prefilter <em>before</em> sampling</dd>
+        <dt>Too late?</dt><dd>Yes &mdash; unrecoverable</dd>
+      </dl>
+    </div>
+    <div class="card b">
+      <div class="tag">Failure at step 3</div>
+      <h3>Imaging</h3>
+      <p>The copies were fine, but the kernel let some through. This is the failure your objection is really describing.</p>
+      <dl>
+        <dt>Cost</dt><dd>Junk added, nothing lost</dd>
+        <dt>Looks like</dt><dd>Blockiness, jaggies, the pixel grid</dd>
+        <dt>Fix</dt><dd>A better reconstruction kernel</dd>
+        <dt>Too late?</dt><dd>No &mdash; still repairable</dd>
+      </dl>
+    </div>
+  </div>
+  <p style="color:var(--muted); font-size:.93rem;">Two different failures, two different steps, two different remedies &mdash; and the two-row diagram has no place to put the second one. In the demo above, the ochre stems are imaging and the red stems are aliasing.</p>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>The same three steps, both domains</h2>
+    <p>This is the whole lecture on one line each. Note that the first and last steps use the same box shape, normalised two different ways for two different jobs.</p>
+  </div>
+  <div class="two">
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Step</th><th>In space</th><th>In frequency</th><th>What it decides</th></tr></thead>
+      <tbody>
+        <tr><td><b>Blur</b></td><td class="k">&lowast; an <b>area-1</b> aperture</td><td class="k">&times; A(&nu;)</td><td>Narrow the band <em>before</em> sampling, so nothing can fold.</td></tr>
+        <tr><td><b>Pick</b></td><td class="k">&times; comb of spacing T</td><td class="k">&lowast; comb of spacing 1/T &rarr; copies</td><td><b>Nyquist.</b> Did the copies overlap? If so, information is gone.</td></tr>
+        <tr><td><b>Paint</b></td><td class="k">&lowast; a <b>height-1</b> kernel</td><td class="k">&times; K(&nu;)</td><td>How faithfully you show what you kept. Cannot undo step 2.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note" style="margin:0;">
+    <div class="tag">The distinction students miss</div>
+    <p>A better interpolator cannot repair aliasing. Step&nbsp;2 decides whether the information still exists; step&nbsp;3 only decides how well you display what remains. Switch the kernel to <b>Sinc</b> while the signal is aliased &mdash; the reconstruction becomes perfectly smooth and perfectly wrong.</p>
+  </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>Writing it down</h2></div>
+  <div class="math-card">
+    <p><strong>Pick.</strong> The impulse train is the one object whose transform is another impulse train, which is exactly why sampling is written this way:</p>
+    $$ \sum_n \delta(x-nT) \;\longleftrightarrow\; \frac{1}{T}\sum_k \delta\!\left(\nu-\frac{k}{T}\right) $$
+    <p>so multiplying by it in space convolves by it in frequency, and the spectrum is copied at every multiple of \(1/T\):</p>
+    $$ f_s(x)=f(x)\sum_n \delta(x-nT) \;\longleftrightarrow\; F_s(\nu)=\frac{1}{T}\sum_k F\!\left(\nu-\frac{k}{T}\right) $$
+    <p><strong>Nyquist.</strong> The copies miss each other exactly when \(F\) vanishes above half the sampling rate:</p>
+    $$ F(\nu)=0 \ \text{ for } |\nu|\ge \tfrac{1}{2T} \qquad\Longleftrightarrow\qquad \text{no overlap} $$
+    <p><strong>Paint.</strong> Reconstruction multiplies by \(K(\nu)\). The ideal choice is a rect of width \(1/T\), which keeps the central copy and deletes the others; its inverse transform is the sinc, so ideal reconstruction is sinc interpolation:</p>
+    $$ r(x)=\sum_n f(nT)\,k\!\left(\frac{x-nT}{T}\right), \qquad k_{\text{ideal}}(u)=\operatorname{sinc}(u)=\frac{\sin \pi u}{\pi u} $$
+    <p>The box kernel gives \(K(\nu)=T\operatorname{sinc}(\nu T)\) instead &mdash; it leaks the neighbouring copies through as blockiness and sags to 0.64 of its value at the Nyquist frequency, about 3.9&nbsp;dB of droop. Every kernel here equals 1 at the origin and 0 at the other sample points, which is what makes the curve pass through the samples.</p>
+  </div>
+</section>
+
+<footer>Signal is a sum of cosines, so its spectrum is exact rather than estimated. Copies are drawn at equal height; the true amplitudes all carry the same 1/T factor.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var L = 12, FMAX = 2.8, TAU = Math.PI * 2;
+  var TMIN = 0.25, TMAX = 4.0, LOGT = Math.log(TMAX / TMIN);
+  function tToT(t){ return TMIN * Math.exp(LOGT * t / 1000); }
+  function TTot(T){ return Math.round(1000 * Math.log(T / TMIN) / LOGT); }
+  function sinc(u){ return Math.abs(u) < 1e-9 ? 1 : Math.sin(Math.PI * u) / (Math.PI * u); }
+
+  var state = { nu: 0.90, T: 1.0, kern: 'box', pre: false };
+
+  function comps(){
+    return [ {A:0.50, nu:0, phi:0}, {A:0.32, nu:0.15, phi:0}, {A:0.40, nu:state.nu, phi:0.7} ];
+  }
+  function active(){
+    var nyq = 1 / (2 * state.T);
+    return comps().filter(function(c){ return !state.pre || c.nu < nyq - 1e-12; });
+  }
+  function evalC(cs, x){
+    var s = 0;
+    for (var i = 0; i < cs.length; i++) s += cs[i].A * Math.cos(TAU * cs[i].nu * x + cs[i].phi);
+    return s;
+  }
+  function lines(cs){
+    var out = [];
+    cs.forEach(function(c){
+      if (c.nu === 0) out.push({ nu: 0, a: c.A });
+      else { out.push({ nu: c.nu, a: c.A / 2 }); out.push({ nu: -c.nu, a: c.A / 2 }); }
+    });
+    return out;
+  }
+  var KERN = {
+    box:  { k: function(u){ return (u >= -0.5 && u < 0.5) ? 1 : 0; },
+            K: function(v, T){ return Math.abs(sinc(v * T)); } },
+    lin:  { k: function(u){ return Math.max(0, 1 - Math.abs(u)); },
+            K: function(v, T){ var s = sinc(v * T); return s * s; } },
+    sinc: { k: function(u){ return Math.abs(u) <= 16 ? sinc(u) : 0; },
+            K: function(v, T){ return Math.abs(v) < 1 / (2 * T) ? 1 : 0; } }
+  };
+  function samples(){
+    var T = state.T, cs = active(), out = [], n;
+    var n0 = -20, n1 = Math.ceil(L / T) + 20;
+    for (n = n0; n <= n1; n++) out.push({ n: n, x: n * T, v: evalC(cs, n * T) });
+    return out;
+  }
+  function recon(sm, x){
+    var T = state.T, k = KERN[state.kern].k, s = 0, i, u;
+    for (i = 0; i < sm.length; i++){
+      u = (x - sm[i].x) / T;
+      if (u > -17 && u < 17) s += sm[i].v * k(u);
+    }
+    return s;
+  }
+
+  /* ---------- canvas ---------- */
+  var C = {};
+  function readTheme(){
+    var cs = getComputedStyle(document.documentElement);
+    ['ink','muted','line','grid','sig','ker','prod','warn','surface'].forEach(function(k){
+      C[k] = cs.getPropertyValue('--' + k).trim();
+    });
+  }
+  function hexA(hex, a){
+    var h = hex.replace('#','');
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length === 8) h = h.slice(0,6);
+    return 'rgba(' + parseInt(h.slice(0,2),16) + ',' + parseInt(h.slice(2,4),16) + ',' + parseInt(h.slice(4,6),16) + ',' + a + ')';
+  }
+  function prep(cv, cssH){
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.getBoundingClientRect().width || cv.parentNode.clientWidth || 480;
+    cv.width = Math.max(1, Math.round(w * dpr));
+    cv.height = Math.max(1, Math.round(cssH * dpr));
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, cssH);
+    ctx.font = "10.5px 'JetBrains Mono', ui-monospace, monospace";
+    ctx.lineJoin = 'round';
+    return { ctx: ctx, w: w, h: cssH };
+  }
+  var PL = 34, PR = 14, PT = 14, PB = 22;
+
+  function axes(ctx, w, h, x0, x1, y0, y1, xticks, yticks){
+    var pl = PL, pr = w - PR, pt = PT, pb = h - PB;
+    var X = function(x){ return pl + (x - x0) / (x1 - x0) * (pr - pl); };
+    var Y = function(v){ return pb - (v - y0) / (y1 - y0) * (pb - pt); };
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.beginPath();
+    xticks.forEach(function(t){ ctx.moveTo(Math.round(X(t)) + .5, pt); ctx.lineTo(Math.round(X(t)) + .5, pb); });
+    ctx.stroke();
+    ctx.strokeStyle = C.line; ctx.beginPath();
+    ctx.moveTo(pl, Math.round(Y(0)) + .5); ctx.lineTo(pr, Math.round(Y(0)) + .5); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    xticks.forEach(function(t){ ctx.fillText(String(t), X(t), pb + 5); });
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    (yticks || []).forEach(function(t){ ctx.fillText(t.l, pl - 6, Y(t.v)); });
+    return { X: X, Y: Y, pl: pl, pr: pr, pt: pt, pb: pb };
+  }
+  function curve(ctx, g, fn, x0, x1, col, lw, dash){
+    ctx.save();
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    for (var i = 0; i <= 900; i++){
+      var x = x0 + (x1 - x0) * i / 900, y = g.Y(fn(x));
+      if (i === 0) ctx.moveTo(g.X(x), y); else ctx.lineTo(g.X(x), y);
+    }
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.stroke();
+    ctx.restore();
+  }
+
+  var SY0 = -0.5, SY1 = 1.5;
+  var CY0 = -0.12, CY1 = 1.45;
+  var XT = [0, 3, 6, 9, 12];
+  var YTS = [{v:0,l:'0'},{v:1,l:'1'}];
+  var FT = [-2, -1, 0, 1, 2];
+  var FY1 = 0.62, FYT = [{v:0,l:'0'},{v:0.5,l:'.5'}];
+
+  function kcol(k){
+    var a = Math.abs(k);
+    if (a === 0) return C.sig;
+    if (a === 1) return C.prod;
+    if (a === 2) return C.ker;
+    return hexA(C.muted, .5);
+  }
+  function arrow(ctx, g, x, val, col, lw){
+    var px = Math.round(g.X(x)) + .5, yt = g.Y(val);
+    ctx.strokeStyle = col; ctx.lineWidth = lw || 1.6;
+    ctx.beginPath(); ctx.moveTo(px, g.Y(0)); ctx.lineTo(px, yt); ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(px, yt - 1); ctx.lineTo(px - 3.3, yt + 6.5); ctx.lineTo(px + 3.3, yt + 6.5); ctx.closePath(); ctx.fill();
+  }
+  function stem(ctx, g, nu, amp, col, lw){
+    if (nu < -FMAX || nu > FMAX) return;
+    var x = Math.round(g.X(nu)) + .5;
+    ctx.strokeStyle = col; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x, g.Y(0)); ctx.lineTo(x, g.Y(amp)); ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(g.X(nu), g.Y(amp), 2.7, 0, TAU); ctx.fill();
+  }
+  function nyqMarks(ctx, g, nyq, label){
+    ctx.save();
+    ctx.strokeStyle = hexA(C.ink, .45); ctx.setLineDash([4,4]); ctx.lineWidth = 1;
+    [-nyq, nyq].forEach(function(v){
+      if (Math.abs(v) > FMAX) return;
+      ctx.beginPath(); ctx.moveTo(Math.round(g.X(v)) + .5, g.pt); ctx.lineTo(Math.round(g.X(v)) + .5, g.pb); ctx.stroke();
+    });
+    ctx.restore();
+    if (label !== false && nyq <= FMAX){
+      ctx.fillStyle = hexA(C.ink, .7); ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('\u00b1' + nyq.toFixed(2), Math.min(g.X(nyq) + 4, g.pr - 34), g.pt + 1);
+    }
+  }
+  function nuLabel(ctx, g){
+    ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText('\u03bd', g.pr, g.pb + 5);
+  }
+
+  /* --- row 1 --- */
+  function drawA1(){
+    var P = prep(document.getElementById('cA1'), 150), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, 0, L, SY0, SY1, XT, YTS);
+    var all = comps(), act = active();
+    ctx.save(); ctx.beginPath(); ctx.rect(g.pl, g.pt, g.pr - g.pl, g.pb - g.pt); ctx.clip();
+    if (state.pre && act.length < all.length)
+      curve(ctx, g, function(x){ return evalC(all, x); }, 0, L, hexA(C.muted, .55), 1.2, [4,4]);
+    curve(ctx, g, function(x){ return evalC(act, x); }, 0, L, C.sig, 2.1);
+    ctx.restore();
+  }
+  function drawB1(){
+    var P = prep(document.getElementById('cB1'), 150), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, -FMAX, FMAX, 0, FY1, FT, FYT);
+    nyqMarks(ctx, g, 1 / (2 * state.T));
+    lines(active()).forEach(function(l){ stem(ctx, g, l.nu, l.a, C.sig, 2); });
+    nuLabel(ctx, g);
+  }
+
+  /* --- row 2 : the two combs --- */
+  function drawA2(){
+    var P = prep(document.getElementById('cA2'), 150), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, 0, L, CY0, CY1, XT, [{v:0,l:'0'},{v:1,l:'1'}]);
+    var T = state.T, n, x;
+    ctx.save(); ctx.beginPath(); ctx.rect(g.pl, g.pt - 8, g.pr - g.pl, g.pb - g.pt + 8); ctx.clip();
+    for (n = 0; n * T <= L + 1e-9; n++){
+      x = n * T;
+      arrow(ctx, g, x, 1, C.prod, T > 0.3 ? 1.7 : 1.1);
+    }
+    ctx.restore();
+    if (T >= 0.8){
+      var x0 = g.X(0), x1 = g.X(T), y = g.Y(1.28);
+      ctx.strokeStyle = hexA(C.ink, .5); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y);
+      ctx.moveTo(x0, y - 3); ctx.lineTo(x0, y + 3); ctx.moveTo(x1, y - 3); ctx.lineTo(x1, y + 3); ctx.stroke();
+      ctx.fillStyle = hexA(C.ink, .72); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('T = ' + T.toFixed(2), x1 + 6, y + 4);
+    }
+  }
+  function drawB2(){
+    var P = prep(document.getElementById('cB2'), 150), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, -FMAX, FMAX, CY0, CY1, FT, [{v:0,l:'0'},{v:1,l:'1'}]);
+    var rate = 1 / state.T, k, KM = Math.floor(FMAX / rate);
+    ctx.save(); ctx.beginPath(); ctx.rect(g.pl, g.pt - 8, g.pr - g.pl, g.pb - g.pt + 8); ctx.clip();
+    for (k = -KM; k <= KM; k++) arrow(ctx, g, k * rate, 1, kcol(k), rate > 0.35 ? 1.7 : 1.1);
+    ctx.restore();
+    if (rate <= FMAX * 0.9){
+      var x0 = g.X(0), x1 = g.X(rate), y = g.Y(1.28);
+      ctx.strokeStyle = hexA(C.ink, .5); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y);
+      ctx.moveTo(x0, y - 3); ctx.lineTo(x0, y + 3); ctx.moveTo(x1, y - 3); ctx.lineTo(x1, y + 3); ctx.stroke();
+      ctx.fillStyle = hexA(C.ink, .72); ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('1/T = ' + rate.toFixed(2), x1 + 6, y + 4);
+    }
+    nuLabel(ctx, g);
+  }
+
+  /* --- row 3 : the product, and the convolution --- */
+  function drawA3(){
+    var P = prep(document.getElementById('cA3'), 150), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, 0, L, SY0, SY1, XT, YTS);
+    var act = active(), T = state.T, n, x, v;
+    ctx.save(); ctx.beginPath(); ctx.rect(g.pl, g.pt - 8, g.pr - g.pl, g.pb - g.pt + 8); ctx.clip();
+    curve(ctx, g, function(xx){ return evalC(act, xx); }, 0, L, hexA(C.sig, .35), 1.2, [5,4]);
+    for (n = 0; n * T <= L + 1e-9; n++){
+      x = n * T; v = evalC(act, x);
+      arrow(ctx, g, x, v, C.prod, T > 0.3 ? 1.7 : 1.1);
+    }
+    ctx.restore();
+  }
+  function drawB3(){
+    var P = prep(document.getElementById('cB3'), 150), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, -FMAX, FMAX, 0, FY1, FT, FYT);
+    var T = state.T, rate = 1 / T, ls = lines(active()), k, i2, nk;
+    var KM = Math.ceil((FMAX + 0.2) / rate) + 1;
+    nyqMarks(ctx, g, 1 / (2 * T));
+    for (k = -KM; k <= KM; k++){
+      if (k === 0) continue;
+      for (i2 = 0; i2 < ls.length; i2++){
+        nk = ls[i2].nu + k * rate;
+        stem(ctx, g, nk, ls[i2].a, kcol(k), Math.abs(k) <= 2 ? 1.7 : 1.2);
+      }
+    }
+    ls.forEach(function(l){ stem(ctx, g, l.nu, l.a, C.sig, 2); });
+    nuLabel(ctx, g);
+  }
+
+  /* --- row 4 --- */
+  function drawA4(){
+    var P = prep(document.getElementById('cA4'), 170), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, 0, L, SY0, SY1, XT, YTS);
+    var all = comps(), sm = samples();
+    ctx.save(); ctx.beginPath(); ctx.rect(g.pl, g.pt, g.pr - g.pl, g.pb - g.pt); ctx.clip();
+    curve(ctx, g, function(x){ return evalC(all, x); }, 0, L, hexA(C.sig, .45), 1.5, [5,4]);
+    curve(ctx, g, function(x){ return recon(sm, x); }, 0, L, C.prod, 2.1);
+    ctx.restore();
+  }
+  function copySet(){
+    var T = state.T, nyq = 1 / (2 * T), rate = 1 / T, ls = lines(active());
+    var Kf = KERN[state.kern].K, out = [], k, i2, nk;
+    var KM = Math.ceil((FMAX + 0.2) / rate) + 1;
+    for (k = -KM; k <= KM; k++){
+      for (i2 = 0; i2 < ls.length; i2++){
+        nk = ls[i2].nu + k * rate;
+        if (nk < -FMAX - 0.05 || nk > FMAX + 0.05) continue;
+        out.push({ nu: nk, a: ls[i2].a, kept: ls[i2].a * Kf(nk, T), base: k === 0,
+                   alias: k !== 0 && Math.abs(nk) < nyq - 1e-9 });
+      }
+    }
+    return out;
+  }
+  function drawB4(){
+    var P = prep(document.getElementById('cB4'), 170), ctx = P.ctx;
+    var g = axes(ctx, P.w, P.h, -FMAX, FMAX, 0, FY1, FT, FYT);
+    var T = state.T, nyq = 1 / (2 * T), i2;
+    var Kf = KERN[state.kern].K, cs = copySet();
+
+    ctx.save(); ctx.beginPath(); ctx.rect(g.pl, g.pt, g.pr - g.pl, g.pb - g.pt); ctx.clip();
+    ctx.setLineDash([5, 4]); ctx.strokeStyle = hexA(C.ker, .95); ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (i2 = 0; i2 <= 900; i2++){
+      var v = -FMAX + 2 * FMAX * i2 / 900;
+      var yy = g.pb - Kf(v, T) * (g.pb - g.pt) * 0.86;
+      if (i2 === 0) ctx.moveTo(g.X(v), yy); else ctx.lineTo(g.X(v), yy);
+    }
+    ctx.stroke(); ctx.restore();
+    ctx.fillStyle = hexA(C.ker, .95); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('K', g.pl + 3, g.pb - 0.86 * (g.pb - g.pt) - 1);
+
+    nyqMarks(ctx, g, nyq);
+
+    ctx.save();
+    ctx.strokeStyle = hexA(C.muted, .3); ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    cs.forEach(function(c){
+      if (c.base || c.nu < -FMAX || c.nu > FMAX) return;
+      var x = Math.round(g.X(c.nu)) + .5;
+      ctx.beginPath(); ctx.moveTo(x, g.Y(0)); ctx.lineTo(x, g.Y(c.a)); ctx.stroke();
+    });
+    ctx.restore();
+
+    cs.forEach(function(c){
+      if (c.base || c.kept < 0.004) return;
+      stem(ctx, g, c.nu, c.kept, c.alias ? C.warn : hexA(C.ker, .85), c.alias ? 2 : 1.4);
+    });
+    cs.forEach(function(c){ if (c.base) stem(ctx, g, c.nu, c.kept, C.sig, 2); });
+
+    if (!state.pre && state.nu > nyq + 1e-9){
+      var rate = 1 / T;
+      var af = Math.abs(state.nu - rate * Math.round(state.nu / rate));
+      ctx.fillStyle = C.warn; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('alias ' + af.toFixed(2), Math.min(g.X(af) + 6, g.pr - 62), g.pt + 26);
+    }
+    nuLabel(ctx, g);
+  }
+
+  /* ---------- readouts ---------- */
+  function update(){
+    var T = state.T, nyq = 1 / (2 * T), rate = 1 / T, nu = state.nu;
+    document.getElementById('nuOut').textContent = nu.toFixed(2) + ' c/unit';
+    document.getElementById('TOut').textContent = T.toFixed(3);
+    document.getElementById('nyq1').textContent = nyq.toFixed(2);
+    document.getElementById('rate1').textContent = rate.toFixed(2);
+    document.getElementById('Tcap').textContent = T.toFixed(2);
+    var over = nu > nyq + 1e-9;
+    var alias = Math.abs(nu - rate * Math.round(nu / rate));
+    var v = document.getElementById('verdict');
+    v.className = 'verdict ' + (over ? (state.pre ? 'soft' : 'bad') : 'good');
+    if (over && state.pre){
+      document.getElementById('vBadge').textContent = 'prefiltered';
+      document.getElementById('vTxt').innerHTML = 'ν = ' + nu.toFixed(2) +
+        ' is above the Nyquist limit of ' + nyq.toFixed(2) +
+        ', so the prefilter removed it before sampling. That detail is lost — but nothing false was invented in its place.';
+    } else if (over){
+      document.getElementById('vBadge').textContent = 'aliasing';
+      document.getElementById('vTxt').innerHTML = 'ν = ' + nu.toFixed(2) +
+        ' is above the Nyquist limit of ' + nyq.toFixed(2) + '. It is being recorded as <b class="mono">' +
+        alias.toFixed(2) + '</b> c/unit — a frequency that was never in the signal.';
+    } else {
+      document.getElementById('vBadge').textContent = 'safe';
+      document.getElementById('vTxt').innerHTML = 'ν = ' + nu.toFixed(2) +
+        ' sits below the Nyquist limit of ' + nyq.toFixed(2) +
+        '. The copies miss each other, so the signal can be recovered exactly — with the right kernel.';
+    }
+  }
+  function leakage(){
+    var nyq = 1 / (2 * state.T), cs = copySet(), baseMax = 0, leakMax = 0, at = 0;
+    cs.forEach(function(c){
+      if (c.base) { if (c.kept > baseMax) baseMax = c.kept; }
+      else if (!c.alias && Math.abs(c.nu) >= nyq && c.kept > leakMax) { leakMax = c.kept; at = Math.abs(c.nu); }
+    });
+    return { pct: baseMax > 0 ? 100 * leakMax / baseMax : 0, at: at };
+  }
+  function update2(){
+    var lk = leakage(), el = document.getElementById('v2Txt'), b = document.getElementById('v2Badge');
+    var names = { box: 'Box', lin: 'Linear', sinc: 'Sinc' };
+    if (lk.pct < 0.05){
+      b.textContent = 'clean'; b.parentNode.className = 'verdict2 ok';
+      el.innerHTML = names[state.kern] + ' reconstruction removes the copies exactly \u2014 nothing above the Nyquist limit reaches your eye.';
+    } else {
+      b.textContent = 'leakage'; b.parentNode.className = 'verdict2 warnish';
+      el.innerHTML = names[state.kern] + ' reconstruction lets copies through: the strongest survivor sits at <b class="mono">' +
+        lk.at.toFixed(2) + '</b> c/unit at <b class="mono">' + lk.pct.toFixed(1) +
+        '%</b> of the signal peak. That leftover is the blockiness \u2014 and, on a screen, the visible pixel grid.';
+    }
+  }
+  function render(){ drawA1(); drawB1(); drawA2(); drawB2(); drawA3(); drawB3(); drawA4(); drawB4(); update(); update2(); }
+
+  /* ---------- interaction ---------- */
+  var nuEl = document.getElementById('nu'), TEl = document.getElementById('T');
+  nuEl.addEventListener('input', function(){ state.nu = (+nuEl.value) / 100; render(); });
+  TEl.addEventListener('input', function(){ state.T = tToT(+TEl.value); render(); });
+  document.getElementById('kseg').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-k]'); if (!b) return;
+    state.kern = b.getAttribute('data-k');
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', String(x.getAttribute('data-k') === state.kern)); });
+    render();
+  });
+  document.getElementById('pseg').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-p]'); if (!b) return;
+    state.pre = b.getAttribute('data-p') === 'on';
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function(x){
+      x.setAttribute('aria-pressed', String((x.getAttribute('data-p') === 'on') === state.pre)); });
+    render();
+  });
+  document.getElementById('reset').addEventListener('click', function(){
+    state = { nu: 0.90, T: 1.0, kern: 'box', pre: false };
+    nuEl.value = 90; TEl.value = TTot(1.0);
+    Array.prototype.forEach.call(document.querySelectorAll('#kseg button'), function(x){
+      x.setAttribute('aria-pressed', String(x.getAttribute('data-k') === 'box')); });
+    Array.prototype.forEach.call(document.querySelectorAll('#pseg button'), function(x){
+      x.setAttribute('aria-pressed', String(x.getAttribute('data-p') === 'off')); });
+    render();
+  });
+
+  var rz;
+  window.addEventListener('resize', function(){ clearTimeout(rz); rz = setTimeout(function(){ readTheme(); render(); }, 90); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ setTimeout(function(){ readTheme(); render(); }, 30); });
+  new MutationObserver(function(){ readTheme(); render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ readTheme(); render(); });
+
+  readTheme();
+  nuEl.value = 90; TEl.value = TTot(state.T);
+  render();
+})();
+</script>
+
+
+<script>
+(function(){
+  "use strict";
+  var FMAXPX = 0.30, ASPECT = 0.34;
+  var ZW = 30, ZH = 13;                   /* loupe patch, in source pixels */
+  var st = { pat: 'zone', k: 4, pre: false, res: 160, cx: -1, cy: -1 };
+  var cache = { key: '', a: null };
+  var ofs = document.createElement('canvas');
+
+  function dims(){ var W = st.res; return { W: W, H: Math.max(8, Math.round(W * ASPECT)) }; }
+
+  function build(W, H, pat){
+    var key = pat + ':' + W + 'x' + H;
+    if (cache.key === key) return cache.a;
+    var a = new Float32Array(W * H), px, py, u, v, t, val, asp = H / W;
+    var KZ = FMAXPX * Math.PI * W / 2, KC = FMAXPX * Math.PI * W, FG = FMAXPX * W / 2;
+    var TH = 8 * Math.PI / 180, cs = Math.cos(TH), sn = Math.sin(TH);
+    for (py = 0; py < H; py++){
+      v = ((py + 0.5) / H * 2 - 1) * asp;
+      for (px = 0; px < W; px++){
+        u = (px + 0.5) / W * 2 - 1;
+        if (pat === 'zone') val = 0.5 + 0.5 * Math.cos(KZ * (u * u + v * v));
+        else if (pat === 'chirp'){ t = (u + 1) / 2; val = 0.5 + 0.5 * Math.cos(KC * t * t); }
+        else val = 0.5 + 0.5 * Math.cos(2 * Math.PI * FG * (u * cs + v * sn));
+        a[py * W + px] = val;
+      }
+    }
+    cache = { key: key, a: a };
+    return a;
+  }
+
+  function subsample(base, W, H, k, pre){
+    if (k <= 1) return base;
+    var out = new Float32Array(W * H), bx, by, x, y, xe, ye, sum, cnt, v;
+    for (by = 0; by < H; by += k){
+      ye = Math.min(by + k, H);
+      for (bx = 0; bx < W; bx += k){
+        xe = Math.min(bx + k, W);
+        if (pre){ sum = 0; cnt = 0;
+          for (y = by; y < ye; y++) for (x = bx; x < xe; x++){ sum += base[y * W + x]; cnt++; }
+          v = sum / cnt;
+        } else v = base[by * W + bx];
+        for (y = by; y < ye; y++) for (x = bx; x < xe; x++) out[y * W + x] = v;
+      }
+    }
+    return out;
+  }
+
+  function grey(v){ v = v < 0 ? 0 : v > 1 ? 1 : v; var g = Math.round(26 + v * 216); return 'rgb(' + g + ',' + g + ',' + g + ')'; }
+  function cssv(n, f){ return getComputedStyle(document.documentElement).getPropertyValue('--' + n).trim() || f; }
+
+  function blit(cv, arr, W, H, cssH){
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = cv.getBoundingClientRect().width || cv.parentNode.clientWidth || 600;
+    var DW = Math.round(cssW * dpr), DH = Math.round(cssW * ASPECT * dpr);
+    cv.width = DW; cv.height = DH;
+    ofs.width = W; ofs.height = H;
+    var octx = ofs.getContext('2d'), img = octx.createImageData(W, H), d = img.data, i, g;
+    for (i = 0; i < W * H; i++){
+      g = arr[i]; g = g < 0 ? 0 : g > 1 ? 1 : g; g = Math.round(26 + g * 216);
+      d[i*4] = g; d[i*4+1] = g; d[i*4+2] = g; d[i*4+3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    var ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, DW, DH);
+    ctx.drawImage(ofs, 0, 0, W, H, 0, 0, DW, DH);
+    return { ctx: ctx, DW: DW, DH: DH, sx: DW / W, sy: DH / H, dpr: dpr };
+  }
+
+  function boundary(){
+    var thr = 1 / (2 * st.k), f = thr / FMAXPX;
+    if (st.pat === 'grate') return { kind: 'none', over: FMAXPX > thr, thr: thr };
+    if (f >= 1) return { kind: 'none', over: false, thr: thr };
+    if (st.pat === 'zone') return { kind: 'circle', r: f, fx: [(1 - f) / 2, (1 + f) / 2], thr: thr, over: true };
+    return { kind: 'line', fx: [f], thr: thr, over: true };
+  }
+
+  function drawLoupe(cv, arr, W, H, marks){
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = cv.getBoundingClientRect().width || cv.parentNode.clientWidth || 400;
+    var cell = cssW / ZW;
+    var DW = Math.round(cssW * dpr), DH = Math.round(cell * ZH * dpr);
+    cv.width = DW; cv.height = DH;
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var x0 = Math.max(0, Math.min(W - ZW, Math.round(st.cx - ZW / 2)));
+    var y0 = Math.max(0, Math.min(H - ZH, Math.round(st.cy - ZH / 2)));
+    var i, j, sx, sy;
+    for (j = 0; j < ZH; j++) for (i = 0; i < ZW; i++){
+      sx = x0 + i; sy = y0 + j;
+      ctx.fillStyle = grey(arr[sy * W + sx]);
+      ctx.fillRect(i * cell, j * cell, cell + 0.6, cell + 0.6);
+    }
+    ctx.strokeStyle = 'rgba(128,140,136,.45)'; ctx.lineWidth = 0.7;
+    for (i = 0; i <= ZW; i++){ ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, ZH * cell); ctx.stroke(); }
+    for (j = 0; j <= ZH; j++){ ctx.beginPath(); ctx.moveTo(0, j * cell); ctx.lineTo(ZW * cell, j * cell); ctx.stroke(); }
+
+    if (st.k > 1){
+      ctx.strokeStyle = cssv('ker', '#A96300'); ctx.lineWidth = 1.6;
+      for (i = 0; i <= ZW; i++){ sx = x0 + i; if (sx % st.k === 0){ ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, ZH * cell); ctx.stroke(); } }
+      for (j = 0; j <= ZH; j++){ sy = y0 + j; if (sy % st.k === 0){ ctx.beginPath(); ctx.moveTo(0, j * cell); ctx.lineTo(ZW * cell, j * cell); ctx.stroke(); } }
+    }
+    if (marks){
+      ctx.strokeStyle = cssv('warn', '#B4341C'); ctx.lineWidth = Math.max(1.4, cell * 0.14);
+      for (j = 0; j < ZH; j++) for (i = 0; i < ZW; i++){
+        sx = x0 + i; sy = y0 + j;
+        if (sx % st.k === 0 && sy % st.k === 0){
+          ctx.beginPath(); ctx.arc((i + 0.5) * cell, (j + 0.5) * cell, cell * 0.28, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+    }
+    return { x0: x0, y0: y0 };
+  }
+
+  function render(){
+    var D = dims(), W = D.W, H = D.H;
+    if (st.cx < 0){ st.cx = Math.round(W * 0.78); st.cy = Math.round(H * 0.5); }
+    st.cx = Math.max(0, Math.min(W - 1, st.cx)); st.cy = Math.max(0, Math.min(H - 1, st.cy));
+
+    var base = build(W, H, st.pat);
+    var out = subsample(base, W, H, st.k, st.pre);
+    var bd = boundary();
+
+    var A = blit(document.getElementById('imgA'), base, W, H);
+    var B = blit(document.getElementById('imgB'), out, W, H);
+
+    /* scanline marker + loupe box on both */
+    var row = Math.floor(H / 2);
+    [A, B].forEach(function(P){
+      P.ctx.setLineDash([7, 6]); P.ctx.strokeStyle = 'rgba(255,255,255,.6)'; P.ctx.lineWidth = Math.max(1, P.dpr);
+      P.ctx.beginPath(); P.ctx.moveTo(0, (row + 0.5) * P.sy); P.ctx.lineTo(P.DW, (row + 0.5) * P.sy); P.ctx.stroke();
+      P.ctx.setLineDash([]);
+      var x0 = Math.max(0, Math.min(W - ZW, Math.round(st.cx - ZW / 2)));
+      var y0 = Math.max(0, Math.min(H - ZH, Math.round(st.cy - ZH / 2)));
+      P.ctx.strokeStyle = 'rgba(255,255,255,.95)'; P.ctx.lineWidth = Math.max(1.5, 1.6 * P.dpr);
+      P.ctx.strokeRect(x0 * P.sx, y0 * P.sy, ZW * P.sx, ZH * P.sy);
+      P.ctx.strokeStyle = 'rgba(0,0,0,.6)'; P.ctx.lineWidth = Math.max(1, 0.8 * P.dpr);
+      P.ctx.strokeRect(x0 * P.sx - 1.5, y0 * P.sy - 1.5, ZW * P.sx + 3, ZH * P.sy + 3);
+    });
+
+    /* Nyquist boundary on the subsampled image */
+    B.ctx.strokeStyle = cssv('warn', '#B4341C'); B.ctx.lineWidth = Math.max(1.8, 1.8 * B.dpr);
+    if (bd.kind === 'circle'){ B.ctx.beginPath(); B.ctx.arc(B.DW / 2, B.DH / 2, bd.r * B.DW / 2, 0, Math.PI * 2); B.ctx.stroke(); }
+    else if (bd.kind === 'line'){ B.ctx.beginPath(); B.ctx.moveTo(bd.fx[0] * B.DW, 0); B.ctx.lineTo(bd.fx[0] * B.DW, B.DH); B.ctx.stroke(); }
+
+    drawLoupe(document.getElementById('zoomA'), base, W, H, true);
+    drawLoupe(document.getElementById('zoomB'), out, W, H, true);
+
+    /* scanline */
+    var sc = document.getElementById('imgS'), dpr = window.devicePixelRatio || 1;
+    var cssW = sc.getBoundingClientRect().width || 600;
+    var SW = Math.round(cssW * dpr), SH = Math.round(150 * dpr);
+    sc.width = SW; sc.height = SH;
+    var g = sc.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var w = cssW, h = 150, pt = 12, pb = h - 12, cw = w / W;
+    var Y = function(v){ return pb - v * (pb - pt); }, i;
+    g.clearRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(128,140,136,.3)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(0, Y(0.5)); g.lineTo(w, Y(0.5)); g.stroke();
+
+    g.save(); g.globalAlpha = .5; g.strokeStyle = cssv('sig', '#1B6F68'); g.lineWidth = 1.2;
+    g.beginPath();
+    for (i = 0; i < W; i++){ var y = Y(base[row * W + i]); if (i === 0) g.moveTo((i + .5) * cw, y); else g.lineTo((i + .5) * cw, y); }
+    g.stroke(); g.restore();
+    if (cw > 4){
+      g.fillStyle = cssv('sig', '#1B6F68');
+      for (i = 0; i < W; i++){ g.globalAlpha = .55; g.beginPath(); g.arc((i + .5) * cw, Y(base[row * W + i]), 1.7, 0, Math.PI * 2); g.fill(); }
+      g.globalAlpha = 1;
+    }
+    g.strokeStyle = cssv('prod', '#7A2A59'); g.lineWidth = 2;
+    g.beginPath();
+    for (i = 0; i < W; i++){
+      var yy = Y(out[row * W + i]);
+      if (i === 0) g.moveTo(0, yy); else { g.lineTo(i * cw, yy); }
+      g.lineTo((i + 1) * cw, yy);
+    }
+    g.stroke();
+    g.strokeStyle = cssv('warn', '#B4341C'); g.lineWidth = 1.8;
+    (bd.fx || []).forEach(function(f){ g.beginPath(); g.moveTo(f * w, 0); g.lineTo(f * w, h); g.stroke(); });
+
+    /* verdict */
+    var vd = document.getElementById('mVerdict'), bg = document.getElementById('mBadge'), tx = document.getElementById('mTxt');
+    document.getElementById('mkOut').textContent = 'k = ' + st.k;
+    var thr = bd.thr.toFixed(3), grid = W + ' × ' + H;
+    var kept = Math.ceil(W / st.k) + ' × ' + Math.ceil(H / st.k);
+    if (st.k === 1){
+      vd.className = 'verdict good'; bg.textContent = 'full rate';
+      tx.innerHTML = 'Sensor grid <b class="mono">' + grid + '</b>, every pixel kept. Nyquist is 0.500 cycles/pixel, above everything in the pattern.';
+    } else if (!bd.over){
+      vd.className = 'verdict good'; bg.textContent = 'safe';
+      tx.innerHTML = '<b class="mono">' + grid + '</b> down to <b class="mono">' + kept + '</b>. Nyquist <b class="mono">' + thr + '</b> c/px is still above the finest detail here.';
+    } else if (st.pre){
+      vd.className = 'verdict soft'; bg.textContent = 'prefiltered';
+      tx.innerHTML = '<b class="mono">' + grid + '</b> down to <b class="mono">' + kept + '</b>, averaging each ' + st.k + '&times;' + st.k +
+        ' block first. Detail finer than <b class="mono">' + thr + '</b> c/px is destroyed instead of folded &mdash; blurred, but honest.';
+    } else {
+      vd.className = 'verdict bad'; bg.textContent = 'aliasing';
+      tx.innerHTML = '<b class="mono">' + grid + '</b> down to <b class="mono">' + kept + '</b>, one pixel out of every ' + st.k + '&times;' + st.k +
+        ' block. Nyquist <b class="mono">' + thr + '</b> c/px; detail finer than that ' +
+        (bd.kind === 'circle' ? 'lies outside the red circle' : bd.kind === 'line' ? 'lies right of the red line' : 'is the whole field') +
+        ' and folds into bands that were never there.';
+    }
+  }
+
+  function seg(id, attr, apply){
+    document.getElementById(id).addEventListener('click', function(e){
+      var b = e.target.closest('button[' + attr + ']'); if (!b) return;
+      apply(b.getAttribute(attr));
+      Array.prototype.forEach.call(this.querySelectorAll('button'), function(x){
+        x.setAttribute('aria-pressed', String(x === b)); });
+      render();
+    });
+  }
+  seg('mpat', 'data-p', function(v){ st.pat = v; });
+  seg('mres', 'data-r', function(v){ var old = dims(); st.res = +v; var d = dims();
+    st.cx = Math.round(st.cx / old.W * d.W); st.cy = Math.round(st.cy / old.H * d.H); });
+  seg('mpre', 'data-q', function(v){ st.pre = v === 'on'; });
+  var mk = document.getElementById('mk');
+  mk.addEventListener('input', function(){ st.k = +mk.value; render(); });
+
+  function track(id){
+    var cv = document.getElementById(id);
+    cv.addEventListener('pointermove', function(e){
+      var r = cv.getBoundingClientRect(), D = dims();
+      st.cx = Math.floor((e.clientX - r.left) / r.width * D.W);
+      st.cy = Math.floor((e.clientY - r.top) / r.height * D.H);
+      render();
+    });
+  }
+  track('imgA'); track('imgB');
+
+  var rz;
+  window.addEventListener('resize', function(){ clearTimeout(rz); rz = setTimeout(render, 140); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ setTimeout(render, 30); });
+  new MutationObserver(function(){ render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  render();
+})();
+</script>
+
+</body></html>

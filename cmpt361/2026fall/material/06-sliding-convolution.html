@@ -1,0 +1,734 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sliding Convolution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#F2F5F8; --surface:#FFFFFF; --surface-2:#F7F9FB;
+  --ink:#121821; --muted:#5C6878; --faint:#8A97A6;
+  --line:#DCE3EB; --grid:#E9EEF3; --axis:#A7B3C0;
+  --cx:#1F5FA8; --ch:#BD6C15; --cy:#17795A;
+  --cx-soft:rgba(31,95,168,.13); --ch-soft:rgba(189,108,21,.13); --cy-soft:rgba(23,121,90,.20);
+  --band:rgba(23,121,90,.07);
+  --chip:#EDF1F5; --chip-on:#1F5FA8; --chip-on-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(18,24,33,.05), 0 8px 24px -16px rgba(18,24,33,.30);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:"IBM Plex Serif",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F141B; --surface:#161D26; --surface-2:#1B232E;
+    --ink:#E6EDF5; --muted:#94A2B3; --faint:#6D7C8D;
+    --line:#26303C; --grid:#1F2833; --axis:#48586A;
+    --cx:#6FAEEC; --ch:#E9A84C; --cy:#4FC49A;
+    --cx-soft:rgba(111,174,236,.16); --ch-soft:rgba(233,168,76,.16); --cy-soft:rgba(79,196,154,.22);
+    --band:rgba(79,196,154,.08);
+    --chip:#222C38; --chip-on:#6FAEEC; --chip-on-ink:#0F141B;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F141B; --surface:#161D26; --surface-2:#1B232E;
+  --ink:#E6EDF5; --muted:#94A2B3; --faint:#6D7C8D;
+  --line:#26303C; --grid:#1F2833; --axis:#48586A;
+  --cx:#6FAEEC; --ch:#E9A84C; --cy:#4FC49A;
+  --cx-soft:rgba(111,174,236,.16); --ch-soft:rgba(233,168,76,.16); --cy-soft:rgba(79,196,154,.22);
+  --band:rgba(79,196,154,.08);
+  --chip:#222C38; --chip-on:#6FAEEC; --chip-on-ink:#0F141B;
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:22px 40px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;margin-bottom:16px}
+header.top .titles{min-width:min(100%,330px);flex:1 1 330px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(23px,3.4vw,31px);margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13.5px;max-width:58ch;margin:3px 0 0}
+
+.formula{display:flex;align-items:center;gap:.5ch;font-family:var(--mono);font-size:clamp(14px,2.4vw,17px);
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 15px;margin:0;
+  box-shadow:var(--shadow);overflow-x:auto;white-space:nowrap}
+.formula .int{font-family:var(--serif);font-size:1.7em;line-height:0;position:relative;top:.12em;color:var(--muted)}
+.tx{color:var(--cx);font-weight:500}
+.th{color:var(--ch);font-weight:500}
+.ty{color:var(--cy);font-weight:500}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 258px;gap:18px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+.given{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:start}
+@media (max-width:640px){.given{grid-template-columns:1fr}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+  overflow:hidden;position:relative}
+.panel + .panel{margin-top:12px}
+.given .panel + .panel{margin-top:0}
+.panel.given-x{border-top:2px solid var(--cx)}
+.panel.given-h{border-top:2px solid var(--ch)}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 13px 6px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.ptitle{font-size:12.5px;font-weight:600;letter-spacing:.01em}
+.ptitle .dim{font-weight:400;color:var(--muted)}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.pread{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.pread b{color:var(--cy);font-weight:500}
+.pfoot{border-top:1px solid var(--line);background:var(--surface-2);padding:8px 10px}
+canvas{display:block;width:100%;touch-action:none}
+#cvX,#cvH{height:152px}
+#cvA{height:210px}#cvB{height:122px}#cvC{height:192px}
+@media (max-width:520px){#cvX,#cvH{height:136px}#cvA{height:180px}#cvB{height:104px}#cvC{height:164px}}
+
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+  display:flex;gap:9px;align-items:flex-start;transition:border-color .2s,background .2s}
+.step.on{border-color:var(--cy);background:var(--cy-soft)}
+.step .n{font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.45}
+.step.on .n{color:var(--cy)}
+.step .lab{font-size:12.5px;font-weight:600;line-height:1.25}
+.step .hint{display:block;font-weight:400;font-size:11.5px;color:var(--muted);margin-top:1px}
+@media (max-width:700px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.side{display:flex;flex-direction:column;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px)}
+@media (max-width:920px){.side{position:static}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 13px 13px}
+.card h2{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:0 0 9px}
+.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:1px}
+.sw-x{background:var(--cx)}.sw-h{background:var(--ch)}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font:inherit;font-size:12px;line-height:1;padding:6px 9px;border-radius:7px;border:1px solid transparent;
+  background:var(--chip);color:var(--ink);cursor:pointer;transition:background .15s,color .15s}
+.chip:hover{border-color:var(--axis)}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-ink)}
+.chip.act{background:transparent;border-color:var(--axis);color:var(--muted)}
+.chip.act:hover{color:var(--ink);border-color:var(--ink)}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--cx);outline-offset:2px}
+
+.pairs{display:flex;flex-direction:column;gap:5px}
+.pair{font:inherit;font-size:12.5px;text-align:left;padding:7px 10px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pair:hover{border-color:var(--cx);color:var(--cx)}
+.pair .res{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.pair:hover .res{color:var(--cx)}
+
+.transport{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.btn{font:inherit;font-size:13px;padding:7px 11px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--axis)}
+.btn.primary{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-ink);font-weight:500;min-width:74px;justify-content:center}
+.btn.sm{font-size:12px;padding:5px 9px}
+.btn.wide{width:100%;justify-content:center}
+.row{display:flex;align-items:center;gap:9px;margin-top:9px}
+.row label{font-size:11.5px;color:var(--muted);min-width:46px;font-family:var(--mono)}
+input[type=range]{flex:1;accent-color:var(--cx);min-width:0}
+.tval{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;min-width:46px;text-align:right;color:var(--ink)}
+
+.drawbar{position:absolute;inset:auto 0 0 0;background:var(--surface);border-top:1px solid var(--line);
+  padding:7px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px}
+.drawbar .msg{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center}
+footer{margin-top:22px;color:var(--faint);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="titles">
+      <h1>Sliding Convolution</h1>
+      <p class="sub">Start from the two given functions. Flip one, slide it across the other, and at every shift multiply and measure the area &mdash; that number is the output at that instant.</p>
+    </div>
+    <div class="formula">
+      <span class="ty">y(t)</span><span>&nbsp;=&nbsp;</span>
+      <span class="int">&#8747;</span>
+      <span class="tx">x(&tau;)</span>
+      <span class="th">h(t&minus;&tau;)</span>
+      <span>d&tau;</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="given">
+        <section class="panel given-x">
+          <div class="phead">
+            <span class="ptitle"><span class="tx">x(&tau;)</span> <span class="dim">the signal</span></span>
+            <span class="eyebrow">given</span>
+          </div>
+          <canvas id="cvX"></canvas>
+          <div class="pfoot"><div class="chips" id="xChips"></div></div>
+          <div class="drawbar" id="drawbarX" hidden>
+            <span class="msg">Drag across the plot to draw x(&tau;).</span>
+            <span style="display:flex;gap:6px"><button class="btn sm" data-cancel="x">Cancel</button><button class="btn sm primary" data-done="x">Use it</button></span>
+          </div>
+        </section>
+
+        <section class="panel given-h">
+          <div class="phead">
+            <span class="ptitle"><span class="th">h(&tau;)</span> <span class="dim">the kernel</span></span>
+            <span class="eyebrow">given</span>
+          </div>
+          <canvas id="cvH"></canvas>
+          <div class="pfoot"><div class="chips" id="hChips"></div></div>
+          <div class="drawbar" id="drawbarH" hidden>
+            <span class="msg">Drag across the plot to draw h(&tau;).</span>
+            <span style="display:flex;gap:6px"><button class="btn sm" data-cancel="h">Cancel</button><button class="btn sm primary" data-done="h">Use it</button></span>
+          </div>
+        </section>
+      </div>
+
+      <div class="steps" id="steps">
+        <div class="step" data-step="1"><span class="n">1</span><span class="lab">Flip<span class="hint">h(&tau;) &rarr; h(&minus;&tau;)</span></span></div>
+        <div class="step" data-step="2"><span class="n">2</span><span class="lab">Shift<span class="hint">slide by t</span></span></div>
+        <div class="step" data-step="3"><span class="n">3</span><span class="lab">Multiply<span class="hint">point by point</span></span></div>
+        <div class="step" data-step="4"><span class="n">4</span><span class="lab">Integrate<span class="hint">area &rarr; y(t)</span></span></div>
+      </div>
+
+      <section class="panel">
+        <div class="phead">
+          <span class="ptitle"><span class="tx">x(&tau;)</span> <span class="dim">fixed</span> &nbsp;&middot;&nbsp; <span class="th">h(t&minus;&tau;)</span> <span class="dim">flipped &amp; sliding</span></span>
+          <span class="pread" id="readT">t = 0.00</span>
+        </div>
+        <canvas id="cvA"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="phead">
+          <span class="ptitle">Product <span class="tx">x(&tau;)</span><span class="dim">&middot;</span><span class="th">h(t&minus;&tau;)</span></span>
+          <span class="pread">area = <b id="readArea">0.000</b></span>
+        </div>
+        <canvas id="cvB"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="phead">
+          <span class="ptitle"><span class="ty">y(t)</span> <span class="dim">one point per shift</span></span>
+          <span class="pread">y(t) = <b id="readY">0.000</b></span>
+        </div>
+        <canvas id="cvC"></canvas>
+      </section>
+
+      <div class="legend">
+        <span><i class="swatch sw-x"></i>x(&tau;) &mdash; the signal</span>
+        <span><i class="swatch sw-h"></i>h(t&minus;&tau;) &mdash; the flipped kernel</span>
+        <span><i class="swatch" style="background:var(--cy)"></i>y(t) &mdash; the output</span>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="card">
+        <h2>Playback</h2>
+        <div class="transport">
+          <button class="btn primary" id="play">Play</button>
+          <button class="btn" id="stepB" title="Step back" aria-label="Step back">&minus;</button>
+          <button class="btn" id="stepF" title="Step forward" aria-label="Step forward">+</button>
+        </div>
+        <div class="row">
+          <label for="tSlider">shift t</label>
+          <input type="range" id="tSlider" min="-3.5" max="3.5" step="0.01" value="-0.6">
+          <span class="tval" id="tOut">&minus;0.60</span>
+        </div>
+        <div class="row">
+          <label for="spd">speed</label>
+          <input type="range" id="spd" min="0.2" max="3" step="0.1" value="1">
+          <span class="tval" id="spdOut">1.0&times;</span>
+        </div>
+        <button class="btn wide" id="flipBtn" style="margin-top:10px">Replay the flip</button>
+      </div>
+
+      <div class="card">
+        <h2>Classic pairs</h2>
+        <div class="pairs" id="pairs"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Press <b>Draw&hellip;</b> under either plot to sketch your own. Keyboard: space plays and pauses, arrow keys step the shift.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var TMIN=-4, TMAX=4, N=801, DT=(TMAX-TMIN)/(N-1), Z=Math.round(-TMIN/DT);
+var TSW_MIN=-3.5, TSW_MAX=3.5;
+var TAU=new Float64Array(N); for(var i=0;i<N;i++) TAU[i]=TMIN+i*DT;
+
+function zeros(){return new Float64Array(N);}
+function fromFn(f){var a=zeros();for(var i=0;i<N;i++)a[i]=f(TAU[i]);return a;}
+function box(a,b){return fromFn(function(t){return (t>=a&&t<=b)?1:0;});}
+function sig(cont,imps){return {cont:cont,imps:imps||[]};}
+
+var XLIB={
+  box:   {label:"Box",         make:function(){return sig(box(-1,1));}},
+  two:   {label:"Two pulses",  make:function(){return sig(fromFn(function(t){return ((t>=-2&&t<=-1)||(t>=1&&t<=2))?1:0;}));}},
+  wide:  {label:"Wide box",    make:function(){return sig(box(-1.8,1.8));}},
+  tri:   {label:"Triangle",    make:function(){return sig(fromFn(function(t){return Math.max(0,1-Math.abs(t));}));}},
+  gauss: {label:"Gaussian",    make:function(){return sig(fromFn(function(t){return Math.exp(-t*t/(2*0.16));}));}},
+  sine:  {label:"Sine burst",  make:function(){return sig(fromFn(function(t){return Math.abs(t)<=1.6?Math.sin(2*Math.PI*0.7*t):0;}));}},
+  ramp:  {label:"Ramp",        make:function(){return sig(fromFn(function(t){return (t>=-1&&t<=1)?(t+1)/2:0;}));}},
+  step:  {label:"Step",        make:function(){return sig(fromFn(function(t){return t>=0?1:0;}));}},
+  imp:   {label:"Impulse δ", make:function(){return sig(zeros(),[{pos:0,area:1}]);}},
+  imp2:  {label:"Two impulses",  make:function(){return sig(zeros(),[{pos:-1.2,area:1},{pos:1.2,area:1}]);}},
+  imp3:  {label:"Three impulses",make:function(){return sig(zeros(),[{pos:-1.5,area:1},{pos:0,area:1},{pos:1.5,area:1}]);}},
+  spec:  {label:"Line spectrum F(\u03BD)", axis:"\u03BD", make:function(){return sig(zeros(),[
+            {pos:-0.88,area:0.20},{pos:-0.15,area:0.165},{pos:0,area:0.50},
+            {pos:0.15,area:0.165},{pos:0.88,area:0.20}]);}}
+};
+var HLIB={
+  box2:   {label:"Box (2)",     make:function(){return sig(box(-1,1));}},
+  boxn:   {label:"Box (1.5)",   make:function(){return sig(box(-0.75,0.75));}},
+  tri:    {label:"Triangle",    make:function(){return sig(fromFn(function(t){return Math.max(0,1-Math.abs(t));}));}},
+  gauss:  {label:"Gaussian",    make:function(){return sig(fromFn(function(t){return Math.exp(-t*t/(2*0.1225));}));}},
+  expo:   {label:"Exponential", make:function(){return sig(fromFn(function(t){return t>=0?Math.exp(-2*t):0;}));}},
+  imp:    {label:"Impulse \u03B4(\u03C4)",      make:function(){return sig(zeros(),[{pos:0,area:1}]);}},
+  impS:   {label:"Shifted \u03B4(\u03C4\u22121.2)", make:function(){return sig(zeros(),[{pos:1.2,area:1}]);}},
+  imp2:   {label:"Two impulses", make:function(){return sig(zeros(),[{pos:-1.2,area:1},{pos:1.2,area:1}]);}},
+  imp3:   {label:"Three impulses",make:function(){return sig(zeros(),[{pos:-1.5,area:1},{pos:0,area:1},{pos:1.5,area:1}]);}},
+  comb:   {label:"Sampling comb 1/T", axis:"\u03BD", make:function(){return sig(zeros(),[
+             {pos:-2.38,area:1},{pos:-1.19,area:1},{pos:0,area:1},{pos:1.19,area:1},{pos:2.38,area:1}]);}}
+};
+var PAIRS=[
+  {x:"box",  h:"box2", name:"Box ∗ box",         res:"triangle"},
+  {x:"box",  h:"boxn", name:"Box ∗ short box",   res:"trapezoid"},
+  {x:"box",  h:"expo", name:"Box ∗ exponential", res:"RC pulse"},
+  {x:"gauss",h:"gauss",name:"Gaussian ∗ Gaussian",res:"wider Gaussian"},
+  {x:"tri",  h:"boxn", name:"Triangle ∗ box",    res:"smoothed"},
+  {x:"gauss",h:"imp",  name:"Gaussian ∗ δ",  res:"unchanged"},
+  {x:"gauss",h:"impS", name:"Gaussian ∗ shifted δ",res:"translated"},
+  {x:"gauss",h:"imp3", name:"Gaussian ∗ impulses",res:"three copies"},
+  {x:"two",  h:"box2", name:"Two pulses ∗ box",  res:"overlapping"},
+  {x:"step", h:"expo", name:"Step ∗ exponential",res:"step response"},
+  {x:"spec", h:"comb", name:"Spectrum ∗ comb",  res:"replicas"}
+];
+
+// an impulse carries a unit-area triangular bump so the numerics stay honest
+function buildFull(s){
+  var f=new Float64Array(s.cont);
+  for(var k=0;k<s.imps.length;k++){
+    var im=s.imps[k], c=Math.round((im.pos-TMIN)/DT), w=3, norm=0, j;
+    for(j=-w;j<=w;j++){ if(c+j<0||c+j>=N) continue; norm+=(1-Math.abs(j)/(w+1)); }
+    for(j=-w;j<=w;j++){ if(c+j<0||c+j>=N) continue; f[c+j]+=im.area*(1-Math.abs(j)/(w+1))/(norm*DT); }
+  }
+  return f;
+}
+function isPure(s){
+  if(!s.imps.length) return false;
+  for(var i=0;i<N;i++) if(Math.abs(s.cont[i])>1e-9) return false;
+  return true;
+}
+var IMP_TOL=0.035;
+function impulseAt(list,t){
+  var tot=0;
+  for(var i=0;i<list.length;i++) if(Math.abs(list[i].pos-t)<IMP_TOL) tot+=list[i].area;
+  return tot;
+}
+function convolve(xf,hf){
+  var y=new Float64Array(N),k,i,j,s;
+  for(k=0;k<N;k++){ s=0;
+    for(i=0;i<N;i++){ j=k-i+Z; if(j<0||j>=N) continue; s+=xf[i]*hf[j]; }
+    y[k]=s*DT;
+  }
+  return y;
+}
+
+var S={xKey:"box",hKey:"box2",t:-0.6,playing:false,speed:1,
+       flip:null,drawing:null,drawBuf:null,drawLast:-1};
+var X,H,XF,HF,Y,yMax,prodMax,prodImpMax,pureBoth,yImps,yImpMax;
+
+function rebuild(){
+  X=XLIB[S.xKey].make(); H=HLIB[S.hKey].make();
+  XF=buildFull(X); HF=buildFull(H);
+  Y=convolve(XF,HF);
+  yMax=0; for(var i=0;i<N;i++) yMax=Math.max(yMax,Math.abs(Y[i]));
+  prodMax=0;
+  for(var k=0;k<N;k+=4){ for(var m=0;m<N;m+=2){ var j=k-m+Z; if(j<0||j>=N) continue;
+    var v=Math.abs(X.cont[m]*H.cont[j]); if(v>prodMax) prodMax=v; } }
+  pureBoth=isPure(X)&&isPure(H); yImps=[]; yImpMax=0;
+  if(pureBoth){
+    for(var a=0;a<X.imps.length;a++) for(var b=0;b<H.imps.length;b++){
+      var pos=X.imps[a].pos+H.imps[b].pos, ar=X.imps[a].area*H.imps[b].area, hit=null;
+      for(var c=0;c<yImps.length;c++) if(Math.abs(yImps[c].pos-pos)<1e-6){hit=yImps[c];break;}
+      if(hit) hit.area+=ar; else yImps.push({pos:pos,area:ar});
+    }
+    for(var d=0;d<yImps.length;d++) yImpMax=Math.max(yImpMax,Math.abs(yImps[d].area));
+  }
+  var xAbs=0,hAbs=0,n;
+  for(n=0;n<N;n++){ if(Math.abs(X.cont[n])>xAbs)xAbs=Math.abs(X.cont[n]);
+                    if(Math.abs(H.cont[n])>hAbs)hAbs=Math.abs(H.cont[n]); }
+  prodImpMax=0;
+  for(n=0;n<H.imps.length;n++) prodImpMax=Math.max(prodImpMax,Math.abs(H.imps[n].area)*xAbs);
+  for(n=0;n<X.imps.length;n++) prodImpMax=Math.max(prodImpMax,Math.abs(X.imps[n].area)*hAbs);
+}
+
+var cvX=document.getElementById("cvX"),cvH=document.getElementById("cvH"),
+    cvA=document.getElementById("cvA"),cvB=document.getElementById("cvB"),cvC=document.getElementById("cvC");
+var ctxX=cvX.getContext("2d"),ctxH=cvH.getContext("2d"),
+    ctxA=cvA.getContext("2d"),ctxB=cvB.getContext("2d"),ctxC=cvC.getContext("2d");
+var PAD={l:38,r:14,t:16,b:22};
+function fit(cv,ctx){
+  var dpr=Math.min(window.devicePixelRatio||1,2.5),w=cv.clientWidth,h=cv.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h); return {w:w,h:h};
+}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+var C={};
+function readTokens(){
+  ["--ink","--muted","--faint","--grid","--axis","--line","--cx","--ch","--cy",
+   "--cx-soft","--ch-soft","--cy-soft","--band","--surface"].forEach(function(k){C[k]=css(k);});
+}
+function mapX(tau,g){return PAD.l+(tau-TMIN)/(TMAX-TMIN)*(g.w-PAD.l-PAD.r);}
+function unmapX(px,g){return TMIN+(px-PAD.l)/(g.w-PAD.l-PAD.r)*(TMAX-TMIN);}
+function mapY(v,g,lo,hi){return PAD.t+(hi-v)/(hi-lo)*(g.h-PAD.t-PAD.b);}
+function unmapY(py,g,lo,hi){return hi-(py-PAD.t)/(g.h-PAD.t-PAD.b)*(hi-lo);}
+function fmt(v){var a=Math.abs(v);return (a>=10?v.toFixed(0):a>=1?v.toFixed(1):v.toFixed(2));}
+
+function axes(ctx,g,lo,hi,xlabel,dense){
+  var y0=mapY(0,g,lo,hi),i,stepv=dense?1:1;
+  ctx.lineWidth=1; ctx.strokeStyle=C["--grid"];
+  for(i=Math.ceil(TMIN);i<=TMAX;i+=stepv){var px=Math.round(mapX(i,g))+.5;
+    ctx.beginPath();ctx.moveTo(px,PAD.t);ctx.lineTo(px,g.h-PAD.b);ctx.stroke();}
+  ctx.strokeStyle=C["--axis"];
+  ctx.beginPath();ctx.moveTo(PAD.l,Math.round(y0)+.5);ctx.lineTo(g.w-PAD.r,Math.round(y0)+.5);ctx.stroke();
+  ctx.font='500 10px "IBM Plex Mono",monospace';ctx.fillStyle=C["--faint"];
+  ctx.textAlign="center";ctx.textBaseline="top";
+  for(i=Math.ceil(TMIN);i<=TMAX;i+=stepv){ if(i===0) continue;
+    if(dense&&Math.abs(i)%2===1&&g.w<420) continue;
+    ctx.fillText(String(i),mapX(i,g),g.h-PAD.b+4); }
+  ctx.textAlign="right";ctx.textBaseline="middle";
+  ctx.fillText(fmt(hi),PAD.l-6,mapY(hi,g,lo,hi)+4);
+  ctx.fillText("0",PAD.l-6,y0);
+  if(lo < -0.2*hi) ctx.fillText(fmt(lo),PAD.l-6,mapY(lo,g,lo,hi)-4);
+  ctx.textAlign="left";
+  ctx.fillText(xlabel,g.w-PAD.r-14,g.h-PAD.b+9);
+}
+function curve(ctx,g,arr,lo,hi,color,width,fill,xform){
+  var i,px,py,started=false,t;
+  function trace(){ started=false; ctx.beginPath();
+    for(i=0;i<N;i++){ t=xform?xform(TAU[i]):TAU[i]; px=mapX(t,g); py=mapY(arr[i],g,lo,hi);
+      if(!started){ctx.moveTo(px,py);started=true;} else ctx.lineTo(px,py); } }
+  if(fill){ trace(); var y0=mapY(0,g,lo,hi);
+    ctx.lineTo(mapX(xform?xform(TAU[N-1]):TAU[N-1],g),y0);
+    ctx.lineTo(mapX(xform?xform(TAU[0]):TAU[0],g),y0);
+    ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); }
+  trace();
+  ctx.strokeStyle=color;ctx.lineWidth=width||2;ctx.lineJoin="round";ctx.stroke();
+}
+function arrow(ctx,g,tau,val,lo,hi,color,label){
+  if(tau<TMIN||tau>TMAX) return;
+  var x=mapX(tau,g),y0=mapY(0,g,lo,hi),y1=mapY(val,g,lo,hi),dir=val>=0?1:-1;
+  if(Math.abs(y1-y0)<2.5) return;
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y1);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x-4.5,y1+7*dir);ctx.lineTo(x+4.5,y1+7*dir);ctx.closePath();ctx.fill();
+  if(label){ctx.font='500 10px "IBM Plex Mono",monospace';ctx.textAlign="left";ctx.textBaseline="bottom";
+    ctx.fillText(label,x+6,y1+(dir>0?0:13));}
+}
+function marker(ctx,g,tau,color){
+  var x=Math.round(mapX(tau,g))+.5;
+  ctx.save();ctx.setLineDash([3,3]);ctx.strokeStyle=color;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x,PAD.t-6);ctx.lineTo(x,g.h-PAD.b);ctx.stroke();ctx.restore();
+}
+function rangeOf(arr,imps,pad){
+  var mx=0,mn=0,i;
+  for(i=0;i<N;i++){if(arr[i]>mx)mx=arr[i];if(arr[i]<mn)mn=arr[i];}
+  if(imps) for(i=0;i<imps.length;i++){ if(imps[i].area>mx)mx=imps[i].area; if(imps[i].area<mn)mn=imps[i].area; }
+  if(mx<1e-9&&mn>-1e-9)mx=1;
+  return [mn<-1e-9?mn*(1+(pad||0.2)):-mx*0.14, mx*(1+(pad||0.2))];
+}
+function axSym(){return XLIB[S.xKey].axis||"\u03C4";}
+function axSymT(){return XLIB[S.xKey].axis||"t";}
+function idxOf(tau){var i=Math.round((tau-TMIN)/DT);return (i<0||i>=N)?-1:i;}
+
+// ---- the two given functions ---------------------------------------------
+function drawGiven(cv,ctx,which){
+  var g=fit(cv,ctx);
+  if(S.drawing===which){ drawSurface(ctx,g,which); return; }
+  var s=which==="x"?X:H, col=which==="x"?C["--cx"]:C["--ch"], soft=which==="x"?C["--cx-soft"]:C["--ch-soft"];
+  var r=rangeOf(s.cont,s.imps), lo=r[0], hi=r[1];
+  axes(ctx,g,lo,hi,axSym(),true);
+  curve(ctx,g,s.cont,lo,hi,col,2.2,soft);
+  var i;
+  for(i=0;i<s.imps.length;i++) arrow(ctx,g,s.imps[i].pos,s.imps[i].area,lo,hi,col,null);
+  var byArea=s.imps.slice().sort(function(a,b){return Math.abs(b.area)-Math.abs(a.area);}),taken=[];
+  ctx.font='500 10px "IBM Plex Mono",monospace';ctx.fillStyle=col;
+  ctx.textAlign="center";ctx.textBaseline="bottom";
+  for(i=0;i<byArea.length;i++){
+    var txt="("+byArea[i].area+")", lx=mapX(byArea[i].pos,g), hw=ctx.measureText(txt).width/2+4,
+        l=lx-hw, r=lx+hw, clash=false, q;
+    for(q=0;q<taken.length;q++) if(r>taken[q][0]&&l<taken[q][1]){clash=true;break;}
+    if(clash||l<PAD.l-4||r>g.w-PAD.r+4) continue;
+    ctx.fillText(txt,lx,mapY(byArea[i].area,g,lo,hi)-9);
+    taken.push([l,r]);
+  }
+}
+
+function drawA(){
+  var g=fit(cvA,ctxA),ctx=ctxA,i,j;
+  var k=idxOf(S.t); if(k<0)k=0;
+  var hs=zeros();
+  for(i=0;i<N;i++){j=k-i+Z; hs[i]=(j>=0&&j<N)?H.cont[j]:0;}
+  var rx=rangeOf(X.cont,X.imps),rh=rangeOf(hs,H.imps);
+  var lo=Math.min(rx[0],rh[0]),hi=Math.max(rx[1],rh[1]);
+  axes(ctx,g,lo,hi,axSym());
+  // band over the support where both are non-zero
+  ctx.fillStyle=C["--band"];
+  var run=-1;
+  for(i=0;i<N;i++){
+    j=k-i+Z;
+    var both=Math.abs(X.cont[i])>1e-6 && j>=0 && j<N && Math.abs(H.cont[j])>1e-6;
+    if(both&&run<0)run=i;
+    if((!both||i===N-1)&&run>=0){var x1=mapX(TAU[run],g),x2=mapX(TAU[i],g);
+      ctx.fillRect(x1,PAD.t,Math.max(1,x2-x1),g.h-PAD.b-PAD.t);run=-1;}
+  }
+  var sx=1;
+  if(S.flip){ var p=S.flip.p; sx=(p<0.5)?(1-4*p):(-1+4*(p-0.5));
+    curve(ctx,g,H.cont,lo,hi,C["--ch"],2.2,C["--ch-soft"],function(t){return t*sx;});
+    for(i=0;i<H.imps.length;i++) arrow(ctx,g,H.imps[i].pos*sx,H.imps[i].area,lo,hi,C["--ch"],null);
+  }else{
+    curve(ctx,g,hs,lo,hi,C["--ch"],2.2,C["--ch-soft"]);
+    for(i=0;i<H.imps.length;i++) arrow(ctx,g,S.t-H.imps[i].pos,H.imps[i].area,lo,hi,C["--ch"],null);
+  }
+  curve(ctx,g,X.cont,lo,hi,C["--cx"],2.2,C["--cx-soft"]);
+  for(i=0;i<X.imps.length;i++) arrow(ctx,g,X.imps[i].pos,X.imps[i].area,lo,hi,C["--cx"],null);
+  if(!S.flip){
+    marker(ctx,g,S.t,C["--ch"]);
+    ctx.font='500 10px "IBM Plex Mono",monospace';ctx.fillStyle=C["--ch"];
+    ctx.textAlign="center";ctx.textBaseline="bottom";
+    ctx.fillText("t",mapX(S.t,g),PAD.t-6);
+  }
+}
+function drawB(){
+  var g=fit(cvB,ctxB),ctx=ctxB,i,j;
+  var k=idxOf(S.t); if(k<0)k=0;
+  if(pureBoth){
+    var hiB=(yImpMax||1)*1.25, loB=-hiB*0.14, b, hits=[], m, found;
+    for(i=0;i<yImps.length;i++) if(yImps[i].area<0) loB=Math.min(loB,yImps[i].area*1.25);
+    axes(ctx,g,loB,hiB,axSym());
+    for(i=0;i<X.imps.length;i++) for(b=0;b<H.imps.length;b++){
+      if(Math.abs(S.t-(X.imps[i].pos+H.imps[b].pos))>=IMP_TOL) continue;
+      found=null;
+      for(m=0;m<hits.length;m++) if(Math.abs(hits[m].pos-X.imps[i].pos)<1e-6){found=hits[m];break;}
+      if(found) found.area+=X.imps[i].area*H.imps[b].area;
+      else hits.push({pos:X.imps[i].pos,area:X.imps[i].area*H.imps[b].area});
+    }
+    for(i=0;i<hits.length;i++) arrow(ctx,g,hits[i].pos,hits[i].area,loB,hiB,C["--cy"],null);
+    if(!hits.length){
+      ctx.font='400 11.5px "IBM Plex Sans",sans-serif';ctx.fillStyle=C["--faint"];
+      ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.fillText("no impulses line up at this shift",g.w/2,(PAD.t+g.h-PAD.b)/2);
+    }
+    marker(ctx,g,S.t,C["--ch"]);
+    return;
+  }
+  var p=zeros(); for(i=0;i<N;i++){j=k-i+Z; p[i]=(j>=0&&j<N)?X.cont[i]*H.cont[j]:0;}
+  var pimps=[],ix;
+  for(i=0;i<H.imps.length;i++){var tp=S.t-H.imps[i].pos; ix=idxOf(tp);
+    if(ix>=0&&Math.abs(X.cont[ix])>1e-9) pimps.push({pos:tp,area:H.imps[i].area*X.cont[ix]});}
+  for(i=0;i<X.imps.length;i++){var tq=X.imps[i].pos; var jq=k-idxOf(tq)+Z;
+    if(jq>=0&&jq<N&&Math.abs(H.cont[jq])>1e-9) pimps.push({pos:tq,area:X.imps[i].area*H.cont[jq]});}
+  var mn=0,mx=0;
+  for(i=0;i<N;i++){ if(p[i]>mx)mx=p[i]; if(p[i]<mn)mn=p[i]; }
+  for(i=0;i<pimps.length;i++){ if(pimps[i].area>mx)mx=pimps[i].area; if(pimps[i].area<mn)mn=pimps[i].area; }
+  mx=Math.max(mx,prodMax,prodImpMax);
+  if(mx<1e-9&&mn>-1e-9) mx=1;
+  var hi=mx*1.2, lo=(mn<-1e-9)?Math.min(mn,-prodMax)*1.2:-hi*0.14;
+  axes(ctx,g,lo,hi,axSym());
+  curve(ctx,g,p,lo,hi,C["--cy"],1.8,C["--cy-soft"]);
+  for(i=0;i<pimps.length;i++) arrow(ctx,g,pimps[i].pos,pimps[i].area,lo,hi,C["--cy"],null);
+  marker(ctx,g,S.t,C["--ch"]);
+}
+function drawC(){
+  var g=fit(cvC,ctxC),ctx=ctxC,i;
+  if(pureBoth){
+    var hiC=(yImpMax||1)*1.25, loC=-hiC*0.14;
+    for(i=0;i<yImps.length;i++) if(yImps[i].area<0) loC=Math.min(loC,yImps[i].area*1.25);
+    axes(ctx,g,loC,hiC,axSymT());
+    for(i=0;i<yImps.length;i++){
+      var swept=yImps[i].pos<=S.t+IMP_TOL;
+      ctx.save(); ctx.globalAlpha=swept?1:0.26;
+      arrow(ctx,g,yImps[i].pos,yImps[i].area,loC,hiC,C["--cy"],null);
+      ctx.restore();
+    }
+    marker(ctx,g,S.t,C["--ch"]);
+    return;
+  }
+  var hi=(yMax||1)*1.2, lo=-hi*0.14;
+  for(i=0;i<N;i++) if(Y[i]*1.2<lo) lo=Y[i]*1.2;
+  axes(ctx,g,lo,hi,axSymT());
+  ctx.save();ctx.globalAlpha=0.28;
+  curve(ctx,g,Y,lo,hi,C["--cy"],1.6);
+  ctx.restore();
+  var k=idxOf(S.t); if(k<0)k=0;
+  var y0=mapY(0,g,lo,hi),started=false,px,py;
+  ctx.beginPath();
+  for(i=0;i<=k;i++){px=mapX(TAU[i],g);py=mapY(Y[i],g,lo,hi);
+    if(!started){ctx.moveTo(px,py);started=true;}else ctx.lineTo(px,py);}
+  if(started){
+    ctx.lineTo(mapX(TAU[k],g),y0);ctx.lineTo(mapX(TAU[0],g),y0);ctx.closePath();
+    ctx.fillStyle=C["--cy-soft"];ctx.fill();
+    started=false;ctx.beginPath();
+    for(i=0;i<=k;i++){px=mapX(TAU[i],g);py=mapY(Y[i],g,lo,hi);
+      if(!started){ctx.moveTo(px,py);started=true;}else ctx.lineTo(px,py);}
+    ctx.strokeStyle=C["--cy"];ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.stroke();
+  }
+  marker(ctx,g,S.t,C["--ch"]);
+  var dx=mapX(S.t,g),dy=mapY(Y[k],g,lo,hi);
+  ctx.beginPath();ctx.arc(dx,dy,4.5,0,6.284);ctx.fillStyle=C["--cy"];ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle=C["--surface"];ctx.stroke();
+}
+function drawSurface(ctx,g,which){
+  var lo=-1.25,hi=1.25,i,any=false;
+  axes(ctx,g,lo,hi,axSym(),true);
+  ctx.beginPath();var started=false;
+  for(i=0;i<N;i++){ var v=S.drawBuf[i];
+    if(isNaN(v)){started=false;continue;}
+    any=true;
+    var px=mapX(TAU[i],g),py=mapY(v,g,lo,hi);
+    if(!started){ctx.moveTo(px,py);started=true;}else ctx.lineTo(px,py);}
+  ctx.strokeStyle=which==="x"?C["--cx"]:C["--ch"];ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.stroke();
+  if(!any){ctx.font='400 12px "IBM Plex Sans",sans-serif';ctx.fillStyle=C["--faint"];
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText("drag across here",g.w/2,(PAD.t+g.h-PAD.b)/2-22);}
+}
+
+function render(){
+  readTokens();
+  drawGiven(cvX,ctxX,"x"); drawGiven(cvH,ctxH,"h");
+  drawA();drawB();drawC();
+  var k=idxOf(S.t); if(k<0)k=0;
+  var val=pureBoth?impulseAt(yImps,S.t):Y[k];
+  document.getElementById("readT").textContent="t = "+(S.t<0?"−":" ")+Math.abs(S.t).toFixed(2);
+  document.getElementById("readArea").textContent=val.toFixed(3);
+  document.getElementById("readY").textContent=val.toFixed(3);
+  document.getElementById("tOut").textContent=(S.t<0?"−":"")+Math.abs(S.t).toFixed(2);
+  document.getElementById("tSlider").value=String(S.t);
+  [].forEach.call(document.querySelectorAll(".step"),function(el){
+    var n=+el.getAttribute("data-step");
+    el.classList.toggle("on", S.flip? n===1 : (S.playing&&n>1));
+  });
+}
+
+var last=0;
+function loop(ts){
+  var dt=last?Math.min(0.05,(ts-last)/1000):0; last=ts;
+  if(S.flip){ S.flip.p+=dt/S.flip.dur; if(S.flip.p>=1) S.flip=null; }
+  else if(S.playing){ S.t+=dt*1.6*S.speed; if(S.t>TSW_MAX) S.t=TSW_MIN; }
+  render();
+  requestAnimationFrame(loop);
+}
+
+var playBtn=document.getElementById("play");
+function chipRow(host,lib,which){
+  host.innerHTML="";
+  Object.keys(lib).forEach(function(key){
+    var b=document.createElement("button");
+    b.className="chip";b.type="button";b.textContent=lib[key].label;
+    b.setAttribute("aria-pressed",String((which==="x"?S.xKey:S.hKey)===key));
+    b.addEventListener("click",function(){
+      if(which==="x")S.xKey=key; else S.hKey=key;
+      rebuild();chipRow(host,lib,which);render();
+    });
+    host.appendChild(b);
+  });
+  var d=document.createElement("button");
+  d.className="chip act";d.type="button";d.textContent="Draw…";
+  d.addEventListener("click",function(){startDraw(which);});
+  host.appendChild(d);
+}
+function startDraw(which){
+  S.playing=false;playBtn.textContent="Play";
+  S.drawing=which;S.drawBuf=new Float64Array(N);S.drawBuf.fill(NaN);S.drawLast=-1;
+  document.getElementById(which==="x"?"drawbarX":"drawbarH").hidden=false;
+  render();
+}
+function endDraw(which,commit){
+  if(commit){
+    var a=zeros(),i;for(i=0;i<N;i++)a[i]=isNaN(S.drawBuf[i])?0:S.drawBuf[i];
+    var lib=which==="x"?XLIB:HLIB;
+    lib.custom={label:"Your curve",make:(function(arr){return function(){return sig(new Float64Array(arr));};})(a)};
+    if(which==="x")S.xKey="custom"; else S.hKey="custom";
+    S.drawing=null; rebuild();
+    chipRow(document.getElementById(which==="x"?"xChips":"hChips"),lib,which);
+  } else S.drawing=null;
+  document.getElementById(which==="x"?"drawbarX":"drawbarH").hidden=true;
+  render();
+}
+[].forEach.call(document.querySelectorAll("[data-done]"),function(b){
+  b.addEventListener("click",function(){endDraw(b.getAttribute("data-done"),true);});});
+[].forEach.call(document.querySelectorAll("[data-cancel]"),function(b){
+  b.addEventListener("click",function(){endDraw(b.getAttribute("data-cancel"),false);});});
+
+function paintOn(cv,which,e){
+  if(S.drawing!==which)return;
+  var g={w:cv.clientWidth,h:cv.clientHeight},r=cv.getBoundingClientRect();
+  var tau=unmapX(e.clientX-r.left,g),v=unmapY(e.clientY-r.top,g,-1.25,1.25);
+  v=Math.max(-1.2,Math.min(1.2,v));
+  var i=Math.round((tau-TMIN)/DT); if(i<0||i>=N) return;
+  if(S.drawLast>=0&&Math.abs(i-S.drawLast)>1){
+    var a=S.drawLast,b=i,v0=S.drawBuf[a],lo=Math.min(a,b),hi=Math.max(a,b);
+    for(var j=lo;j<=hi;j++){S.drawBuf[j]=v0+(v-v0)*((j-a)/(b-a));}
+  } else S.drawBuf[i]=v;
+  S.drawLast=i; render();
+}
+[[cvX,"x"],[cvH,"h"]].forEach(function(pair){
+  var cv=pair[0],w=pair[1];
+  cv.addEventListener("pointerdown",function(e){ if(S.drawing!==w)return;
+    cv.setPointerCapture(e.pointerId); paintOn(cv,w,e); });
+  cv.addEventListener("pointermove",function(e){ if(e.buttons) paintOn(cv,w,e); });
+  cv.addEventListener("pointerup",function(){S.drawLast=-1;});
+});
+
+playBtn.addEventListener("click",function(){
+  if(S.drawing) return;
+  S.playing=!S.playing; playBtn.textContent=S.playing?"Pause":"Play";
+  if(S.playing&&S.t>=TSW_MAX-0.01) S.t=TSW_MIN;
+});
+function setT(v){S.playing=false;playBtn.textContent="Play";
+  S.t=Math.max(TSW_MIN,Math.min(TSW_MAX,v));render();}
+document.getElementById("stepB").addEventListener("click",function(){setT(S.t-0.1);});
+document.getElementById("stepF").addEventListener("click",function(){setT(S.t+0.1);});
+document.getElementById("tSlider").addEventListener("input",function(e){setT(parseFloat(e.target.value));});
+document.getElementById("spd").addEventListener("input",function(e){
+  S.speed=parseFloat(e.target.value);
+  document.getElementById("spdOut").textContent=S.speed.toFixed(1)+"×";});
+document.getElementById("flipBtn").addEventListener("click",function(){
+  if(S.drawing)return;
+  S.playing=false;playBtn.textContent="Play";S.t=TSW_MIN;
+  if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches) S.flip={p:0,dur:1.3};
+  render();
+});
+var pairsHost=document.getElementById("pairs");
+PAIRS.forEach(function(p){
+  var b=document.createElement("button");b.className="pair";b.type="button";
+  b.innerHTML="<span>"+p.name+"</span><span class='res'>"+p.res+"</span>";
+  b.addEventListener("click",function(){
+    S.xKey=p.x;S.hKey=p.h;S.t=TSW_MIN;S.playing=true;playBtn.textContent="Pause";
+    rebuild();
+    chipRow(document.getElementById("xChips"),XLIB,"x");
+    chipRow(document.getElementById("hChips"),HLIB,"h");
+    render();
+  });
+  pairsHost.appendChild(b);
+});
+document.addEventListener("keydown",function(e){
+  if(e.target.tagName==="INPUT")return;
+  if(e.code==="Space"){e.preventDefault();playBtn.click();}
+  else if(e.key==="ArrowRight"){e.preventDefault();setT(S.t+(e.shiftKey?0.5:0.05));}
+  else if(e.key==="ArrowLeft"){e.preventDefault();setT(S.t-(e.shiftKey?0.5:0.05));}
+});
+window.addEventListener("resize",render);
+
+readTokens();
+rebuild();
+chipRow(document.getElementById("xChips"),XLIB,"x");
+chipRow(document.getElementById("hChips"),HLIB,"h");
+render();
+requestAnimationFrame(loop);
+})();
+</script>
+
+</body></html>

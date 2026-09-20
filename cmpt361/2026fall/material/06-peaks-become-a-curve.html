@@ -1,0 +1,920 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>When Peaks Become a Curve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root{
+    --ground:#f5f7fa;
+    --surface:#ffffff;
+    --surface-2:#eef1f7;
+    --ink:#16213a;
+    --muted:#69738a;
+    --rule:#dbe1ec;
+    --rule-soft:#e9edf4;
+    --sum:#16213a;
+    --c1:#2f52a8;
+    --c2:#0e8279;
+    --c3:#9c4489;
+    --probe:#c07714;
+    --probe-soft:rgba(192,119,20,.20);
+    --band:#0f8279;
+    --band-soft:rgba(15,130,121,.17);
+    --neg-soft:rgba(47,82,168,.20);
+    --focus:#2f52a8;
+    --shadow:0 1px 2px rgba(22,33,58,.06),0 8px 24px -16px rgba(22,33,58,.4);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0e121c;
+      --surface:#161c29;
+      --surface-2:#1d2433;
+      --ink:#e7ebf4;
+      --muted:#939db4;
+      --rule:#2a3244;
+      --rule-soft:#222939;
+      --sum:#dbe3f2;
+      --c1:#8fb0ff;
+      --c2:#46cbbd;
+      --c3:#e08ccd;
+      --probe:#f0b453;
+      --probe-soft:rgba(240,180,83,.24);
+      --band:#46cbbd;
+      --band-soft:rgba(70,203,189,.20);
+      --neg-soft:rgba(143,176,255,.26);
+      --focus:#8fb0ff;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0e121c;
+    --surface:#161c29;
+    --surface-2:#1d2433;
+    --ink:#e7ebf4;
+    --muted:#939db4;
+    --rule:#2a3244;
+    --rule-soft:#222939;
+    --sum:#dbe3f2;
+    --c1:#8fb0ff;
+    --c2:#46cbbd;
+    --c3:#e08ccd;
+    --probe:#f0b453;
+    --probe-soft:rgba(240,180,83,.24);
+    --band:#46cbbd;
+    --band-soft:rgba(70,203,189,.20);
+    --neg-soft:rgba(143,176,255,.26);
+    --focus:#8fb0ff;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  [hidden]{display:none !important;}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1440px;
+    margin:0 auto;
+    padding-inline:18px;
+    padding-block:12px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  /* ---------- top bar: title and example tabs on one line ---------- */
+  .topbar{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:20px;flex-wrap:wrap;
+    border-bottom:1px solid var(--rule);
+  }
+  .titleblock{display:flex;flex-direction:column;gap:1px;padding-bottom:8px;}
+  .eyebrow{
+    margin:0;font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+  }
+  h1{
+    margin:0;font-family:Spectral,Georgia,serif;font-weight:600;
+    font-size:clamp(20px,2.2vw,27px);line-height:1.1;letter-spacing:-.01em;
+  }
+  .tabs{display:flex;gap:0;flex-wrap:wrap;}
+  .tab{
+    font:inherit;font-size:13.5px;color:var(--muted);
+    background:none;border:none;border-bottom:2px solid transparent;
+    padding:7px 14px 8px;cursor:pointer;margin-bottom:-1px;
+    display:flex;align-items:baseline;gap:7px;
+    transition:color .12s ease,border-color .12s ease;
+  }
+  .tab .idx{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:.1em;}
+  .tab:hover{color:var(--ink);}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:500;}
+
+  button.mode{
+    font:inherit;font-size:12.5px;color:var(--ink);
+    background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+    padding:5px 12px;cursor:pointer;margin-bottom:8px;white-space:nowrap;
+    transition:background .12s ease,border-color .12s ease,color .12s ease;
+  }
+  button.mode:hover{border-color:var(--muted);}
+  button.mode[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface);}
+
+  label.chk{
+    display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);cursor:pointer;
+  }
+  label.chk input{accent-color:var(--band);width:13px;height:13px;cursor:pointer;}
+
+  /* ---------- three columns, side by side ---------- */
+  .cols{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  .panel{
+    background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+    box-shadow:var(--shadow);padding:11px 12px 10px;
+    display:flex;flex-direction:column;gap:7px;min-width:0;
+  }
+  .panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .panel-head h2{
+    margin:0;font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:10.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);
+  }
+  .panel-head .hint{font-size:11.5px;color:var(--muted);}
+
+  canvas{display:block;width:100%;flex:0 0 auto;touch-action:none;}
+  #leftCv{height:450px;border-radius:4px;}
+  #specCv{height:450px;border-radius:4px;}
+  .wrap.detail #leftCv{height:244px;}
+  .wrap.detail #specCv{height:244px;}
+  .wrap:not(.detail) .recipe,
+  .wrap:not(.detail) .controls{display:none;}
+  .wrap:not(.detail) .cols{grid-template-columns:1fr 1fr;}
+  .wrap.detail #noteSimple{display:none;}
+  .wrap:not(.detail) #noteDetail{display:none;}
+  #mulCv{height:321px;border-radius:4px;cursor:ew-resize;}
+  #totCv{height:92px;border-radius:4px;}
+
+  .caption{margin:0;font-size:12px;color:var(--muted);line-height:1.4;min-height:3.2em;}
+  .caption b{color:var(--ink);font-weight:500;}
+
+  .mulout{
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+    font-variant-numeric:tabular-nums;
+    background:var(--surface-2);border:1px solid var(--rule-soft);
+    border-radius:6px;padding:5px 9px;
+  }
+  .mulout .lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .mulout .op{color:var(--muted);}
+  .mulout .sig{color:var(--sum);font-weight:500;}
+  .mulout .prb{color:var(--probe);font-weight:500;}
+  .mulout .res{color:var(--ink);font-weight:500;background:var(--probe-soft);border-radius:4px;padding:1px 7px;}
+
+  /* ---------- control bar ---------- */
+  .controls{
+    background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+    box-shadow:var(--shadow);padding:9px 12px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .rowlab{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+  }
+  button.freq{
+    font:inherit;font-size:12.5px;font-family:"IBM Plex Mono",ui-monospace,monospace;
+    color:var(--ink);background:var(--surface-2);border:1px solid var(--rule);
+    border-radius:6px;padding:4px 10px;cursor:pointer;
+    transition:background .12s ease,border-color .12s ease,color .12s ease;
+  }
+  button.freq:hover{border-color:var(--muted);}
+  button.freq[aria-pressed="true"]{background:var(--probe);border-color:var(--probe);color:var(--surface);}
+  .slider-shell{flex:1 1 170px;min-width:120px;display:flex;align-items:center;}
+  input[type=range]{width:100%;accent-color:var(--probe);height:20px;cursor:pointer;background:transparent;}
+  button.play{
+    font:inherit;font-size:12.5px;font-weight:500;
+    color:var(--surface);background:var(--probe);border:1px solid var(--probe);
+    border-radius:6px;padding:5px 14px;cursor:pointer;transition:filter .12s ease;
+  }
+  button.play:hover{filter:brightness(1.08);}
+  .result{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .result .lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .result .arrow{color:var(--muted);}
+  .result .val{color:var(--probe);font-weight:500;}
+  .result .fin{color:var(--band);font-weight:500;}
+  .result .tail{color:var(--muted);font-family:"IBM Plex Sans",sans-serif;}
+
+  :focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+
+  .colophon{margin:0;font-size:11.5px;color:var(--muted);line-height:1.45;}
+  .colophon code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:var(--ink);}
+  .colophon b{color:var(--ink);font-weight:500;}
+
+  @media (max-width:1080px){
+    .cols{grid-template-columns:1fr 1fr;}
+    .panel.recipe{grid-column:1 / -1;}
+  }
+  @media (max-width:720px){
+    .cols{grid-template-columns:1fr;}
+    .panel.recipe{grid-column:auto;}
+    .caption{min-height:0;}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition-duration:.01ms !important;} }
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="titleblock">
+      <p class="eyebrow">Visual computing · Fourier</p>
+      <h1>When peaks become a curve</h1>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <button class="mode" id="modeBtn" aria-pressed="false">Show how each number is computed</button>
+  </header>
+
+  <div class="cols">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Spatial domain</h2>
+        <span class="hint" id="leftHint">the sine curves, and their sum</span>
+      </div>
+      <canvas id="leftCv" aria-label="The ingredient sine curves and the signal they add up to"></canvas>
+      <p class="caption" id="leftCap"></p>
+    </section>
+
+    <section class="panel recipe">
+      <div class="panel-head">
+        <h2>Where each number comes from</h2>
+        <span class="hint">pick · multiply · add up</span>
+      </div>
+      <canvas id="mulCv" aria-label="The signal, the chosen sine curve, and their product at every x"></canvas>
+      <div class="mulout">
+        <span class="lbl">at x =</span><span id="mX">0.170</span>
+        <span class="op">→</span>
+        <span class="sig" id="mF">0.000</span>
+        <span class="op">×</span>
+        <span class="prb" id="mS">0.000</span>
+        <span class="op">=</span>
+        <span class="res" id="mP">0.000</span>
+      </div>
+      <canvas id="totCv" aria-label="The area accumulated so far, sweeping from left to right"></canvas>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Frequency domain</h2>
+        <label class="chk"><input type="checkbox" id="joinChk"> join the dots</label>
+      </div>
+      <canvas id="specCv" aria-label="The weight of every sine curve, plotted against its frequency"></canvas>
+      <p class="caption" id="specCap"></p>
+    </section>
+  </div>
+
+  <div class="controls">
+    <span class="rowlab">Try</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="freqBtns"></div>
+    <div class="slider-shell">
+      <input id="uSlider" type="range" min="1" max="24" step="1" value="3" aria-label="Which sine curve to test">
+    </div>
+    <button class="play" id="playBtn">▶ Play</button>
+    <div class="result">
+      <span class="lbl">u</span><span id="rU">3</span>
+      <span class="arrow">→</span>
+      <span class="lbl">area</span><span class="val" id="rArea">0.500</span>
+      <span class="arrow">× 2 →</span>
+      <span class="lbl">weight</span><span class="fin" id="rWeight">1.000</span>
+      <span class="tail" id="rTail"></span>
+    </div>
+  </div>
+
+  <p class="colophon" id="noteSimple">Each sine curve in the signal contributes one number, and those numbers sit in order along the frequency axis. With two ingredients there are two of them; with twenty-four the list is no longer something you read off one by one — <b>it is a curve</b>. The frequency domain is a 1D function of <code>u</code>, exactly as the signal is a 1D function of <code>x</code>.</p>
+  <p class="colophon" id="noteDetail">Window one unit wide, <code>u</code> = whole cycles across it. The area is exactly half the weight — hence the <code>× 2</code>. <b>Drag the middle plot</b> to move the marker; <b>Play</b> sweeps the area.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var N = 512, U_MAX = 24, TWO_PI = Math.PI*2;
+
+  // One plot box, used for f(x) in BOTH the left panel and the middle panel, so
+  // the same curve is drawn at the same width, the same half-height and the same
+  // vertical scale in the two places.
+  var PLOT_INSET = 10, LBL_H = 15, ROW_GAP = 12;
+  var detail = false, joinDots = false;
+  var PLOT_HALF = 80, BOX_H = 2*PLOT_HALF + LBL_H;
+  function geom(){
+    PLOT_HALF = detail ? 42 : 102;
+    BOX_H = 2*PLOT_HALF + LBL_H;
+  }
+
+  function seeded(s){
+    return function(){ s = (s*1664525 + 1013904223) >>> 0; return s/4294967296; };
+  }
+  function manyComponents(){
+    var rnd = seeded(7731), out = [];
+    for(var k=1;k<=U_MAX;k++){
+      var r = 0.38 + 0.62*rnd();
+      var sgn = rnd() < 0.5 ? -1 : 1;
+      out.push({ f:k, a: sgn*r/(1 + Math.pow(k/7.5, 1.35)) });
+    }
+    return out;
+  }
+
+  var EXAMPLES = [
+    {
+      idx:"01", tab:"Two sines", mode:"stems",
+      comps:[{f:3,a:1.00},{f:7,a:0.55}],
+      leftHint:"two sine curves, and their sum",
+      leftCap:"Two ingredients. Added together they make a shape that no longer looks obviously periodic — but nothing has been lost.",
+      specCap:"<b>Two peaks.</b> Their heights are exactly the two amplitudes, 1.00 and 0.55. Everywhere else the weight is zero."
+    },
+    {
+      idx:"02", tab:"Three sines", mode:"stems",
+      comps:[{f:2,a:0.95},{f:6,a:0.60},{f:11,a:0.35}],
+      leftHint:"three sine curves, and their sum",
+      leftCap:"One more ingredient, faster and fainter than the others. In the sum it is the small ripple riding on the big swell.",
+      specCap:"<b>Three peaks</b>, at 2, 6 and 11 — again the exact amplitudes. The list of weights is still short enough to read off."
+    },
+    {
+      idx:"03", tab:"Twenty-four sines", mode:"band",
+      comps:manyComponents(),
+      leftHint:"a sum of 24 sine curves",
+      leftCap:"The same construction with 24 ingredients instead of three. Nobody would guess the recipe by looking at it.",
+      specCap:"<b>No peaks to count.</b> Every frequency carries some weight, and the list has become a shape — a 1D function of u, just as f(x) is a 1D function of x. A weight below zero means that sine enters upside down."
+    }
+  ];
+
+  var TINT = ["--c1","--c2","--c3"];
+  var cur = 0, curU = 3, cursorX = 0.17;
+  var samples = new Float64Array(N);
+  var weights = new Float64Array(U_MAX+1);
+  var cum = new Float64Array(N);
+  var animT = 1, animating = false, animStart = 0;
+  var ANIM_MS = 2600;
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function sineIntegral(u){
+    var s = 0, k = TWO_PI*u/N;
+    for(var j=0;j<N;j++) s += samples[j]*Math.sin(k*j);
+    return s/N;
+  }
+  function buildSignal(){
+    var comps = EXAMPLES[cur].comps, peak = 0, j, c;
+    for(j=0;j<N;j++){
+      var v = 0;
+      for(c=0;c<comps.length;c++) v += comps[c].a*Math.sin(TWO_PI*comps[c].f*(j/N));
+      samples[j] = v;
+      if(Math.abs(v) > peak) peak = Math.abs(v);
+    }
+    if(EXAMPLES[cur].mode === "band" && peak > 0){
+      var g = 1.08/peak;
+      for(j=0;j<N;j++) samples[j] *= g;
+      for(c=0;c<comps.length;c++) comps[c].a *= g;
+    }
+    for(var u=0;u<=U_MAX;u++) weights[u] = 2*sineIntegral(u);
+    weights[0] = 0;
+  }
+  function recomputeCum(){
+    var run = 0;
+    for(var j=0;j<N;j++){
+      run += samples[j]*Math.sin(TWO_PI*curU*(j/N));
+      cum[j] = run/N;
+    }
+  }
+  function fmt(v){ return (Math.abs(v) < 5e-4 ? 0 : v).toFixed(3); }
+  function jIdx(){ return Math.max(0, Math.min(N-1, Math.round(animT*(N-1)))); }
+  function shownWeight(u){ return u === curU ? 2*cum[jIdx()] : weights[u]; }
+
+  function sigPeak(){
+    var m = 0.001;
+    for(var j=0;j<N;j++) if(Math.abs(samples[j]) > m) m = Math.abs(samples[j]);
+    return m;
+  }
+  function compPeak(){
+    var comps = EXAMPLES[cur].comps, m = 0.001;
+    for(var c=0;c<comps.length;c++) if(Math.abs(comps[c].a) > m) m = Math.abs(comps[c].a);
+    return m;
+  }
+  function niceStep(range){
+    var raw = Math.max(1e-6, range)/4;
+    var pw = Math.pow(10, Math.floor(Math.log(raw)/Math.LN10));
+    var n = raw/pw;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pw;
+  }
+  function weightRange(){
+    var hi = 0.001, lo = 0;
+    for(var u=0;u<=U_MAX;u++){
+      if(weights[u] > hi) hi = weights[u];
+      if(weights[u] < lo) lo = weights[u];
+    }
+    if(lo > -0.004*hi) lo = 0;
+    var step = niceStep(hi - lo);
+    return { lo: lo < 0 ? Math.floor((lo*1.14)/step)*step : 0,
+             hi: Math.ceil((hi*1.14)/step)*step, step: step };
+  }
+  function tintOf(f){
+    var comps = EXAMPLES[cur].comps;
+    if(EXAMPLES[cur].mode === "band") return null;
+    for(var c=0;c<comps.length;c++) if(comps[c].f === f) return TINT[c % TINT.length];
+    return null;
+  }
+
+  // ---------- canvas plumbing -------------------------------------------
+  var rootStyle = null;
+  function tok(n){
+    if(!rootStyle) rootStyle = getComputedStyle(document.documentElement);
+    return rootStyle.getPropertyValue(n).trim();
+  }
+  function setup(cv){
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var w = Math.min(4000, cv.clientWidth), h = Math.min(1200, cv.clientHeight);
+    if(w < 2 || h < 2) return null;
+    if(cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
+      cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    }
+    var ctx = cv.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = tok("--surface"); ctx.fillRect(0,0,w,h);
+    return { ctx:ctx, w:w, h:h };
+  }
+  function plotCurve(ctx, L, R, midY, half, scale, get, color, width){
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath();
+    for(var j=0;j<N;j++){
+      var x = L + (j/(N-1))*(R-L);
+      var y = midY - (get(j)/scale)*half;
+      if(j===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  function baseline(ctx, L, R, y, color){
+    ctx.strokeStyle = color; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, Math.round(y)+0.5); ctx.lineTo(R, Math.round(y)+0.5); ctx.stroke();
+  }
+  function badge(ctx, x, y, n){
+    var bw = 13, bh = 13;
+    ctx.fillStyle = tok("--probe");
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x, y, bw, bh, 3); else ctx.rect(x, y, bw, bh);
+    ctx.fill();
+    ctx.fillStyle = tok("--surface");
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(String(n), x + bw/2, y + bh/2 + 0.5);
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    return x + bw + 6;
+  }
+  // the shared f(x)-sized plot box
+  function plotBox(ctx, L, R, top, get, scale, color, width, label, step){
+    var mid = top + LBL_H + PLOT_HALF;
+    var tx = L + 2;
+    if(step) tx = badge(ctx, L + 2, top - 1, step);
+    if(label){
+      ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText(label, tx, top);
+    }
+    baseline(ctx, L, R, mid, tok("--rule"));
+    plotCurve(ctx, L, R, mid, PLOT_HALF, scale, get, color, width);
+    return mid;
+  }
+
+  var leftCv = document.getElementById("leftCv");
+  var specCv = document.getElementById("specCv");
+  var mulCv  = document.getElementById("mulCv");
+  var totCv  = document.getElementById("totCv");
+
+  // ---------- spatial panel ---------------------------------------------
+  function drawLeft(){
+    var st = setup(leftCv); if(!st) return;
+    var ctx = st.ctx, w = st.w, h = st.h;
+    var L = PLOT_INSET, R = w - PLOT_INSET;
+    var ex = EXAMPLES[cur], comps = ex.comps;
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textBaseline = "top";
+
+    if(ex.mode === "band"){
+      var btop = Math.max(34, h - BOX_H - 26);
+      ctx.fillStyle = tok("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText("24 ingredient sine curves — too many to draw one by one", L+2, btop - 44);
+      var bsep = btop - 14;
+      ctx.save();
+      ctx.strokeStyle = tok("--rule"); ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(L, Math.round(bsep)+0.5); ctx.lineTo(R, Math.round(bsep)+0.5); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = tok("--surface"); ctx.fillRect(L, bsep-7, 22, 14);
+      ctx.fillStyle = tok("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText("=", L+5, bsep);
+      ctx.textBaseline = "top";
+      plotBox(ctx, L, R, btop, function(k){ return samples[k]; },
+        sigPeak(), tok("--sum"), 2.2, "f(x)", null);
+      return;
+    }
+
+    var rowH = 28, gap = 10, sepH = 16;
+    var stackH = comps.length*rowH + (comps.length-1)*gap + sepH + BOX_H;
+    var y = Math.max(2, (h - stackH)/2);
+    var cScale = compPeak();
+
+    for(var c=0;c<comps.length;c++){
+      var mid = y + rowH/2 + 6;
+      baseline(ctx, L, R, mid, tok("--rule-soft"));
+      (function(comp, tint){
+        plotCurve(ctx, L, R, mid, rowH/2 - 2, cScale,
+          function(k){ return comp.a*Math.sin(TWO_PI*comp.f*(k/N)); }, tok(tint), 1.8);
+      })(comps[c], TINT[c % TINT.length]);
+      ctx.fillStyle = tok(TINT[c % TINT.length]);
+      ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText((c===0 ? "  " : "+ ") + comps[c].a.toFixed(2) + " · sin(2π·" + comps[c].f + "·x)", L+2, y-4);
+      y += rowH + gap;
+    }
+    y -= gap;
+
+    var sepY = y + sepH/2 + 2;
+    ctx.save();
+    ctx.strokeStyle = tok("--rule"); ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(L, Math.round(sepY)+0.5); ctx.lineTo(R, Math.round(sepY)+0.5); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = tok("--surface"); ctx.fillRect(L, sepY-7, 22, 14);
+    ctx.fillStyle = tok("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText("=", L+5, sepY);
+    ctx.textBaseline = "top";
+
+    y += sepH;
+    plotBox(ctx, L, R, y, function(k){ return samples[k]; }, sigPeak(),
+            tok("--sum"), 2.2, "f(x)", null);
+  }
+
+  // ---------- frequency panel -------------------------------------------
+  function drawSpec(){
+    var st = setup(specCv); if(!st) return;
+    var ctx = st.ctx, w = st.w, h = st.h;
+    var L = 46, R = w-12, T = 14, B = h-30;
+    if(R <= L+20 || B <= T+20) return;
+    var rg = weightRange(), span = rg.hi - rg.lo;
+    var X = function(u){ return L + (u/U_MAX)*(R-L); };
+    var Y = function(a){ return B - ((a - rg.lo)/span)*(B-T); };
+    var zeroY = Y(0), ex = EXAMPLES[cur];
+    var dec = rg.step < 0.05 ? 3 : 2;
+
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.strokeStyle = tok("--rule-soft"); ctx.lineWidth = 1;
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for(var a = rg.lo; a <= rg.hi + rg.step*0.5; a += rg.step){
+      var gy = Math.round(Y(a))+0.5;
+      ctx.beginPath(); ctx.moveTo(L,gy); ctx.lineTo(R,gy); ctx.stroke();
+      ctx.fillStyle = tok("--muted");
+      ctx.fillText(a.toFixed(dec), L-7, Y(a));
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for(var t=0; t<=U_MAX; t+=4){
+      ctx.fillStyle = tok("--muted");
+      ctx.fillText(String(t), X(t), B+6);
+    }
+    ctx.strokeStyle = tok("--rule"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L+0.5,T); ctx.lineTo(L+0.5,B); ctx.lineTo(R,B+0.5); ctx.stroke();
+    ctx.fillStyle = tok("--muted");
+    ctx.fillText("frequency u  (cycles across the window)", (L+R)/2, B+17);
+
+    if(rg.lo < 0){
+      ctx.strokeStyle = tok("--rule"); ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(L, Math.round(zeroY)+0.5); ctx.lineTo(R, Math.round(zeroY)+0.5); ctx.stroke();
+    }
+
+    if(ex.mode === "band" || joinDots){
+      ctx.fillStyle = tok("--band-soft");
+      ctx.beginPath(); ctx.moveTo(X(0), zeroY);
+      for(var u1=0; u1<=U_MAX; u1++) ctx.lineTo(X(u1), Y(weights[u1]));
+      ctx.lineTo(X(U_MAX), zeroY); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = tok("--band"); ctx.lineWidth = 2; ctx.lineJoin = "round";
+      ctx.beginPath();
+      for(var u2=0; u2<=U_MAX; u2++){
+        if(u2===0) ctx.moveTo(X(u2), Y(weights[u2])); else ctx.lineTo(X(u2), Y(weights[u2]));
+      }
+      ctx.stroke();
+    }
+
+    var mx = X(curU), my = Y(shownWeight(curU));
+    if(detail){
+      ctx.save();
+      ctx.strokeStyle = tok("--probe"); ctx.lineWidth = 1.4; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(mx, zeroY);
+      ctx.lineTo(mx, my + (shownWeight(curU) >= 0 ? 10 : -10)); ctx.stroke();
+      ctx.restore();
+    }
+
+    for(var u=1; u<=U_MAX; u++){
+      var wv = detail ? shownWeight(u) : weights[u], px = X(u), py = Y(wv);
+      var tint = tintOf(u), strong = !!tint;
+      var col = tint ? tok(tint) : (ex.mode === "band" ? tok("--band") : tok("--muted"));
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = strong ? 1 : 0.5;
+      ctx.lineWidth = strong ? 3 : 1.2;
+      ctx.beginPath(); ctx.moveTo(px, zeroY); ctx.lineTo(px, py); ctx.stroke();
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(px, py, strong ? 3.6 : 2, 0, TWO_PI); ctx.fill();
+      ctx.globalAlpha = 1;
+      if(strong){
+        ctx.fillStyle = col; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+        ctx.fillText(wv.toFixed(2), px, py-8);
+      }
+    }
+
+    if(detail){
+      ctx.strokeStyle = tok("--probe"); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(mx, my, 7, 0, TWO_PI); ctx.stroke();
+    }
+  }
+
+  // ---------- pick, multiply, add up ------------------------------------
+  function drawMul(){
+    var st = setup(mulCv); if(!st) return;
+    var ctx = st.ctx, w = st.w;
+    // lock the drawing width to the left panel's, so f(x) is drawn identically
+    var usable = Math.min(w, leftCv.clientWidth || w);
+    var L = PLOT_INSET, R = L + (usable - 2*PLOT_INSET);
+    var X = function(k){ return L + (k/(N-1))*(R-L); };
+
+    var prod = new Float64Array(N), pm = 0.001;
+    for(var j=0;j<N;j++){
+      var v = samples[j]*Math.sin(TWO_PI*curU*(j/N));
+      prod[j] = v;
+      if(Math.abs(v) > pm) pm = Math.abs(v);
+    }
+    var rows = [
+      { get:function(k){ return samples[k]; }, sc:sigPeak(), col:tok("--sum"),
+        lab:"f(x)", step:null, glyph:"×" },
+      { get:function(k){ return Math.sin(TWO_PI*curU*(k/N)); }, sc:1, col:tok("--probe"),
+        lab:"sin(2π·" + curU + "·x)   the sine curve you picked", step:1, glyph:"=" },
+      { get:function(k){ return prod[k]; }, sc:pm, col:tok("--probe"),
+        lab:"f(x) · sin(2π·" + curU + "·x)   multiplied point by point", step:2, fill:true }
+    ];
+
+    var cx = animating ? animT : cursorX;
+    var ci = Math.max(0, Math.min(N-1, Math.round(cx*(N-1))));
+    var jMax = jIdx();
+    var colW = (R-L)/(N-1) + 1.6;
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+
+    var mids = [];
+    for(var r=0;r<3;r++){
+      var top = r*(BOX_H + ROW_GAP), row = rows[r];
+      var mid = top + LBL_H + PLOT_HALF;
+      mids.push({ mid:mid, sc:row.sc, col:row.col });
+
+      if(row.fill){
+        for(var k=0;k<=jMax;k++){
+          ctx.strokeStyle = prod[k] >= 0 ? tok("--probe-soft") : tok("--neg-soft");
+          ctx.lineWidth = colW;
+          ctx.beginPath();
+          ctx.moveTo(X(k), mid); ctx.lineTo(X(k), mid - (prod[k]/pm)*PLOT_HALF);
+          ctx.stroke();
+        }
+      }
+      plotBox(ctx, L, R, top, row.get, row.sc, row.col, r === 0 ? 2.2 : 1.8, row.lab, row.step);
+
+      if(row.glyph){
+        ctx.fillStyle = tok("--muted"); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+        ctx.font = '13px "IBM Plex Mono", monospace';
+        ctx.fillText(row.glyph, R - 3, top + BOX_H + ROW_GAP/2);
+        ctx.font = '10.5px "IBM Plex Mono", monospace';
+        ctx.textAlign = "left"; ctx.textBaseline = "top";
+      }
+    }
+
+    var mxp = X(ci);
+    ctx.save();
+    ctx.strokeStyle = tok("--probe"); ctx.globalAlpha = 0.5; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(mxp, 2); ctx.lineTo(mxp, 3*BOX_H + 2*ROW_GAP - 2); ctx.stroke();
+    ctx.restore();
+
+    var flip = cx > 0.66;
+    for(var q=0;q<3;q++){
+      var mm = mids[q], val = rows[q].get(ci);
+      var py = mm.mid - (val/mm.sc)*PLOT_HALF;
+      ctx.fillStyle = mm.col;
+      ctx.beginPath(); ctx.arc(mxp, py, 4, 0, TWO_PI); ctx.fill();
+      ctx.strokeStyle = tok("--surface"); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(mxp, py, 4, 0, TWO_PI); ctx.stroke();
+      ctx.fillStyle = mm.col;
+      ctx.textAlign = flip ? "right" : "left"; ctx.textBaseline = "middle";
+      ctx.fillText(fmt(val), mxp + (flip ? -8 : 8), py);
+    }
+
+    document.getElementById("mX").textContent = cx.toFixed(3);
+    document.getElementById("mF").textContent = fmt(samples[ci]);
+    document.getElementById("mS").textContent = fmt(Math.sin(TWO_PI*curU*(ci/N)));
+    document.getElementById("mP").textContent = fmt(prod[ci]);
+  }
+
+  function drawTotal(){
+    var st = setup(totCv); if(!st) return;
+    var ctx = st.ctx, w = st.w, h = st.h;
+    var usable = Math.min(w, leftCv.clientWidth || w);
+    var L = 52, R = L + (usable - PLOT_INSET) - 96, T = 20, B = h-12;
+    if(R <= L+20) return;
+    var fin = cum[N-1];
+    var lo = 0, hi = 0;
+    for(var k=0;k<N;k++){ if(cum[k] < lo) lo = cum[k]; if(cum[k] > hi) hi = cum[k]; }
+    var pad = Math.max(0.04, (hi-lo)*0.24);
+    lo -= pad; hi += pad;
+    var X = function(t){ return L + t*(R-L); };
+    var Y = function(v){ return B - ((v-lo)/(hi-lo))*(B-T); };
+    var jMax = jIdx();
+
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    var tx = badge(ctx, PLOT_INSET + 2, 0, 3);
+    ctx.fillStyle = tok("--muted"); ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("add up the area, left to right", tx, 1);
+
+    ctx.strokeStyle = tok("--rule-soft"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, Math.round(Y(0))+0.5); ctx.lineTo(R, Math.round(Y(0))+0.5); ctx.stroke();
+    ctx.fillStyle = tok("--muted"); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText("0.000", L-7, Y(0));
+
+    ctx.save();
+    ctx.strokeStyle = tok("--band"); ctx.lineWidth = 1.4; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(L, Math.round(Y(fin))+0.5); ctx.lineTo(R+8, Math.round(Y(fin))+0.5); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = tok("--band"); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText(fmt(fin), R+13, Y(fin));
+
+    ctx.strokeStyle = tok("--probe"); ctx.lineWidth = 2;
+    ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath();
+    for(var a=0;a<=jMax;a++){
+      var px = X(a/(N-1)), py = Y(cum[a]);
+      if(a===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = tok("--probe");
+    ctx.beginPath(); ctx.arc(X(jMax/(N-1)), Y(cum[jMax]), 3.6, 0, TWO_PI); ctx.fill();
+
+    var area = cum[jMax];
+    document.getElementById("rU").textContent = String(curU);
+    document.getElementById("rArea").textContent = fmt(area);
+    document.getElementById("rWeight").textContent = fmt(2*area);
+    document.getElementById("rTail").textContent =
+      animT < 1 ? "— adding up…"
+                : (Math.abs(weights[curU]) < 0.02 ? "— this sine is not in the signal"
+                                                  : "— the bar at u = " + curU);
+  }
+
+  function renderAll(){ geom(); drawLeft(); drawSpec(); drawMul(); drawTotal(); }
+
+  // ---------- controls ----------------------------------------------------
+  var tabsEl = document.getElementById("tabs");
+  EXAMPLES.forEach(function(ex, i){
+    var b = document.createElement("button");
+    b.className = "tab"; b.id = "tab-" + i;
+    b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", i===0 ? "true" : "false");
+    b.innerHTML = '<span class="idx">' + ex.idx + '</span>' + ex.tab;
+    b.addEventListener("click", function(){ selectExample(i); });
+    tabsEl.appendChild(b);
+  });
+
+  var freqBtnsEl = document.getElementById("freqBtns");
+  var uSlider = document.getElementById("uSlider");
+  var playBtn = document.getElementById("playBtn");
+
+  function suggestedFreqs(){
+    var ex = EXAMPLES[cur];
+    if(ex.mode === "band") return [2, 6, 11, 18];
+    var list = ex.comps.map(function(c){ return c.f; });
+    for(var u=1; u<=U_MAX && list.length < ex.comps.length+1; u++){
+      if(list.indexOf(u) === -1 && u > list[0]){ list.push(u); break; }
+    }
+    return list;
+  }
+  function paintFreqButtons(){
+    freqBtnsEl.innerHTML = "";
+    suggestedFreqs().forEach(function(f){
+      var b = document.createElement("button");
+      b.className = "freq"; b.textContent = "u = " + f;
+      b.setAttribute("aria-pressed", f === curU ? "true" : "false");
+      b.addEventListener("click", function(){ setU(f, true); });
+      freqBtnsEl.appendChild(b);
+    });
+  }
+
+  var wrapEl = document.querySelector(".wrap");
+  var modeBtn = document.getElementById("modeBtn");
+  var joinChk = document.getElementById("joinChk");
+
+  modeBtn.addEventListener("click", function(){
+    detail = !detail;
+    wrapEl.classList.toggle("detail", detail);
+    modeBtn.setAttribute("aria-pressed", detail ? "true" : "false");
+    modeBtn.textContent = detail ? "Hide how each number is computed"
+                                 : "Show how each number is computed";
+    stopAnim("▶ Play");
+    requestAnimationFrame(renderAll);
+  });
+
+  joinChk.addEventListener("change", function(){
+    joinDots = joinChk.checked;
+    renderAll();
+  });
+
+  function stopAnim(label){
+    animating = false; animT = 1;
+    playBtn.textContent = label || "▶ Play";
+  }
+  function tick(ts){
+    if(!animating) return;
+    if(!animStart) animStart = ts;
+    animT = Math.min(1, (ts - animStart)/ANIM_MS);
+    renderAll();
+    if(animT >= 1){ animating = false; playBtn.textContent = "▶ Replay"; return; }
+    requestAnimationFrame(tick);
+  }
+  function play(){
+    if(reduceMotion){ stopAnim("▶ Play"); renderAll(); return; }
+    animating = true; animStart = 0; animT = 0;
+    playBtn.textContent = "■ Stop";
+    requestAnimationFrame(tick);
+  }
+  playBtn.addEventListener("click", function(){
+    if(animating){ stopAnim("▶ Replay"); renderAll(); } else play();
+  });
+
+  function setU(u, andPlay){
+    stopAnim("▶ Play");
+    curU = Math.max(1, Math.min(U_MAX, Math.round(u)));
+    uSlider.value = String(curU);
+    recomputeCum();
+    paintFreqButtons();
+    if(andPlay) play(); else renderAll();
+  }
+  uSlider.addEventListener("input", function(){ setU(parseInt(uSlider.value,10)); });
+
+  function selectExample(i){
+    cur = i;
+    EXAMPLES.forEach(function(_, k){
+      document.getElementById("tab-"+k).setAttribute("aria-selected", k===i ? "true":"false");
+    });
+    buildSignal();
+    document.getElementById("leftHint").textContent = EXAMPLES[i].leftHint;
+    document.getElementById("leftCap").innerHTML = EXAMPLES[i].leftCap;
+    document.getElementById("specCap").innerHTML = EXAMPLES[i].specCap;
+    joinDots = EXAMPLES[i].mode === "band";
+    joinChk.checked = joinDots;
+    setU(EXAMPLES[i].mode === "band" ? 6 : EXAMPLES[i].comps[0].f);
+  }
+
+  // dragging the marker
+  var dragging = false;
+  function cursorFromEvent(e){
+    var rc = mulCv.getBoundingClientRect();
+    var usable = Math.min(rc.width, leftCv.clientWidth || rc.width);
+    var l = PLOT_INSET, r = l + (usable - 2*PLOT_INSET);
+    return Math.max(0, Math.min(1, (e.clientX - rc.left - l)/(r - l)));
+  }
+  mulCv.addEventListener("pointerdown", function(e){
+    dragging = true; mulCv.setPointerCapture(e.pointerId);
+    stopAnim("▶ Play");
+    cursorX = cursorFromEvent(e); renderAll();
+  });
+  mulCv.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    cursorX = cursorFromEvent(e); renderAll();
+  });
+  ["pointerup","pointercancel"].forEach(function(ev){
+    mulCv.addEventListener(ev, function(){ dragging = false; });
+  });
+
+  // ---------- boot --------------------------------------------------------
+  var lastBox = "", roPending = false;
+  var ro = new ResizeObserver(function(){
+    var box = [leftCv.clientWidth, leftCv.clientHeight, specCv.clientWidth, specCv.clientHeight,
+               mulCv.clientWidth, mulCv.clientHeight, totCv.clientWidth].join("x");
+    if(box === lastBox || roPending) return;
+    lastBox = box; roPending = true;
+    requestAnimationFrame(function(){ roPending = false; renderAll(); });
+  });
+  ro.observe(leftCv); ro.observe(specCv); ro.observe(mulCv); ro.observe(totCv);
+
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(){
+    rootStyle = null; renderAll();
+  });
+  new MutationObserver(function(){ rootStyle = null; renderAll(); })
+    .observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
+
+  selectExample(0);
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(renderAll); }
+})();
+</script>
+
+</body></html>
