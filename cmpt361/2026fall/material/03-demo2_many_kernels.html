@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Convolution to ConvNet · Demo 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface2:#E9EDF2; --ink:#182230; --muted:#5F6E7E; --line:#D5DCE4;
+  --accent:#0E7C86; --accent-ink:#FFFFFF; --accent-soft:#D7EEF0;
+  --r:#E5484D; --g:#2FA46A; --b:#3E63DD;
+  --c0:#E5484D; --c1:#2FA46A; --c2:#3E63DD; --c3:#D97706; --c4:#8E4EC6; --c5:#0E7C86; --c6:#C2298A; --c7:#6B7F1A;
+  --shadow:0 1px 2px rgba(20,30,40,.06),0 6px 20px rgba(20,30,40,.06);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --pane:#F7F9FB;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1319; --surface:#161D26; --surface2:#1F2833; --ink:#E7ECF2; --muted:#98A6B5; --line:#2A3542;
+  --accent:#2FB3BF; --accent-ink:#06282B; --accent-soft:#12363A; --pane:#121922;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1319; --surface:#161D26; --surface2:#1F2833; --ink:#E7ECF2; --muted:#98A6B5; --line:#2A3542;
+  --accent:#2FB3BF; --accent-ink:#06282B; --accent-soft:#12363A; --pane:#121922;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+canvas{display:block;image-rendering:pixelated;max-width:100%}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
+p{margin:0}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:10px 20px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;line-height:1.15;margin-right:auto}
+.brand b{font-size:15px;font-weight:600}
+.brand span{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px 7px 8px;cursor:pointer;text-align:left}
+.tab .n{width:24px;height:24px;border-radius:6px;background:var(--surface2);display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--muted)}
+.tab .t{display:flex;flex-direction:column;line-height:1.1}
+.tab .t b{font-size:13px;font-weight:500}
+.tab .t span{font-size:11px;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.tab[aria-selected="true"] .n{background:var(--accent);color:var(--accent-ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+main{padding:22px 20px 60px;max-width:1380px;margin:0 auto}
+section[role="tabpanel"]{display:flex;flex-direction:column;gap:18px}
+.lede{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;align-items:end}
+.lede h2{font-size:26px;letter-spacing:-.01em}
+.lede p{color:var(--muted);max-width:62ch}
+.lede .kicker{font-family:var(--mono);font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+@media (max-width:820px){.lede{grid-template-columns:1fr}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:16px}
+.panel h3{font-size:14px;font-weight:600;margin-bottom:10px}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+select.sel{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:13px}
+input[type=range]{accent-color:var(--accent)}
+.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.shape{font-family:var(--mono);font-size:13px;background:var(--surface2);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.shape b{font-weight:500;color:var(--accent)}
+.note{font-size:13px;color:var(--muted)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
+.callout b{font-weight:600}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.stepbar{display:flex;gap:6px;flex-wrap:wrap}
+.step{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;background:var(--surface);display:flex;gap:8px;align-items:center}
+.step i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.step[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.step[aria-current="step"] i{color:var(--accent)}
+.kgrid{display:grid;gap:2px}
+.kgrid .c{width:36px;height:30px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;border-radius:4px;background:var(--surface2)}
+.kgrid input{width:36px;height:30px;text-align:center;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:4px;background:var(--surface);padding:0}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;border-radius:999px;padding:2px 10px 2px 6px;border:1px solid var(--line)}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.stage{background:var(--pane);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage canvas{width:100%;height:auto;image-rendering:auto}
+.formula{font-family:var(--mono);font-size:13px;line-height:1.7;background:var(--surface2);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:nowrap}
+.formula .hl{color:var(--accent);font-weight:500}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="topbar">
+  <div class="brand"><b>Convolution → ConvNet</b><span>CMPT 361 · from one kernel to a whole network</span></div>
+  <nav class="tabs" hidden role="tablist" aria-label="Demos">
+    <button class="tab" role="tab" id="tab-1" aria-controls="demo-1" aria-selected="true"><span class="n">1</span><span class="t"><b>Kernels get depth</b><span>grey → RGB, 2D kernel → 3D kernel</span></span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="demo-2" aria-selected="false"><span class="n">2</span><span class="t"><b>Many kernels, many channels</b><span>a bank of filters makes a 5-channel image</span></span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="demo-3" aria-selected="false"><span class="n">3</span><span class="t"><b>A whole ConvNet</b><span>CIFAR-10 classifier you can click through</span></span></button>
+  </nav>
+</header>
+<main>
+<section id="demo-2" role="tabpanel" aria-labelledby="tab-2">
+  <div class="lede">
+    <div><div class="kicker">Demo 2 · width, then depth again</div><h2>Many kernels make many channels — and the next kernels get deeper</h2></div>
+    <p>One kernel gives one output map. Use five different 3×3×3 kernels on the same RGB image and you get five maps — stack them and you have a <em>feature image</em> with five channels. The next layer's kernels must therefore be 3×3×<b>5</b>. Seven of them give a seven-channel image, and the pattern repeats: <em>number of kernels in = number of channels out</em>.</p>
+  </div>
+
+  <div class="panel">
+    <div class="controls" style="justify-content:space-between">
+      <div class="stepbar" id="d2-steps">
+        <button class="step" data-phase="r1" aria-current="step"><i>round 1</i>RGB image ⊛ 5 kernels (3×3×3) → 5 channels</button>
+        <button class="step" data-phase="shift"><i>→</i>the output becomes the next input</button>
+        <button class="step" data-phase="r2"><i>round 2</i>5-channel image ⊛ 7 kernels (3×3×5) → 7 channels</button>
+      </div>
+      <div class="controls">
+        <button class="btn primary" id="d2-play">▶ Play</button>
+        <button class="btn" id="d2-reset">Restart</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin:12px 0 6px;flex-wrap:wrap">
+      <span class="label">Timeline</span>
+      <input type="range" id="d2-time" min="0" max="10000" value="0" step="1" style="flex:1;min-width:200px" aria-label="Animation timeline">
+      <span class="label" style="margin-left:8px">Speed</span>
+      <select class="sel" id="d2-speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+    </div>
+    <div class="stage"><canvas id="d2-canvas" width="1200" height="540"></canvas></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <span class="shape" id="d2-shape-in">input 12×12×<b>3</b></span><span class="mono">⊛</span>
+      <span class="shape" id="d2-shape-k"><b>5</b> kernels, each 3×3×<b>3</b></span><span class="mono">→</span>
+      <span class="shape" id="d2-shape-out">output 10×10×<b>5</b></span>
+    </div>
+  </div>
+  <div class="callout" id="d2-msg"><b>Round 1.</b> Press Play. Each of the five kernels slides over the whole RGB image in turn; each pass produces one 10×10 map, and the five maps stack into a 10×10×5 feature image.</div>
+</section>
+
+<script>
+(function(){
+// ---------- scene (same 12×12 colour image as Demo 1) ----------
+const W=12,H=12; const IMG=[];
+for(let y=0;y<H;y++){const row=[];for(let x=0;x<W;x++){let c;
+  if(y<7) c=[92+y*6,150+y*5,235-y*3]; else if(y===7) c=[120,170,90]; else c=[60+(y%2)*10,140+((x+y)%3)*12,50];
+  if(y>=1&&y<=3&&x>=8&&x<=10) c=[245,150,40]; if(y===2&&x===9) c=[255,200,90];
+  if(y>=3&&y<=4&&x>=1&&x<=4) c=[240,240,245]; if(y===9&&x>=5&&x<=6) c=[140,80,40]; if(y>=7&&y<=8&&x>=4&&x<=7) c=[30,110,45];
+  row.push(c);} IMG.push(row);}
+// channel-major input for round 1: IN1[c][y][x]
+const IN1=[0,1,2].map(c=>IMG.map(r=>r.map(p=>p[c])));
+const SX=[[-1,0,1],[-2,0,2],[-1,0,1]], SY=[[-1,-2,-1],[0,0,0],[1,2,1]], LAP=[[0,1,0],[1,-4,1],[0,1,0]], G=[[1,2,1],[2,4,2],[1,2,1]].map(r=>r.map(v=>v/16)), Z=[[0,0,0],[0,0,0],[0,0,0]], ONE=[[1,1,1],[1,1,1],[1,1,1]];
+const K1=[ {name:'Sobel-x (all channels)',s:[SX,SX,SX]}, {name:'Sobel-y (all channels)',s:[SY,SY,SY]}, {name:'colour: +R −B',s:[ONE,Z,ONE.map(r=>r.map(v=>-v))]}, {name:'Laplacian on G',s:[Z,LAP,Z]}, {name:'Gaussian blur (all)',s:[G,G,G]} ];
+// deterministic pseudo-random kernels for round 2: 7 kernels × 5 slabs
+let seed=7; const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff;};
+const K2=Array.from({length:7},(_,k)=>({name:'learned-looking kernel '+(k+1), s:Array.from({length:5},()=>Array.from({length:3},()=>Array.from({length:3},()=>Math.round((rnd()*2-1)*4)/2)))}));
+function convValid(IN,ker){ const C=IN.length, h=IN[0].length-2, w=IN[0][0].length-2, out=[]; for(let y=0;y<h;y++){const r=[];for(let x=0;x<w;x++){let s=0;for(let c=0;c<C;c++)for(let i=0;i<3;i++)for(let j=0;j<3;j++)s+=ker.s[c][i][j]*IN[c][y+i][x+j];r.push(s);}out.push(r);}return out;}
+const M1=K1.map(k=>convValid(IN1,k));      // 5 maps 10×10
+const M2=K2.map(k=>convValid(M1,k));       // 7 maps 8×8
+const ROUND=[ {IN:IN1, K:K1, M:M1, n:W, on:W-2, inTint:'rgb'}, {IN:M1, K:K2, M:M2, n:W-2, on:W-4, inTint:'feat'} ];
+
+// ---------- timeline ----------
+// phases: r1 slide×5 (each followed by fly), shift, r2 slide×7 (+fly), end
+const PH=[]; for(let k=0;k<5;k++){PH.push({t:'slide',r:0,k,d:2600});PH.push({t:'fly',r:0,k,d:650});} PH.push({t:'shift',d:1600}); for(let k=0;k<7;k++){PH.push({t:'slide',r:1,k,d:2000});PH.push({t:'fly',r:1,k,d:650});} PH.push({t:'end',d:1});
+const TOTAL=PH.reduce((a,p)=>a+p.d,0); let acc=0; PH.forEach(p=>{p.start=acc;acc+=p.d;});
+let T=0, playing=false, last=0, speed=1;
+const cv=document.getElementById('d2-canvas'), ctx=cv.getContext('2d'), slider=document.getElementById('d2-time'), playBtn=document.getElementById('d2-play');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const CH=['#E5484D','#2FA46A','#3E63DD']; const FC=['--c0','--c1','--c2','--c3','--c4','--c5','--c6','--c7'];
+const featCol=k=>css(FC[k%8]);
+const hex2rgb=h=>{h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];};
+function phaseAt(t){ for(let i=PH.length-1;i>=0;i--) if(t>=PH[i].start) return [PH[i],(t-PH[i].start)/PH[i].d]; return [PH[0],0]; }
+const ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
+
+// ---------- drawing ----------
+function tintCell(col,v01){ const [r,g,b]=hex2rgb(col); const f=Math.max(0,Math.min(1,v01)); return `rgb(${Math.round(18+(r-18)*f)},${Math.round(18+(g-18)*f)},${Math.round(18+(b-18)*f)})`; }
+function mapNorm(M){ let mx=1; for(const r of M) for(const v of r) mx=Math.max(mx,Math.abs(v)); return v=>0.5+0.5*v/mx; }
+function rgbNorm(){ return v=>v/255; }
+function pill(x,y,txt,col){ctx.save();ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x,y,txt.length>1?30:22,18,5);ctx.fill();ctx.fillStyle='#fff';ctx.font='600 11px '+css('--mono');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x+(txt.length>1?15:11),y+9.5);ctx.restore();}
+function slab(x0,y0,cell,n,colorFn,border,tag,alpha=1){ ctx.save(); ctx.globalAlpha=alpha; for(let y=0;y<n;y++)for(let x=0;x<n;x++){ctx.fillStyle=colorFn(y,x);ctx.fillRect(x0+x*cell,y0+y*cell,cell-1,cell-1);} ctx.strokeStyle=border;ctx.lineWidth=2;ctx.strokeRect(x0-1.5,y0-1.5,n*cell+2,n*cell+2); if(tag) pill(x0+3,y0+3,tag,border); ctx.restore(); }
+function kcolor(v){ if(v===0) return css('--surface2'); const a=Math.min(1,Math.abs(v)/2); return v>0?`rgba(14,124,134,${0.2+0.55*a})`:`rgba(217,119,6,${0.2+0.55*a})`; }
+function kernelStack(x0,y0,cell,ker,cols,dx,dy,tags){ const C=ker.s.length; for(let c=C-1;c>=0;c--){ const x=x0+c*dx, y=y0-c*dy; ctx.fillStyle=css('--surface'); ctx.fillRect(x-1,y-1,3*cell+1,3*cell+1); for(let i=0;i<3;i++)for(let j=0;j<3;j++){ctx.fillStyle=css('--surface');ctx.fillRect(x+j*cell,y+i*cell,cell-1,cell-1);ctx.fillStyle=kcolor(ker.s[c][i][j]);ctx.fillRect(x+j*cell,y+i*cell,cell-1,cell-1);} ctx.strokeStyle=cols(c); ctx.lineWidth=cell>10?2:1; ctx.strokeRect(x-1,y-1,3*cell+1,3*cell+1); if(tags&&cell>=14) pill(x-8,y-8,tags(c),cols(c)); } }
+function arrow(x1,y1,x2,y2,col,w=1.5){ctx.save();ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();const a=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(a-.4),y2-9*Math.sin(a-.4));ctx.lineTo(x2-9*Math.cos(a+.4),y2-9*Math.sin(a+.4));ctx.closePath();ctx.fill();ctx.restore();}
+function text(s,x,y,size=12,col,align='left',weight=500,mono=true){ctx.save();ctx.fillStyle=col||css('--muted');ctx.font=`${weight} ${size}px ${mono?css('--mono'):css('--sans')}`;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(s,x,y);ctx.restore();}
+
+// layout constants
+const IX=60, IY=250, CELL=18, DX=14, DY=10;      // input stack (front slab origin)
+const KX=470, KY=300, KC=24, KDX=16, KDY=11;     // active kernel
+const BX=640, BY=70;                              // kernel bank (list)
+const OX=790, OY=250;                             // map being built
+const STX=980, STY=270, SC=15;                    // output stack
+
+function drawInputStack(x0,y0,cell,round,alpha=1,win=null){ const R=ROUND[round]; const C=R.IN.length; const norm=round===0?rgbNorm():null;
+  for(let c=C-1;c>=0;c--){ const x=x0+c*DX, y=y0-c*DY; const col=round===0?CH[c]:featCol(c); const nf=round===0?norm:mapNorm(R.IN[c]);
+    slab(x,y,cell,R.n,(yy,xx)=>tintCell(col,nf(R.IN[c][yy][xx])),col,round===0?'RGB'[c]:'ch'+(c+1),alpha);
+    if(win){ ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=3; ctx.strokeRect(x+win[1]*cell-1,y+win[0]*cell-1,3*cell+1,3*cell+1); ctx.restore(); } } }
+function drawOutStack(x0,y0,cell,round,count,alpha=1){ const R=ROUND[round]; for(let k=Math.min(count,R.M.length)-1;k>=0;k--){ const x=x0+k*DX, y=y0-k*DY; const nf=mapNorm(R.M[k]); slab(x,y,cell,R.on,(yy,xx)=>tintCell(featCol(k),nf(R.M[k][yy][xx])),featCol(k),'ch'+(k+1),alpha); } }
+
+function draw(){
+  const dpr=Math.min(2,window.devicePixelRatio||1), LW=1200, LH=540; if(cv.width!==LW*dpr){cv.width=LW*dpr;cv.height=LH*dpr;} ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,LW,LH);
+  const [ph,lt]=phaseAt(T); const r=ph.r??(ph.t==='shift'?0:1); const R=ROUND[r]; const nK=R.K.length;
+  const depth=R.IN.length;
+
+  // ----- SHIFT phase: output stack of round 1 slides to input position -----
+  if(ph.t==='shift'){ const e=ease(lt);
+    const x=STX+(IX-STX)*e, y=STY+(IY-STY)*e, cell=SC+(CELL-SC)*e;
+    // fade out old input & kernels
+    drawInputStack(IX,IY,CELL,0,1-Math.min(1,lt*2.5));
+    text('round 1 input fades — the 5-channel output becomes the round 2 input',IX,IY-5*DY-20,12,css('--muted'));
+    drawOutStack(x,y,cell,0,5,1);
+    if(lt>0.5){ const a=(lt-0.5)*2; ctx.save(); ctx.globalAlpha=a; drawBank(1,-1); ctx.restore(); text('new kernel bank: 7 kernels, each 3×3×5',BX-20,BY-22,12,css('--accent')); }
+    return; }
+  if(ph.t==='end'){ drawInputStack(IX,IY,CELL,1,1); text('input 10×10×5',IX,IY-4*DY-20); drawBank(1,-1); drawOutStack(STX,STY,SC,1,7); text('output 8×8×7 · ready for round 3…',STX,STY-6*DY-20,12,css('--accent')); return; }
+
+  // ----- SLIDE / FLY phases -----
+  const k=ph.k, n=R.on, npos=n*n; let pos=-1, win=null;
+  if(ph.t==='slide'){ pos=Math.min(npos-1,Math.floor(lt*npos)); win=[Math.floor(pos/n),pos%n]; }
+  const done=ph.t==='fly'?k:k; // maps already in stack
+  // input
+  text(`input ${R.n}×${R.n}×${depth}`,IX,IY-(depth-1)*DY-20);
+  drawInputStack(IX,IY,CELL,r,1,win);
+  // active kernel (large)
+  text(`kernel ${k+1} of ${nK} · 3×3×${depth}`,KX-10,KY-(depth-1)*KDY-34,12,css('--accent'));
+  kernelStack(KX,KY,KC,R.K[k],c=>r===0?CH[c]:featCol(c),KDX,KDY,c=>r===0?'RGB'[c]:'ch'+(c+1));
+  text(R.K[k].name,KX-10,KY+3*KC+22,11,css('--muted'),'left',400,false);
+  // bank
+  drawBank(r,k);
+  // map being built / flying
+  const nf=mapNorm(R.M[k]);
+  if(ph.t==='slide'){
+    text(`output map ${k+1} · ${n}×${n}`,OX,OY-20);
+    slab(OX,OY,CELL,n,(yy,xx)=>{const i=yy*n+xx; return i<=pos?tintCell(featCol(k),nf(R.M[k][yy][xx])):css('--surface2');},featCol(k),null);
+    ctx.save();ctx.strokeStyle=css('--accent');ctx.lineWidth=3;ctx.strokeRect(OX+win[1]*CELL-1,OY+win[0]*CELL-1,CELL+1,CELL+1);ctx.restore();
+    // arrows: window (front slab) -> kernel -> output cell
+    arrow(IX+win[1]*CELL+3*CELL+4,IY+win[0]*CELL+1.5*CELL,KX-12,KY+1.5*KC,css('--accent'));
+    arrow(KX+3*KC+(depth-1)*KDX+8,KY+1.5*KC-(depth-1)*KDY/2,OX+win[1]*CELL-6,OY+win[0]*CELL+CELL/2,css('--accent'));
+    text(`${9*depth} products → 1 number`,KX+1.5*KC+(depth-1)*KDX/2,KY+3*KC+40,11,css('--accent'),'center');
+  } else { // fly: finished map moves into stack slot k
+    const e=ease(lt); const tx=STX+k*DX, ty=STY-k*DY; const x=OX+(tx-OX)*e, y=OY+(ty-OY)*e, cell=CELL+(SC-CELL)*e;
+    slab(x,y,cell,n,(yy,xx)=>tintCell(featCol(k),nf(R.M[k][yy][xx])),featCol(k),e>0.7?'ch'+(k+1):null);
+  }
+  // output stack so far
+  text(`output so far: ${n}×${n}×${done}`,STX,STY-(nK-1)*DY-20);
+  drawOutStack(STX,STY,SC,r,done);
+  // ghost outline of the full stack
+  ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle=css('--line'); ctx.lineWidth=1; for(let q=done;q<nK;q++){ if(ph.t==='fly'&&q===k) continue; ctx.strokeRect(STX+q*DX-1.5,STY-q*DY-1.5,n*SC+2,n*SC+2);} ctx.restore();
+}
+function drawBank(r,active){ const R=ROUND[r]; const nK=R.K.length, depth=R.IN.length; const cell=7, dx=5, dy=3.5; const rowH=Math.min(52,440/nK);
+  text(`kernel bank · ${nK} × (3×3×${depth})`,BX-20,BY-8,11,css('--muted'));
+  for(let q=0;q<nK;q++){ const y=BY+q*rowH+ (depth-1)*dy + 6; const x=BX;
+    if(q===active){ ctx.save(); ctx.fillStyle=css('--accent-soft'); ctx.beginPath(); ctx.roundRect(x-26,y-(depth-1)*dy-6,100,rowH-4,6); ctx.fill(); ctx.restore(); }
+    kernelStack(x,y,cell,R.K[q],c=>r===0?CH[c]:featCol(c),dx,dy,null);
+    text('k'+(q+1),x-22,y+3*cell-2,11,q===active?css('--accent'):css('--muted'));
+    if(q<active) { ctx.save(); ctx.fillStyle=featCol(q); ctx.beginPath(); ctx.arc(x+3*cell+(depth-1)*dx+14,y+1.5*cell-(depth-1)*dy/2,4,0,7); ctx.fill(); ctx.restore(); } } }
+
+// ---------- text ----------
+function updateText(){ const [ph]=phaseAt(T); const r=ph.r??(ph.t==='shift'?1:1); const steps=document.querySelectorAll('#d2-steps .step');
+  const which=ph.t==='shift'?'shift':(ph.r===0?'r1':'r2'); steps.forEach(b=>b.setAttribute('aria-current',b.dataset.phase===which?'step':'false'));
+  const sIn=document.getElementById('d2-shape-in'), sK=document.getElementById('d2-shape-k'), sOut=document.getElementById('d2-shape-out'), msg=document.getElementById('d2-msg');
+  if(ph.t==='shift'||ph.r===1||ph.t==='end'){ sIn.innerHTML='input 10×10×<b>5</b>'; sK.innerHTML='<b>7</b> kernels, each 3×3×<b>5</b>'; sOut.innerHTML='output 8×8×<b>7</b>'; }
+  else { sIn.innerHTML='input 12×12×<b>3</b>'; sK.innerHTML='<b>5</b> kernels, each 3×3×<b>3</b>'; sOut.innerHTML='output 10×10×<b>5</b>'; }
+  if(ph.t==='slide'&&ph.r===0) msg.innerHTML=`<b>Round 1 · kernel ${ph.k+1} of 5.</b> A 3×3×3 kernel slides over the RGB image — 27 products and one sum per stop — and writes one 10×10 map. Each kernel makes exactly one map (one channel).`;
+  else if(ph.t==='fly'&&ph.r===0) msg.innerHTML=`<b>Map ${ph.k+1} joins the stack.</b> ${ph.k+1} kernel${ph.k?'s':''} done → ${ph.k+1} channel${ph.k?'s':''} so far. After all five: a 10×10×5 feature image.`;
+  else if(ph.t==='shift') msg.innerHTML='<b>The output is the next input.</b> The 10×10×5 feature image is just a 5-channel image. So the next layer needs kernels of depth 5: 3×3×5, 45 weights each. We choose how many — here, seven.';
+  else if(ph.t==='slide'&&ph.r===1) msg.innerHTML=`<b>Round 2 · kernel ${ph.k+1} of 7.</b> A 3×3×5 kernel slides over the 5-channel image — 45 products and one sum per stop — writing one 8×8 map. Same picture as before, only deeper.`;
+  else if(ph.t==='fly'&&ph.r===1) msg.innerHTML=`<b>Map ${ph.k+1} of 7 joins the stack.</b> Seven kernels → a seven-channel image. The channel count is a design choice; in real networks it is 16, 64, 256…`;
+  else msg.innerHTML='<b>Done: 12×12×3 → 10×10×5 → 8×8×7.</b> Layer <i>L</i> has C<sub>L</sub> kernels of size 3×3×C<sub>L−1</sub> and outputs C<sub>L</sub> channels. Add a nonlinearity between layers and that is a ConvNet — Demo 3 shows a real one.'; }
+
+// ---------- control ----------
+function setT(t,fromSlider){ T=Math.max(0,Math.min(TOTAL-1,t)); if(!fromSlider) slider.value=Math.round(T/TOTAL*10000); draw(); updateText(); }
+function tick(ts){ if(!playing) return; if(!last) last=ts; const dt=(ts-last)*speed; last=ts; if(T+dt>=TOTAL-1){ setT(TOTAL-1); stop(); return; } setT(T+dt); requestAnimationFrame(tick); }
+function start(){ if(T>=TOTAL-2) setT(0); playing=true; last=0; playBtn.textContent='❚❚ Pause'; requestAnimationFrame(tick); }
+function stop(){ playing=false; playBtn.textContent='▶ Play'; }
+playBtn.addEventListener('click',()=>playing?stop():start());
+document.getElementById('d2-reset').addEventListener('click',()=>{stop();setT(0);});
+slider.addEventListener('input',()=>{stop();setT(+slider.value/10000*TOTAL,true);});
+document.getElementById('d2-speed').addEventListener('change',e=>{speed=+e.target.value;});
+document.querySelectorAll('#d2-steps .step').forEach(b=>b.addEventListener('click',()=>{stop(); const p=b.dataset.phase; const ph=p==='r1'?PH[0]:p==='shift'?PH.find(q=>q.t==='shift'):PH.find(q=>q.t==='slide'&&q.r===1); setT(ph.start+1);}));
+window.addEventListener('resize',draw);
+window.addEventListener('demo-shown',e=>{ if(e.detail==='demo-2') draw(); });
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+setT(1);
+})();
+</script>
+</main>
+
+</body>
+</html>

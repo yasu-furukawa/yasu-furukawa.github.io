@@ -1,0 +1,827 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Convolution, Cell by Cell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#e9edf2; --surface:#ffffff; --surface-2:#f3f6f9; --sunk:#dfe5ec;
+  --ink:#141a22; --ink-2:#56626f; --ink-3:#8593a2;
+  --line:#ccd5de; --line-2:#b7c2ce;
+  --amber:#9c6200; --amber-ink:#7a4d00; --amber-soft:#f8ead0; --amber-edge:#d9a441;
+  --indigo:#3a4da8; --indigo-ink:#2e3f8f; --indigo-soft:#e3e7f9; --indigo-edge:#8e9bdd;
+  --shadow:0 1px 2px rgba(20,26,34,.06), 0 8px 24px -12px rgba(20,26,34,.22);
+  --focus:#2e3f8f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0e1218; --surface:#161c24; --surface-2:#1d242e; --sunk:#0a0e13;
+    --ink:#e7edf4; --ink-2:#98a5b4; --ink-3:#6c7a8a;
+    --line:#2a3440; --line-2:#3a4756;
+    --amber:#e6ad4e; --amber-ink:#f0c47c; --amber-soft:#3a2d12; --amber-edge:#9c7226;
+    --indigo:#93a2f2; --indigo-ink:#b0bbf7; --indigo-soft:#222a4c; --indigo-edge:#4d5aa0;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+    --focus:#93a2f2;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0e1218; --surface:#161c24; --surface-2:#1d242e; --sunk:#0a0e13;
+  --ink:#e7edf4; --ink-2:#98a5b4; --ink-3:#6c7a8a;
+  --line:#2a3440; --line-2:#3a4756;
+  --amber:#e6ad4e; --amber-ink:#f0c47c; --amber-soft:#3a2d12; --amber-edge:#9c7226;
+  --indigo:#93a2f2; --indigo-ink:#b0bbf7; --indigo-soft:#222a4c; --indigo-edge:#4d5aa0;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  --focus:#93a2f2;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:28px 18px 64px}
+h1,h2,h3{font-family:"Archivo", ui-sans-serif, system-ui, sans-serif; text-wrap:balance; margin:0}
+h1{font-size:clamp(28px,4.2vw,42px); font-weight:700; letter-spacing:-.022em; line-height:1.08}
+h2{font-size:20px; font-weight:600; letter-spacing:-.01em}
+h3{font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2)}
+.mono{font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+header{display:flex; flex-wrap:wrap; gap:18px 28px; align-items:flex-end; justify-content:space-between; padding-bottom:20px; border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:8px}
+header p{margin:8px 0 0; color:var(--ink-2); max-width:56ch; font-size:14.5px}
+.formula{font-family:"IBM Plex Mono",monospace; font-size:13.5px; color:var(--ink-2); background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:10px 14px; white-space:nowrap; overflow-x:auto; max-width:100%}
+.formula b{color:var(--ink); font-weight:600}
+
+/* ---------- tabs ---------- */
+nav.tabs{display:flex; gap:4px; margin:22px 0 26px; background:var(--sunk); border-radius:11px; padding:4px; width:fit-content; max-width:100%; flex-wrap:wrap}
+nav.tabs button{
+  font:inherit; font-weight:500; font-size:14px; border:0; cursor:pointer; padding:9px 18px; border-radius:8px;
+  background:transparent; color:var(--ink-2);
+}
+nav.tabs button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow); font-weight:600}
+nav.tabs button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+/* ---------- panels ---------- */
+.panel{display:flex; flex-direction:column; gap:22px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px}
+.card.plain{background:transparent; border:0; padding:0}
+.note{font-size:13.5px; color:var(--ink-2); margin:0}
+.note strong{color:var(--ink); font-weight:600}
+
+/* ---------- equation row ---------- */
+.eqn{display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:14px; align-items:center}
+.eqn .op{font-family:"Archivo",sans-serif; font-size:30px; color:var(--ink-3); text-align:center; line-height:1}
+.stage{display:flex; flex-direction:column; gap:9px; min-width:0}
+.stage .cap{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+.stage .cap b{font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600}
+.stage .cap span{font-size:12px; color:var(--ink-3)}
+canvas.img{width:100%; aspect-ratio:1; display:block; image-rendering:pixelated; border:1px solid var(--line-2); border-radius:10px; background:var(--sunk)}
+
+/* ---------- controls ---------- */
+.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chip{
+  font:inherit; font-size:13px; padding:6px 12px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink-2);
+}
+.chip:hover{border-color:var(--ink-3); color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--indigo-soft); border-color:var(--indigo-edge); color:var(--indigo-ink); font-weight:600}
+.chip:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.btn{
+  font:inherit; font-size:14px; font-weight:600; padding:9px 18px; border-radius:9px; cursor:pointer;
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink);
+}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--indigo); border-color:var(--indigo); color:#fff}
+:root[data-theme="dark"] .btn.primary, :root:not([data-theme="light"]) .btn.primary{color:#0e1218}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .btn.primary{color:#fff}}
+.btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.btn:disabled{opacity:.45; cursor:default}
+label.field{display:flex; flex-direction:column; gap:5px; font-size:12px; color:var(--ink-2)}
+input[type=range]{accent-color:var(--indigo); width:130px}
+input[type=file]{font:inherit; font-size:12.5px; max-width:210px}
+.seg{display:inline-flex; border:1px solid var(--line-2); border-radius:8px; overflow:hidden}
+.seg button{font:inherit; font-size:12.5px; padding:5px 11px; border:0; cursor:pointer; background:var(--surface-2); color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--indigo-soft); color:var(--indigo-ink); font-weight:600}
+.seg button+button{border-left:1px solid var(--line-2)}
+
+/* ---------- kernel matrix ---------- */
+.kwrap{display:flex; flex-direction:column; align-items:center; gap:12px}
+.kgrid{display:grid; gap:4px; padding:10px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px}
+.kgrid input{
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:14px; font-weight:500;
+  width:48px; height:42px; text-align:center; border-radius:6px;
+  border:1px solid var(--line-2); background:var(--surface); color:var(--ink);
+}
+.kgrid input.pos{color:var(--amber-ink); background:var(--amber-soft); border-color:var(--amber-edge)}
+.kgrid input.neg{color:var(--indigo-ink); background:var(--indigo-soft); border-color:var(--indigo-edge)}
+.kgrid input:focus{outline:2px solid var(--focus); outline-offset:1px}
+.kgrid.k5 input{width:38px; height:34px; font-size:12.5px}
+.ksum{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-3)}
+
+/* ---------- step panel ---------- */
+.steplayout{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:20px; align-items:start}
+.gridbox{display:flex; flex-direction:column; gap:10px; align-items:center}
+.pxgrid{display:grid; gap:2px}
+.px{
+  position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:13px; font-weight:500;
+  border-radius:3px; border:1px solid var(--line-2); cursor:pointer; user-select:none;
+  transition:transform .12s ease;
+}
+.px.out{cursor:default}
+.px .kw{
+  position:absolute; top:2px; right:2px; font-size:9px; font-weight:600; line-height:1;
+  padding:1px 3px; border-radius:3px; border:1px solid currentColor; opacity:.92;
+}
+.px.inwin{border-color:var(--amber-edge); box-shadow:inset 0 0 0 1px var(--amber-edge)}
+.px.active{outline:2px solid var(--amber); outline-offset:1px; z-index:3; transform:scale(1.1)}
+.px.target{outline:2px solid var(--indigo); outline-offset:1px; z-index:3}
+.px.empty{background:var(--surface-2); color:var(--ink-3)}
+.winbox{position:absolute; border:2.5px solid var(--amber); border-radius:5px; pointer-events:none; z-index:2; box-shadow:0 0 0 3px color-mix(in srgb, var(--amber) 18%, transparent)}
+.gridwrap{position:relative}
+@media (prefers-reduced-motion:no-preference){ .winbox{transition:left .22s ease, top .22s ease} }
+
+.calc{display:flex; flex-direction:column; gap:14px}
+.prodgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+.prod{
+  background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:8px 4px;
+  text-align:center; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-3);
+  transition:opacity .15s ease;
+}
+.prod.on{background:var(--amber-soft); border-color:var(--amber-edge); color:var(--amber-ink)}
+.prod .terms{font-size:12px}
+.prod .res{display:block; font-size:16px; font-weight:600; margin-top:3px; color:var(--ink-3)}
+.prod.on .res{color:var(--amber-ink)}
+.sumline{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  background:var(--sunk); border-radius:10px; padding:12px 16px;
+}
+.sumline .lbl{font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-2); font-weight:600}
+.sumline .val{font-family:"IBM Plex Mono",monospace; font-size:26px; font-weight:600; letter-spacing:-.01em}
+.sumline .val.done{color:var(--indigo)}
+.where{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:9px 12px; overflow-x:auto; white-space:nowrap}
+.where em{font-style:normal; color:var(--amber); font-weight:600}
+.where b{color:var(--indigo); font-weight:600}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--ink-2)}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+
+footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-3); display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap}
+
+@media (max-width:860px){
+  .eqn{grid-template-columns:1fr; }
+  .eqn .op{font-size:24px; padding:2px 0}
+  .steplayout{grid-template-columns:1fr}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <div class="eyebrow">Filtering &amp; Edge Detection</div>
+    <h1>Convolution, Cell by Cell</h1>
+    <p>Two views of the same operation. On the left, a kernel slides over a whole image and you see the result. On the right — the part that actually takes explaining — it slides one position at a time, and you watch the arithmetic that fills a single output pixel.</p>
+  </div>
+  <div class="formula mono"><b>G</b>[i,&thinsp;j] &nbsp;=&nbsp; &sum;<sub>u</sub> &sum;<sub>v</sub> &nbsp;<b>H</b>[u,&thinsp;v] &middot; <b>F</b>[i+u,&thinsp;j+v]</div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tab-play" aria-controls="p-play" aria-selected="true">Filter the whole image</button>
+  <button role="tab" id="tab-step" aria-controls="p-step" aria-selected="false">One pixel at a time</button>
+</nav>
+
+<!-- ================= PANEL 1 ================= -->
+<section class="panel" id="p-play" role="tabpanel" aria-labelledby="tab-play">
+
+  <div class="card">
+    <div class="eqn">
+      <div class="stage">
+        <div class="cap"><b>F &mdash; input image</b><span id="imgdim">128 &times; 128</span></div>
+        <canvas class="img" id="cIn" width="128" height="128"></canvas>
+      </div>
+      <div class="op">&lowast;</div>
+      <div class="kwrap">
+        <div class="cap" style="width:100%"><b class="mono">H &mdash; kernel</b></div>
+        <div class="kgrid" id="kgrid"></div>
+        <div class="ksum mono" id="ksum"></div>
+      </div>
+      <div class="op">=</div>
+      <div class="stage">
+        <div class="cap"><b>G &mdash; result</b><span id="rangeLbl"></span></div>
+        <canvas class="img" id="cOut" width="128" height="128"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:10px">Pick an image</h3>
+    <div class="row" id="imgRow"></div>
+    <div class="row" style="margin-top:12px">
+      <label class="field">Or load your own
+        <input type="file" id="upload" accept="image/*">
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:10px">Pick a kernel</h3>
+    <div class="row" id="kRow"></div>
+    <div class="row" style="margin-top:16px; gap:22px">
+      <label class="field">Kernel size
+        <span class="seg" id="sizeSeg">
+          <button data-s="3" aria-pressed="true">3 &times; 3</button>
+          <button data-s="5" aria-pressed="false">5 &times; 5</button>
+        </span>
+      </label>
+      <label class="field">Show result as
+        <span class="seg" id="modeSeg">
+          <button data-m="signed" aria-pressed="true">value + 128</button>
+          <button data-m="abs" aria-pressed="false">|value|</button>
+        </span>
+      </label>
+      <label class="field" for="gain">Display gain &times;<span id="gainLbl" class="mono">1.0</span>
+        <input type="range" id="gain" min="0.2" max="4" step="0.1" value="1">
+      </label>
+      <label class="field" style="flex-direction:row; align-items:center; gap:7px; padding-top:14px">
+        <input type="checkbox" id="normalize"> Divide by the sum of weights
+      </label>
+    </div>
+    <p class="note" style="margin-top:14px">Sobel kernels sum to zero, so their output is <strong>signed</strong> — flat regions come out 0 (mid grey under <em>value + 128</em>, black under <em>|value|</em>) and only edges light up. Blur kernels sum to a positive number, which is why they need dividing. At the border the image is extended by repeating its edge pixels.</p>
+  </div>
+
+</section>
+
+<!-- ================= PANEL 2 ================= -->
+<section class="panel" id="p-step" role="tabpanel" aria-labelledby="tab-step" hidden>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <button class="btn primary" id="play">Play</button>
+        <button class="btn" id="stepb">Step</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+      <div class="row" style="gap:20px">
+        <label class="field" style="flex-direction:row; align-items:center; gap:7px">
+          <input type="checkbox" id="detail" checked> Show every multiply
+        </label>
+        <label class="field" for="speed">Speed
+          <input type="range" id="speed" min="1" max="10" step="1" value="6">
+        </label>
+      </div>
+    </div>
+    <p class="note" style="margin-top:12px"><strong>Space</strong> plays and pauses, <strong>&rarr;</strong> takes one step. Click any input cell to flip it between 0 and 9.</p>
+  </div>
+
+  <div class="steplayout">
+    <div class="card">
+      <div class="row" style="justify-content:space-between; margin-bottom:14px">
+        <h3>F &mdash; input, 8 &times; 8</h3>
+        <div class="row" id="toyRow" style="gap:6px"></div>
+      </div>
+      <div class="gridbox">
+        <div class="gridwrap" id="inWrap" style="width:100%; max-width:340px">
+          <div class="pxgrid" id="inGrid" style="grid-template-columns:repeat(8,1fr)"></div>
+          <div class="winbox" id="winbox" hidden></div>
+        </div>
+      </div>
+
+      <div style="height:22px"></div>
+      <div class="row" style="justify-content:space-between; margin-bottom:14px">
+        <h3>G &mdash; output, 6 &times; 6</h3>
+        <span class="ksum mono">valid positions only</span>
+      </div>
+      <div class="gridbox">
+        <div style="width:100%; max-width:255px">
+          <div class="pxgrid" id="outGrid" style="grid-template-columns:repeat(6,1fr)"></div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:16px">The window never hangs off the edge, so a 3&times;3 kernel on an 8&times;8 image produces only 6&times;6 outputs. That shrinkage is why real implementations pad the border.</p>
+    </div>
+
+    <div class="card calc">
+      <div class="row" style="justify-content:space-between">
+        <h3>H &mdash; kernel, 3 &times; 3</h3>
+        <div class="row" id="skRow" style="gap:6px"></div>
+      </div>
+
+      <div class="kwrap" style="align-items:flex-start">
+        <div class="kgrid" id="skGrid" style="grid-template-columns:repeat(3,1fr)"></div>
+      </div>
+
+      <div class="where mono" id="where"></div>
+
+      <div>
+        <h3 style="margin-bottom:9px">Element-wise products</h3>
+        <div class="prodgrid" id="prodGrid"></div>
+      </div>
+
+      <div class="sumline">
+        <span class="lbl">Running sum</span>
+        <span class="val mono" id="sumVal">0</span>
+      </div>
+      <div class="sumline" id="writeLine" style="opacity:.4">
+        <span class="lbl">Writes into</span>
+        <span class="val mono" id="writeVal">G[&mdash;,&mdash;] = &mdash;</span>
+      </div>
+
+      <div class="legend">
+        <span><i style="background:var(--amber)"></i>kernel window &amp; weights</span>
+        <span><i style="background:var(--indigo)"></i>output cell being written</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  <span>Cross-correlation form (no kernel flip) — the version every library implements as <span class="mono">conv2</span> / <span class="mono">imfilter</span>.</span>
+  <span class="mono">CMPT &middot; Filtering &amp; Edge Detection</span>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ tabs ============ */
+const tabs=[["tab-play","p-play"],["tab-step","p-step"]];
+tabs.forEach(([t,p])=>{
+  document.getElementById(t).addEventListener("click",()=>{
+    tabs.forEach(([t2,p2])=>{
+      const sel=t2===t;
+      document.getElementById(t2).setAttribute("aria-selected",sel?"true":"false");
+      document.getElementById(p2).hidden=!sel;
+    });
+    document.dispatchEvent(new CustomEvent("tabchange",{detail:p}));
+  });
+});
+
+/* ================================================================
+   PANEL 1 — whole-image filtering
+   ================================================================ */
+const N=128;
+function mkImage(kind){
+  const a=new Float32Array(N*N);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    let v=0;
+    switch(kind){
+      case "step": v = x < N/2 ? 45 : 205; break;
+      case "circle":{
+        const dx=x-N/2, dy=y-N/2;
+        v = Math.hypot(dx,dy) < N*0.3 ? 210 : 35; break;
+      }
+      case "checker": v = ((x>>4)+(y>>4))%2 ? 40 : 210; break;
+      case "ramp": v = 15 + (x/(N-1))*225; break;
+      case "noisy":{
+        const base = x < N/2 ? 70 : 185;
+        let n=0; for(let i=0;i<3;i++) n+=Math.random();
+        v = base + (n-1.5)*52; break;
+      }
+      case "shapes":{
+        v=28;
+        if(x>14&&x<58&&y>14&&y<58) v=225;                      // square
+        if(Math.hypot(x-88,y-40)<26) v=150;                    // disc
+        if(y>74 && y<116 && Math.abs(x-64) < (y-74)*0.8) v=95; // triangle
+        if(y>62&&y<66) v=255;                                  // thin line
+        break;
+      }
+    }
+    a[y*N+x]=Math.max(0,Math.min(255,v));
+  }
+  return a;
+}
+const IMAGES=[["step","Step edge"],["circle","Disc"],["checker","Checkerboard"],["ramp","Ramp"],["noisy","Noisy edge"],["shapes","Shapes"]];
+
+const KERNELS={
+  identity:{label:"Identity", norm:false, mode:"signed", k3:[0,0,0,0,1,0,0,0,0]},
+  box:{label:"Box blur", norm:true, mode:"signed", k3:[1,1,1,1,1,1,1,1,1]},
+  gauss:{label:"Gaussian", norm:true, mode:"signed", k3:[1,2,1,2,4,2,1,2,1],
+         k5:[1,4,6,4,1, 4,16,24,16,4, 6,24,36,24,6, 4,16,24,16,4, 1,4,6,4,1]},
+  sobelx:{label:"Sobel x", norm:false, mode:"abs", k3:[-1,0,1,-2,0,2,-1,0,1]},
+  sobely:{label:"Sobel y", norm:false, mode:"abs", k3:[-1,-2,-1,0,0,0,1,2,1]},
+  lap:{label:"Laplacian", norm:false, mode:"abs", k3:[0,-1,0,-1,4,-1,0,-1,0]},
+  sharp:{label:"Sharpen", norm:false, mode:"signed", k3:[0,-1,0,-1,5,-1,0,-1,0]}
+};
+
+const S={img:mkImage("step"), imgName:"step", ks:3, k:KERNELS.sobelx.k3.slice(),
+         preset:"sobelx", norm:false, mode:"abs", gain:1};
+
+const cIn=document.getElementById("cIn"), cOut=document.getElementById("cOut");
+const xIn=cIn.getContext("2d"), xOut=cOut.getContext("2d");
+
+function drawGray(ctx,arr,w,h){
+  const d=ctx.createImageData(w,h);
+  for(let i=0;i<w*h;i++){
+    const v=Math.max(0,Math.min(255,Math.round(arr[i])));
+    d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v; d.data[i*4+3]=255;
+  }
+  ctx.putImageData(d,0,0);
+}
+function convolve(src,w,h,k,ks,normalize){
+  const r=(ks-1)>>1;
+  let div=1;
+  if(normalize){ let s=0; for(let i=0;i<k.length;i++) s+=k[i]; if(Math.abs(s)>1e-9) div=s; }
+  const out=new Float32Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    let acc=0;
+    for(let v=-r;v<=r;v++){
+      const yy=Math.min(h-1,Math.max(0,y+v));
+      for(let u=-r;u<=r;u++){
+        const xx=Math.min(w-1,Math.max(0,x+u));
+        acc+=k[(v+r)*ks+(u+r)]*src[yy*w+xx];
+      }
+    }
+    out[y*w+x]=acc/div;
+  }
+  return out;
+}
+function render(){
+  const w=cIn.width,h=cIn.height;
+  drawGray(xIn,S.img,w,h);
+  const g=convolve(S.img,w,h,S.k,S.ks,S.norm);
+  let lo=Infinity,hi=-Infinity;
+  const vis=new Float32Array(w*h);
+  for(let i=0;i<g.length;i++){
+    if(g[i]<lo)lo=g[i]; if(g[i]>hi)hi=g[i];
+    vis[i] = S.mode==="abs" ? Math.abs(g[i])*S.gain : 128+(g[i]-(hasDC()?128:0))*S.gain;
+  }
+  drawGray(xOut,vis,w,h);
+  document.getElementById("rangeLbl").textContent="range "+Math.round(lo)+" … "+Math.round(hi);
+}
+function hasDC(){ let s=0; for(let i=0;i<S.k.length;i++)s+=S.k[i]; return Math.abs(s)>1e-9; }
+
+/* kernel grid */
+function buildK(){
+  const g=document.getElementById("kgrid");
+  g.innerHTML=""; g.className="kgrid"+(S.ks===5?" k5":"");
+  g.style.gridTemplateColumns="repeat("+S.ks+",auto)";
+  for(let i=0;i<S.ks*S.ks;i++){
+    const inp=document.createElement("input");
+    inp.type="text"; inp.inputMode="decimal"; inp.value=String(S.k[i]);
+    inp.id="kcell-"+i;
+    inp.setAttribute("aria-label","kernel weight "+(i+1));
+    inp.addEventListener("input",()=>{
+      const v=parseFloat(inp.value);
+      S.k[i]=isNaN(v)?0:v;
+      S.preset="custom"; syncKChips(); tintK(); sumK(); render();
+    });
+    g.appendChild(inp);
+  }
+  tintK(); sumK();
+}
+function tintK(){
+  for(let i=0;i<S.ks*S.ks;i++){
+    const el=document.getElementById("kcell-"+i); if(!el)continue;
+    el.classList.toggle("pos",S.k[i]>0);
+    el.classList.toggle("neg",S.k[i]<0);
+  }
+}
+function sumK(){
+  let s=0; for(let i=0;i<S.k.length;i++)s+=S.k[i];
+  document.getElementById("ksum").textContent="Σ weights = "+(Math.round(s*100)/100);
+}
+function setKernel(name){
+  const p=KERNELS[name];
+  const want = (S.ks===5 && p.k5) ? p.k5 : p.k3;
+  if(S.ks===5 && !p.k5){ S.ks=3; syncSize(); }
+  S.k=want.slice(); S.preset=name; S.norm=p.norm; S.mode=p.mode;
+  document.getElementById("normalize").checked=p.norm;
+  syncMode(); syncKChips(); buildK(); render();
+}
+function syncKChips(){
+  document.querySelectorAll("#kRow .chip").forEach(c=>
+    c.setAttribute("aria-pressed", c.dataset.k===S.preset ? "true":"false"));
+}
+function syncSize(){
+  document.querySelectorAll("#sizeSeg button").forEach(b=>
+    b.setAttribute("aria-pressed", +b.dataset.s===S.ks?"true":"false"));
+}
+function syncMode(){
+  document.querySelectorAll("#modeSeg button").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.m===S.mode?"true":"false"));
+}
+
+/* image chips */
+const imgRow=document.getElementById("imgRow");
+IMAGES.forEach(([id,label])=>{
+  const b=document.createElement("button");
+  b.className="chip"; b.textContent=label; b.dataset.img=id;
+  b.setAttribute("aria-pressed", id===S.imgName?"true":"false");
+  b.addEventListener("click",()=>{
+    S.img=mkImage(id); S.imgName=id;
+    cIn.width=cIn.height=cOut.width=cOut.height=N;
+    document.getElementById("imgdim").textContent=N+" × "+N;
+    imgRow.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b?"true":"false"));
+    render();
+  });
+  imgRow.appendChild(b);
+});
+
+/* kernel chips */
+const kRow=document.getElementById("kRow");
+Object.keys(KERNELS).forEach(name=>{
+  const b=document.createElement("button");
+  b.className="chip"; b.textContent=KERNELS[name].label; b.dataset.k=name;
+  b.addEventListener("click",()=>setKernel(name));
+  kRow.appendChild(b);
+});
+{ const b=document.createElement("button"); b.className="chip"; b.textContent="Custom"; b.dataset.k="custom";
+  b.addEventListener("click",()=>{S.preset="custom"; syncKChips();}); kRow.appendChild(b); }
+
+document.querySelectorAll("#sizeSeg button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    const s=+b.dataset.s; if(s===S.ks)return;
+    const old=S.k.slice(), oldS=S.ks; S.ks=s;
+    S.k=new Array(s*s).fill(0);
+    const r0=(oldS-1)>>1, r1=(s-1)>>1;
+    for(let y=-Math.min(r0,r1);y<=Math.min(r0,r1);y++)
+      for(let x=-Math.min(r0,r1);x<=Math.min(r0,r1);x++)
+        S.k[(y+r1)*s+(x+r1)]=old[(y+r0)*oldS+(x+r0)];
+    if(S.preset!=="custom" && KERNELS[S.preset] && s===5 && KERNELS[S.preset].k5) S.k=KERNELS[S.preset].k5.slice();
+    else if(S.preset!=="custom" && s===3) S.k=KERNELS[S.preset].k3.slice();
+    else S.preset="custom";
+    syncSize(); syncKChips(); buildK(); render();
+  });
+});
+document.querySelectorAll("#modeSeg button").forEach(b=>{
+  b.addEventListener("click",()=>{ S.mode=b.dataset.m; syncMode(); render(); });
+});
+document.getElementById("gain").addEventListener("input",e=>{
+  S.gain=+e.target.value;
+  document.getElementById("gainLbl").textContent=S.gain.toFixed(1);
+  render();
+});
+document.getElementById("normalize").addEventListener("change",e=>{ S.norm=e.target.checked; render(); });
+
+document.getElementById("upload").addEventListener("change",e=>{
+  const f=e.target.files && e.target.files[0]; if(!f)return;
+  const img=new Image();
+  img.onload=()=>{
+    const M=192;
+    cIn.width=cIn.height=cOut.width=cOut.height=M;
+    const tmp=document.createElement("canvas"); tmp.width=tmp.height=M;
+    const tc=tmp.getContext("2d");
+    const side=Math.min(img.width,img.height);
+    tc.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,M,M);
+    const d=tc.getImageData(0,0,M,M).data;
+    const a=new Float32Array(M*M);
+    for(let i=0;i<M*M;i++) a[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+    S.img=a; S.imgName="upload";
+    document.getElementById("imgdim").textContent=M+" × "+M;
+    imgRow.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+    render();
+    URL.revokeObjectURL(img.src);
+  };
+  img.src=URL.createObjectURL(f);
+});
+
+setKernel("sobelx");
+
+/* ================================================================
+   PANEL 2 — step by step
+   ================================================================ */
+const IN=8, KS=3, OUT=IN-KS+1;
+const TOYS={
+  vedge:{label:"Vertical edge", f:(x,y)=> x<4?0:9},
+  hedge:{label:"Horizontal edge", f:(x,y)=> y<4?9:0},
+  square:{label:"Square", f:(x,y)=> (x>=2&&x<=5&&y>=2&&y<=5)?9:0},
+  ramp:{label:"Ramp", f:(x,y)=> Math.round(x*9/7)},
+  diag:{label:"Diagonal", f:(x,y)=> x>=y?9:0}
+};
+const SKERNELS={
+  sobelx:{label:"Sobel x", k:[-1,0,1,-2,0,2,-1,0,1], div:1},
+  sobely:{label:"Sobel y", k:[-1,-2,-1,0,0,0,1,2,1], div:1},
+  blur:{label:"Box blur", k:[1,1,1,1,1,1,1,1,1], div:9},
+  identity:{label:"Identity", k:[0,0,0,0,1,0,0,0,0], div:1},
+  lap:{label:"Laplacian", k:[0,-1,0,-1,4,-1,0,-1,0], div:1}
+};
+
+const T={
+  F:new Array(IN*IN).fill(0),
+  K:SKERNELS.sobelx.k.slice(),
+  div:1, kname:"sobelx", toy:"vedge",
+  G:new Array(OUT*OUT).fill(null),
+  pos:0, sub:0, playing:false, detail:true, timer:null
+};
+function loadToy(name){
+  const t=TOYS[name]; T.toy=name;
+  for(let y=0;y<IN;y++)for(let x=0;x<IN;x++) T.F[y*IN+x]=t.f(x,y);
+  resetRun();
+  document.querySelectorAll("#toyRow .chip").forEach(c=>
+    c.setAttribute("aria-pressed", c.dataset.t===name?"true":"false"));
+}
+function loadSK(name){
+  T.K=SKERNELS[name].k.slice(); T.div=SKERNELS[name].div; T.kname=name;
+  document.querySelectorAll("#skRow .chip").forEach(c=>
+    c.setAttribute("aria-pressed", c.dataset.sk===name?"true":"false"));
+  buildSK(); resetRun();
+}
+function resetRun(){
+  T.G=new Array(OUT*OUT).fill(null); T.pos=0; T.sub=0; stop(); drawStep();
+}
+
+/* grids */
+const inGrid=document.getElementById("inGrid"), outGrid=document.getElementById("outGrid");
+for(let i=0;i<IN*IN;i++){
+  const d=document.createElement("div"); d.className="px"; d.id="in-"+i;
+  d.addEventListener("click",()=>{ T.F[i]=T.F[i]>4?0:9; resetRun(); });
+  inGrid.appendChild(d);
+}
+for(let i=0;i<OUT*OUT;i++){
+  const d=document.createElement("div"); d.className="px out"; d.id="out-"+i;
+  outGrid.appendChild(d);
+}
+const prodGrid=document.getElementById("prodGrid");
+for(let i=0;i<9;i++){
+  const d=document.createElement("div"); d.className="prod"; d.id="pr-"+i;
+  d.innerHTML='<span class="terms">&mdash;</span><span class="res">&mdash;</span>';
+  prodGrid.appendChild(d);
+}
+
+function grayStyle(v,max){
+  const t=Math.max(0,Math.min(1,v/max));
+  const lum=Math.round(t*255);
+  return {bg:"rgb("+lum+","+lum+","+lum+")", fg: t>0.55?"#111":"#eee"};
+}
+function buildSK(){
+  const g=document.getElementById("skGrid");
+  g.innerHTML="";
+  for(let i=0;i<9;i++){
+    const inp=document.createElement("input");
+    inp.type="text"; inp.inputMode="decimal"; inp.value=String(T.K[i]);
+    inp.id="skc-"+i; inp.setAttribute("aria-label","kernel weight "+(i+1));
+    if(T.K[i]>0)inp.classList.add("pos"); if(T.K[i]<0)inp.classList.add("neg");
+    inp.addEventListener("input",()=>{
+      const v=parseFloat(inp.value); T.K[i]=isNaN(v)?0:v;
+      inp.classList.toggle("pos",T.K[i]>0); inp.classList.toggle("neg",T.K[i]<0);
+      T.div=1; T.kname="custom";
+      document.querySelectorAll("#skRow .chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+      resetRun();
+    });
+    g.appendChild(inp);
+  }
+}
+
+function windowAt(pos){ return {oy:Math.floor(pos/OUT), ox:pos%OUT}; }
+function partialSum(){
+  const {oy,ox}=windowAt(T.pos); let s=0;
+  for(let i=0;i<T.sub;i++){ const u=i%3, v=(i-u)/3; s+=T.K[i]*T.F[(oy+v)*IN+(ox+u)]; }
+  return s;
+}
+function drawStep(){
+  const {oy,ox}=windowAt(T.pos);
+  const running = T.pos < OUT*OUT;
+
+  for(let i=0;i<IN*IN;i++){
+    const el=document.getElementById("in-"+i);
+    const st=grayStyle(T.F[i],9);
+    el.style.background=st.bg; el.style.color=st.fg;
+    el.textContent=T.F[i];
+    el.className="px";
+  }
+  if(running){
+    for(let v=0;v<3;v++)for(let u=0;u<3;u++){
+      const idx=(oy+v)*IN+(ox+u), ki=v*3+u;
+      const el=document.getElementById("in-"+idx);
+      el.classList.add("inwin");
+      if(T.detail && T.sub===ki+0 && T.sub<9) {}
+      const badge=document.createElement("span");
+      badge.className="kw";
+      badge.textContent=(T.K[ki]>0?"+":"")+T.K[ki];
+      badge.style.color = T.K[ki]>0 ? "var(--amber-ink)" : (T.K[ki]<0 ? "var(--indigo-ink)" : "var(--ink-3)");
+      badge.style.background = T.K[ki]>0 ? "var(--amber-soft)" : (T.K[ki]<0 ? "var(--indigo-soft)" : "var(--surface-2)");
+      el.appendChild(badge);
+      if(T.detail && T.sub<9 && ki===T.sub) el.classList.add("active");
+    }
+    const box=document.getElementById("winbox");
+    box.hidden=false;
+    const cell=document.getElementById("in-0").getBoundingClientRect();
+    const gap=2, cw=cell.width+gap;
+    box.style.left=(ox*cw-2)+"px"; box.style.top=(oy*cw-2)+"px";
+    box.style.width=(3*cell.width+2*gap+4)+"px"; box.style.height=(3*cell.height+2*gap+4)+"px";
+  } else {
+    document.getElementById("winbox").hidden=true;
+  }
+
+  /* output */
+  const vals=T.G.filter(v=>v!==null).map(Math.abs);
+  const mx=Math.max(1,...vals);
+  for(let i=0;i<OUT*OUT;i++){
+    const el=document.getElementById("out-"+i);
+    el.className="px out";
+    if(T.G[i]===null){ el.classList.add("empty"); el.textContent="·"; el.style.background=""; el.style.color=""; }
+    else{
+      const st=grayStyle(Math.abs(T.G[i]),mx);
+      el.style.background=st.bg; el.style.color=st.fg;
+      el.textContent=Math.round(T.G[i]*100)/100;
+    }
+  }
+  if(running) document.getElementById("out-"+T.pos).classList.add("target");
+
+  /* products */
+  for(let i=0;i<9;i++){
+    const d=document.getElementById("pr-"+i);
+    const u=i%3, v=(i-u)/3;
+    const on = running && (T.detail ? i<T.sub : T.sub>=9);
+    d.className="prod"+(on?" on":"");
+    if(running){
+      const f=T.F[(oy+v)*IN+(ox+u)], w=T.K[i];
+      d.querySelector(".terms").textContent=f+" × "+w;
+      d.querySelector(".res").textContent= on ? (f*w) : "—";
+    } else {
+      d.querySelector(".terms").textContent="—";
+      d.querySelector(".res").textContent="—";
+    }
+  }
+
+  /* text */
+  const whereEl=document.getElementById("where");
+  if(running){
+    whereEl.innerHTML="<b>G["+oy+","+ox+"]</b> &nbsp;=&nbsp; Σ H[u,v] · F[<em>"+oy+"</em>+u, <em>"+ox+"</em>+v]"
+      + (T.div!==1 ? " &nbsp;/&nbsp; "+T.div : "");
+  } else {
+    whereEl.innerHTML="Finished — every valid window has been visited.";
+  }
+  const done = T.sub>=9;
+  const raw = running ? (T.detail ? partialSum() : (done?partialSum():0)) : 0;
+  const sv=document.getElementById("sumVal");
+  sv.textContent = running ? (Math.round(raw*100)/100) : "—";
+  sv.classList.toggle("done",done && running);
+
+  const wl=document.getElementById("writeLine"), wv=document.getElementById("writeVal");
+  if(running && done){
+    wl.style.opacity="1";
+    wv.textContent="G["+oy+","+ox+"] = "+(Math.round((raw/T.div)*100)/100);
+  } else if(running){
+    wl.style.opacity=".4";
+    wv.textContent="G["+oy+","+ox+"] = …";
+  } else {
+    wl.style.opacity="1"; wv.textContent="all 36 cells written";
+  }
+
+  document.getElementById("stepb").disabled=!running;
+  document.getElementById("play").disabled=!running;
+}
+
+function advance(){
+  if(T.pos>=OUT*OUT){ stop(); return; }
+  if(T.sub<9){
+    T.sub = T.detail ? T.sub+1 : 9;
+    if(T.sub>=9){
+      const {oy,ox}=windowAt(T.pos);
+      let s=0; for(let i=0;i<9;i++){ const u=i%3,v=(i-u)/3; s+=T.K[i]*T.F[(oy+v)*IN+(ox+u)]; }
+      T.G[T.pos]=s/T.div;
+    }
+  } else {
+    T.pos++; T.sub=0;
+    if(T.pos>=OUT*OUT){ drawStep(); stop(); return; }
+  }
+  drawStep();
+}
+function interval(){ const s=+document.getElementById("speed").value; return 1000/(s*1.3); }
+function start(){
+  if(T.pos>=OUT*OUT) return;
+  T.playing=true; document.getElementById("play").textContent="Pause";
+  clearInterval(T.timer); T.timer=setInterval(advance,interval());
+}
+function stop(){
+  T.playing=false; document.getElementById("play").textContent="Play";
+  clearInterval(T.timer); T.timer=null;
+}
+document.getElementById("play").addEventListener("click",()=>{ T.playing?stop():start(); });
+document.getElementById("stepb").addEventListener("click",()=>{ stop(); advance(); });
+document.getElementById("reset").addEventListener("click",resetRun);
+document.getElementById("detail").addEventListener("change",e=>{ T.detail=e.target.checked; resetRun(); });
+document.getElementById("speed").addEventListener("input",()=>{ if(T.playing) start(); });
+
+const toyRow=document.getElementById("toyRow");
+Object.keys(TOYS).forEach(n=>{
+  const b=document.createElement("button"); b.className="chip"; b.textContent=TOYS[n].label; b.dataset.t=n;
+  b.addEventListener("click",()=>loadToy(n)); toyRow.appendChild(b);
+});
+const skRow=document.getElementById("skRow");
+Object.keys(SKERNELS).forEach(n=>{
+  const b=document.createElement("button"); b.className="chip"; b.textContent=SKERNELS[n].label; b.dataset.sk=n;
+  b.addEventListener("click",()=>loadSK(n)); skRow.appendChild(b);
+});
+
+document.addEventListener("keydown",e=>{
+  if(document.getElementById("p-step").hidden) return;
+  const tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="textarea") return;
+  if(e.code==="Space"){ e.preventDefault(); T.playing?stop():start(); }
+  if(e.code==="ArrowRight"){ e.preventDefault(); stop(); advance(); }
+});
+
+buildSK();
+loadSK("sobelx");
+loadToy("vedge");
+window.addEventListener("resize",()=>{ if(!document.getElementById("p-step").hidden) drawStep(); });
+document.addEventListener("tabchange",e=>{ if(e.detail==="p-step") requestAnimationFrame(drawStep); });
+
+})();
+</script>
+
+</body></html>

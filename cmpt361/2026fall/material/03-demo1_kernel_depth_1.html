@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Convolution to ConvNet · Demo 1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface2:#E9EDF2; --ink:#182230; --muted:#5F6E7E; --line:#D5DCE4;
+  --accent:#0E7C86; --accent-ink:#FFFFFF; --accent-soft:#D7EEF0;
+  --r:#E5484D; --g:#2FA46A; --b:#3E63DD;
+  --c0:#E5484D; --c1:#2FA46A; --c2:#3E63DD; --c3:#D97706; --c4:#8E4EC6; --c5:#0E7C86; --c6:#C2298A; --c7:#6B7F1A;
+  --shadow:0 1px 2px rgba(20,30,40,.06),0 6px 20px rgba(20,30,40,.06);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --pane:#F7F9FB;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1319; --surface:#161D26; --surface2:#1F2833; --ink:#E7ECF2; --muted:#98A6B5; --line:#2A3542;
+  --accent:#2FB3BF; --accent-ink:#06282B; --accent-soft:#12363A; --pane:#121922;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1319; --surface:#161D26; --surface2:#1F2833; --ink:#E7ECF2; --muted:#98A6B5; --line:#2A3542;
+  --accent:#2FB3BF; --accent-ink:#06282B; --accent-soft:#12363A; --pane:#121922;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+canvas{display:block;image-rendering:pixelated;max-width:100%}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
+p{margin:0}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:10px 20px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;line-height:1.15;margin-right:auto}
+.brand b{font-size:15px;font-weight:600}
+.brand span{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px 7px 8px;cursor:pointer;text-align:left}
+.tab .n{width:24px;height:24px;border-radius:6px;background:var(--surface2);display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--muted)}
+.tab .t{display:flex;flex-direction:column;line-height:1.1}
+.tab .t b{font-size:13px;font-weight:500}
+.tab .t span{font-size:11px;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.tab[aria-selected="true"] .n{background:var(--accent);color:var(--accent-ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+main{padding:22px 20px 60px;max-width:1380px;margin:0 auto}
+section[role="tabpanel"]{display:flex;flex-direction:column;gap:18px}
+.lede{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;align-items:end}
+.lede h2{font-size:26px;letter-spacing:-.01em}
+.lede p{color:var(--muted);max-width:62ch}
+.lede .kicker{font-family:var(--mono);font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+@media (max-width:820px){.lede{grid-template-columns:1fr}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:16px}
+.panel h3{font-size:14px;font-weight:600;margin-bottom:10px}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+select.sel{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:13px}
+input[type=range]{accent-color:var(--accent)}
+.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.shape{font-family:var(--mono);font-size:13px;background:var(--surface2);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.shape b{font-weight:500;color:var(--accent)}
+.note{font-size:13px;color:var(--muted)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
+.callout b{font-weight:600}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.stepbar{display:flex;gap:6px;flex-wrap:wrap}
+.step{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;background:var(--surface);display:flex;gap:8px;align-items:center}
+.step i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.step[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft)}
+.step[aria-current="step"] i{color:var(--accent)}
+.kgrid{display:grid;gap:2px}
+.kgrid .c{width:36px;height:30px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;border-radius:4px;background:var(--surface2)}
+.kgrid input{width:36px;height:30px;text-align:center;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:4px;background:var(--surface);padding:0}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;border-radius:999px;padding:2px 10px 2px 6px;border:1px solid var(--line)}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.stage{background:var(--pane);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage canvas{width:100%;height:auto;image-rendering:auto}
+.formula{font-family:var(--mono);font-size:13px;line-height:1.7;background:var(--surface2);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:nowrap}
+.formula .hl{color:var(--accent);font-weight:500}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="topbar">
+  <div class="brand"><b>Convolution → ConvNet</b><span>CMPT 361 · from one kernel to a whole network</span></div>
+  <nav class="tabs" hidden role="tablist" aria-label="Demos">
+    <button class="tab" role="tab" id="tab-1" aria-controls="demo-1" aria-selected="true"><span class="n">1</span><span class="t"><b>Kernels get depth</b><span>grey → RGB, 2D kernel → 3D kernel</span></span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="demo-2" aria-selected="false"><span class="n">2</span><span class="t"><b>Many kernels, many channels</b><span>a bank of filters makes a 5-channel image</span></span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="demo-3" aria-selected="false"><span class="n">3</span><span class="t"><b>A whole ConvNet</b><span>CIFAR-10 classifier you can click through</span></span></button>
+  </nav>
+</header>
+<main>
+<section id="demo-1" role="tabpanel" aria-labelledby="tab-1">
+  <div class="lede">
+    <div><div class="kicker">Demo 1 · depth</div><h2>When the image gets channels, the kernel gets depth</h2></div>
+    <p>You know this picture for a grey image: a 3×3 kernel slides over a 2D grid and every stop produces one number. A colour image is three grids stacked. The kernel simply grows a matching third dimension — 3×3×<b>3</b>, one slab per channel — and each stop is now a sum of 27 products. The output is <em>still</em> one number per position: one kernel always makes one channel.</p>
+  </div>
+
+  <div class="panel">
+    <div class="controls" style="justify-content:space-between">
+      <div class="stepbar" id="d1-steps">
+        <button class="step" data-stage="0" aria-current="step"><i>a</i>Grey image · 2D kernel</button>
+        <button class="step" data-stage="1"><i>b</i>Split into R, G, B</button>
+        <button class="step" data-stage="2"><i>c</i>Kernel grows to 3×3×3</button>
+        <button class="step" data-stage="3"><i>d</i>Convolve with depth</button>
+      </div>
+      <div class="controls">
+        <button class="btn primary" id="d1-play">▶ Play</button>
+        <button class="btn" id="d1-reset">Restart</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin:12px 0 6px;flex-wrap:wrap">
+      <span class="label">Timeline</span>
+      <input type="range" id="d1-time" min="0" max="4000" value="0" step="1" style="flex:1;min-width:200px" aria-label="Animation timeline">
+      <span class="label" style="margin-left:8px">Kernel</span>
+      <select class="sel" id="d1-kernel">
+        <option value="sobelx">Sobel-x, copied into every channel</option>
+        <option value="redblue">Different per channel: +Red, 0·Green, −Blue</option>
+        <option value="random">Random 3×3×3</option>
+      </select>
+    </div>
+    <div class="stage"><canvas id="d1-canvas" width="1200" height="470"></canvas></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <span class="shape" id="d1-shape-in">image 12×12×<b>1</b></span><span class="mono">⊛</span>
+      <span class="shape" id="d1-shape-k">kernel 3×3×<b>1</b></span><span class="mono">→</span>
+      <span class="shape" id="d1-shape-out">output 10×10×<b>1</b></span>
+    </div>
+    <div class="formula" id="d1-formula" style="margin-top:10px">out[y,x] = Σ<sub>i,j</sub> K[i,j] · I[y+i, x+j]</div>
+  </div>
+
+  <div class="callout" id="d1-msg"><b>Start here.</b> Press Play. First the grey convolution you already know; then watch the image split into three channels and the kernel grow to match.</div>
+</section>
+
+<script>
+(function(){
+// ---------- data ----------
+const W=12,H=12,K=3,OW=W-K+1,OH=H-K+1;
+// synthetic 12x12 colour scene: sky (top), grass (bottom), an orange sun, a white cloud
+const IMG=[]; // IMG[y][x]=[r,g,b]
+for(let y=0;y<H;y++){const row=[];for(let x=0;x<W;x++){
+  let c;
+  if(y<7){ c=[92+y*6,150+y*5,235-y*3]; }           // sky
+  else if(y===7){ c=[120,170,90]; }                 // horizon
+  else { c=[60+(y%2)*10,140+((x+y)%3)*12,50]; }     // grass
+  if(y>=1&&y<=3&&x>=8&&x<=10) c=[245,150,40];        // sun
+  if(y===2&&x===9) c=[255,200,90];
+  if(y>=3&&y<=4&&x>=1&&x<=4) c=[240,240,245];        // cloud
+  if(y===9&&x>=5&&x<=6) c=[140,80,40];               // tree trunk
+  if(y>=7&&y<=8&&x>=4&&x<=7) c=[30,110,45];          // tree crown
+  row.push(c);} IMG.push(row);}
+const LUM=IMG.map(r=>r.map(([r_,g,b])=>Math.round(0.299*r_+0.587*g+0.114*b)));
+const SOBX=[[-1,0,1],[-2,0,2],[-1,0,1]];
+const PRESETS={
+  sobelx:[SOBX,SOBX,SOBX],
+  redblue:[[[1,1,1],[1,1,1],[1,1,1]],[[0,0,0],[0,0,0],[0,0,0]],[[-1,-1,-1],[-1,-1,-1],[-1,-1,-1]]],
+  random:null};
+function rnd(){const k=[];for(let c=0;c<3;c++){const s=[];for(let i=0;i<3;i++){const r=[];for(let j=0;j<3;j++)r.push(Math.floor(Math.random()*5)-2);s.push(r);}k.push(s);}return k;}
+let KER=PRESETS.sobelx;
+function convGrey(){const o=[];for(let y=0;y<OH;y++){const r=[];for(let x=0;x<OW;x++){let s=0;for(let i=0;i<3;i++)for(let j=0;j<3;j++)s+=SOBX[i][j]*LUM[y+i][x+j];r.push(s);}o.push(r);}return o;}
+function convRGB(){const o=[];for(let y=0;y<OH;y++){const r=[];for(let x=0;x<OW;x++){let s=0;for(let c=0;c<3;c++)for(let i=0;i<3;i++)for(let j=0;j<3;j++)s+=KER[c][i][j]*IMG[y+i][x+j][c];r.push(s);}o.push(r);}return o;}
+function partsRGB(y,x){return [0,1,2].map(c=>{let s=0;for(let i=0;i<3;i++)for(let j=0;j<3;j++)s+=KER[c][i][j]*IMG[y+i][x+j][c];return s;});}
+let OUTG=convGrey(), OUTC=convRGB();
+
+// ---------- state ----------
+const cv=document.getElementById('d1-canvas'), ctx=cv.getContext('2d');
+const slider=document.getElementById('d1-time'), playBtn=document.getElementById('d1-play');
+let T=0, playing=false, last=0;   // T in [0,4): stage = floor(T), local = frac
+const DUR=[9000,2600,2600,11000]; // ms per stage when playing
+const CH=['#E5484D','#2FA46A','#3E63DD'], CHN=['R','G','B'];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function stageOf(t){return Math.min(3,Math.floor(t));}
+function setT(t,fromSlider){T=Math.max(0,Math.min(3.9999,t)); if(!fromSlider) slider.value=Math.round(T*1000); draw(); updateText();}
+
+// ---------- drawing helpers ----------
+const DX=30, DY=20; // oblique offset per slab
+function tint(c,v){const f=v/255; return c===0?`rgb(${Math.round(255*f)},${Math.round(40*f)},${Math.round(40*f)})`:c===1?`rgb(${Math.round(40*f)},${Math.round(190*f)},${Math.round(70*f)})`:`rgb(${Math.round(60*f)},${Math.round(90*f)},${Math.round(255*f)})`;}
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function slabOrigin(x0,y0,k,sep,dx=DX,dy=DY){return [x0+k*dx*sep, y0-k*dy*sep];}
+const KDX=58,KDY=32;
+function pill(x,y,txt,col){ctx.save();ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x,y,22,18,5);ctx.fill();ctx.fillStyle='#fff';ctx.font='600 11px '+css('--mono');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x+11,y+9.5);ctx.restore();}
+
+function drawSlab(x0,y0,cell,n,m,colorFn,border,label,alpha=1){
+  ctx.save(); ctx.globalAlpha=alpha;
+  for(let y=0;y<m;y++)for(let x=0;x<n;x++){ctx.fillStyle=colorFn(y,x);ctx.fillRect(x0+x*cell,y0+y*cell,cell-1,cell-1);}
+  ctx.strokeStyle=border; ctx.lineWidth=2; ctx.strokeRect(x0-1.5,y0-1.5,n*cell+2,m*cell+2);
+  if(label&&label.length<=4) pill(x0+3,y0+3,label,border); else if(label){ctx.fillStyle=border;ctx.font='500 12px '+css('--mono');ctx.textAlign='left';ctx.fillText(label,x0,y0-6);}
+  ctx.restore();
+}
+function kcolor(v){ if(v===0) return css('--surface2'); const a=Math.min(1,Math.abs(v)/2); return v>0?`rgba(14,124,134,${0.18+0.5*a})`:`rgba(217,119,6,${0.18+0.5*a})`; }
+function drawKernelSlab(x0,y0,cell,k,border,label,alpha){
+  const kk=KER[k]||SOBX;
+  ctx.save();ctx.globalAlpha=alpha;
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){ctx.fillStyle=css('--surface');ctx.fillRect(x0+j*cell,y0+i*cell,cell-1,cell-1);ctx.fillStyle=kcolor(kk[i][j]);ctx.fillRect(x0+j*cell,y0+i*cell,cell-1,cell-1);
+    ctx.fillStyle=css('--ink');ctx.font='500 14px '+css('--mono');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(kk[i][j],x0+j*cell+cell/2,y0+i*cell+cell/2);}
+  ctx.strokeStyle=border;ctx.lineWidth=2;ctx.strokeRect(x0-1.5,y0-1.5,3*cell+2,3*cell+2);
+  if(label&&label.length<=4) pill(x0-8,y0-8,label,border); else if(label){ctx.fillStyle=border;ctx.font='500 12px '+css('--mono');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(label,x0,y0-6);}
+  ctx.restore();
+}
+function outGrey(v,max){const g=Math.round(128+127*v/(max||1));return `rgb(${g},${g},${g})`;}
+function arrow(x1,y1,x2,y2,col){ctx.save();ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();const a=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(a-.4),y2-9*Math.sin(a-.4));ctx.lineTo(x2-9*Math.cos(a+.4),y2-9*Math.sin(a+.4));ctx.closePath();ctx.fill();ctx.restore();}
+function text(s,x,y,size=13,col,align='left',weight=400,mono=false){ctx.save();ctx.fillStyle=col||css('--muted');ctx.font=`${weight} ${size}px ${mono?css('--mono'):css('--sans')}`;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(s,x,y);ctx.restore();}
+
+// ---------- main draw ----------
+function draw(){
+  const dpr=Math.min(2,window.devicePixelRatio||1); const LW=1200,LH=470;
+  if(cv.width!==LW*dpr){cv.width=LW*dpr;cv.height=LH*dpr;}
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,LW,LH);
+  const st=stageOf(T), lt=T-st;
+  const cell=22, kcell=34, ocell=22;
+  const IX=60, IY=150, KX=470, KY=230, OX=830, OY=160;
+  // separation of image slabs and colour blend
+  const colourT = st===0?0 : st===1?Math.min(1,lt/0.3) : 1;
+  const sepI = st===0?0 : st===1?Math.max(0,(lt-0.3)/0.7) : 1;
+  const sepK = st<2?0 : st===2?lt:1;
+  const ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
+  const sI=ease(sepI), sK=ease(sepK);
+  // current output position
+  let pos=-1; if(st===0) pos=Math.min(OW*OH-1,Math.floor(lt*OW*OH)); if(st===3) pos=Math.min(OW*OH-1,Math.floor(lt*OW*OH));
+  const py=pos>=0?Math.floor(pos/OW):-1, px=pos>=0?pos%OW:-1;
+
+  // ---- input ----
+  text(st===0?'input image · 1 channel':'input image · 3 channels (R front, B back)',IX,IY-(2*DY*sI)-14,12,css('--muted'),'left',500,true);
+  if(st===0){
+    drawSlab(IX,IY,cell,W,H,(y,x)=>{const v=LUM[y][x];return `rgb(${v},${v},${v})`;},css('--muted'),'grey · 1 channel');
+  } else {
+    for(let k=2;k>=0;k--){
+      const [x0,y0]=slabOrigin(IX,IY,k,sI);
+      drawSlab(x0,y0,cell,W,H,(y,x)=>{const p=IMG[y][x];const v=p[k];const full=`rgb(${p[0]},${p[1]},${p[2]})`;const grey=`rgb(${LUM[y][x]},${LUM[y][x]},${LUM[y][x]})`;
+        if(colourT<1&&sI===0){const m=mix([LUM[y][x],LUM[y][x],LUM[y][x]],p,colourT);return `rgb(${m[0]},${m[1]},${m[2]})`;}
+        // blend from full colour to channel tint as slabs separate
+        const tc=tint(k,v); if(sI>=1) return tc;
+        const a=mix(p,[k===0?v:Math.round(40*v/255),k===1?Math.round(190*v/255):Math.round((k===0?40:90)*v/255),k===2?v:Math.round((k===0?40:70)*v/255)],sI);
+        return `rgb(${a[0]},${a[1]},${a[2]})`;
+      }, sI>0.05?CH[k]:css('--muted'), sI>0.3?CHN[k]:(k===0?'colour · 3 channels':''), 1);
+    }
+  }
+  // ---- kernel ----
+  text(st<2?'kernel 3×3':'kernel 3×3×3 · one slab per channel',KX,KY-(2*KDY*sK)-14,12,css('--muted'),'left',500,true);
+  if(st<2){ drawKernelSlab(KX,KY,kcell,0,css('--muted'),'3×3',1); }
+  else { for(let k=2;k>=0;k--){const [x0,y0]=slabOrigin(KX,KY,k,sK,KDX,KDY); drawKernelSlab(x0,y0,kcell,k,sK>0.05?CH[k]:css('--muted'),sK>0.3?CHN[k]:(k===0?'3×3×3':''),1);} }
+  // ---- output ----
+  text('output feature map',OX,OY-30,12,css('--muted'),'left',500,true);
+  const OUT = st===0?OUTG:OUTC; const mx=Math.max(1,...OUT.flat().map(Math.abs));
+  drawSlab(OX,OY,ocell,OW,OH,(y,x)=>{const i=y*OW+x; if(pos<0||i>pos) return css('--surface2'); return outGrey(OUT[y][x],mx);},css('--muted'),'1 channel');
+  if(st===1||st===2){ text(st===1?'(old grey output no longer applies)':'(recomputed in the next step)',OX,OY+OH*ocell+22,12,css('--muted'),'left'); }
+
+  // ---- sliding window ----
+  if(pos>=0){
+    if(st===0){
+      ctx.save();ctx.strokeStyle=css('--accent');ctx.lineWidth=3;ctx.strokeRect(IX+px*cell-1,IY+py*cell-1,3*cell+1,3*cell+1);ctx.restore();
+      ctx.save();ctx.strokeStyle=css('--accent');ctx.lineWidth=3;ctx.strokeRect(OX+px*ocell-1,OY+py*ocell-1,ocell+1,ocell+1);ctx.restore();
+      arrow(IX+px*cell+3*cell+4,IY+py*cell+1.5*cell,KX-14,KY+1.5*kcell,css('--accent'));
+      arrow(KX+3*kcell+8,KY+1.5*kcell,OX+px*ocell-6,OY+py*ocell+ocell/2,css('--accent'));
+      text('9 products, 1 sum',KX+1.5*kcell,KY+3*kcell+28,12,css('--accent'),'center',500,true);
+    } else {
+      for(let k=2;k>=0;k--){const [x0,y0]=slabOrigin(IX,IY,k,1);ctx.save();ctx.strokeStyle=CH[k];ctx.lineWidth=3;ctx.strokeRect(x0+px*cell-1,y0+py*cell-1,3*cell+1,3*cell+1);ctx.restore();
+        const [kx,ky]=slabOrigin(KX,KY,k,1,KDX,KDY); arrow(x0+px*cell+3*cell+4,y0+py*cell+1.5*cell,kx-14,ky+1.5*kcell,CH[k]);}
+      ctx.save();ctx.strokeStyle=css('--accent');ctx.lineWidth=3;ctx.strokeRect(OX+px*ocell-1,OY+py*ocell-1,ocell+1,ocell+1);ctx.restore();
+      // three arrows merge to output
+      const mergeX=KX+3*kcell+2*KDX+40, mergeY=KY+1.5*kcell-KDY;
+      for(let k=0;k<3;k++){const [kx,ky]=slabOrigin(KX,KY,k,1,KDX,KDY);arrow(kx+3*kcell+6,ky+1.5*kcell,mergeX-4,mergeY,CH[k]);}
+      ctx.save();ctx.fillStyle=css('--accent');ctx.beginPath();ctx.arc(mergeX,mergeY,7,0,7);ctx.fill();ctx.fillStyle=css('--accent-ink');ctx.font='700 11px '+css('--mono');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Σ',mergeX,mergeY+.5);ctx.restore();
+      arrow(mergeX+9,mergeY,OX+px*ocell-6,OY+py*ocell+ocell/2,css('--accent'));
+      text('27 products, 1 sum',KX+1.5*kcell+KDX,KY+3*kcell+28,12,css('--accent'),'center',500,true);
+    }
+  }
+}
+
+function updateText(){
+  const st=stageOf(T), lt=T-st;
+  document.querySelectorAll('#d1-steps .step').forEach(b=>b.setAttribute('aria-current', +b.dataset.stage===st?'step':'false'));
+  const dIn=document.getElementById('d1-shape-in'), dK=document.getElementById('d1-shape-k'), f=document.getElementById('d1-formula'), msg=document.getElementById('d1-msg');
+  dIn.innerHTML = st===0?'image 12×12×<b>1</b>':'image 12×12×<b>3</b>';
+  dK.innerHTML = st<2?'kernel 3×3×<b>1</b>':'kernel 3×3×<b>3</b>';
+  let pos=-1; if(st===0||st===3) pos=Math.min(OW*OH-1,Math.floor(lt*OW*OH));
+  if(st===0){
+    const y=Math.floor(pos/OW),x=pos%OW;
+    f.innerHTML=`out[${y},${x}] = Σ<sub>i,j</sub> K[i,j] · I[${y}+i, ${x}+j] = <span class="hl">${OUTG[y][x]}</span> &nbsp;<span style="color:var(--muted)">(3×3 = 9 products)</span>`;
+    msg.innerHTML='<b>a · What you already know.</b> One grey grid, one 3×3 kernel (Sobel-x). Every stop: 9 multiplications, one sum, one output pixel.';
+  } else if(st===1){
+    f.innerHTML='A colour image is three grids: I[c, y, x] with c ∈ {R, G, B}. Shape 12×12×3.';
+    msg.innerHTML='<b>b · The image splits into channels.</b> Same 12×12 grid, but now every pixel is three numbers — so the image is a 12×12×3 block. Our 3×3×1 kernel no longer fits it.';
+  } else if(st===2){
+    f.innerHTML='Kernel grows to K[c, i, j]: shape 3×3×3 = 27 weights. Each slab pairs with one channel.';
+    msg.innerHTML='<b>c · The kernel grows a depth dimension.</b> To match, the kernel gets one 3×3 slab per input channel: 3×3×3, 27 weights. The slabs may be identical (Sobel-x copied) or different — try the kernel menu.';
+  } else {
+    const y=Math.floor(pos/OW),x=pos%OW; const p=partsRGB(y,x);
+    f.innerHTML=`out[${y},${x}] = Σ<sub>c</sub> Σ<sub>i,j</sub> K[c,i,j] · I[c, ${y}+i, ${x}+j] = <span style="color:#E5484D">${p[0]}</span> + <span style="color:#2FA46A">${p[1]}</span> + <span style="color:#3E63DD">${p[2]}</span> = <span class="hl">${p[0]+p[1]+p[2]}</span> &nbsp;<span style="color:var(--muted)">(3×3×3 = 27 products)</span>`;
+    msg.innerHTML='<b>d · Convolve with depth.</b> At each stop all 27 products are summed into <em>one</em> number. The output is still a single 10×10 map — one kernel, one output channel, however deep the input. This is the rule that makes deep networks possible.';
+  }
+}
+
+// ---------- interaction ----------
+function tick(ts){ if(!playing) return; if(!last) last=ts; const dt=ts-last; last=ts;
+  const st=stageOf(T); const nt=T+dt/DUR[st]; if(nt>=4){setT(3.9999);stop();return;} setT(nt); requestAnimationFrame(tick); }
+function start(){ if(T>=3.999) setT(0); playing=true; last=0; playBtn.textContent='❚❚ Pause'; requestAnimationFrame(tick); }
+function stop(){ playing=false; playBtn.textContent='▶ Play'; }
+playBtn.addEventListener('click',()=>playing?stop():start());
+document.getElementById('d1-reset').addEventListener('click',()=>{stop();setT(0);});
+slider.addEventListener('input',()=>{stop();setT(+slider.value/1000,true);});
+document.querySelectorAll('#d1-steps .step').forEach(b=>b.addEventListener('click',()=>{stop();const s=+b.dataset.stage;setT(s===0||s===3?s+0.0001:s+0.9999);}));
+document.getElementById('d1-kernel').addEventListener('change',e=>{const v=e.target.value;KER=v==='random'?rnd():PRESETS[v];OUTC=convRGB();if(stageOf(T)<2){stop();setT(2.9999);}else draw(),updateText();});
+window.addEventListener('resize',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+setT(0.0001);
+window.__d1={draw};
+})();
+</script>
+</main>
+
+</body>
+</html>

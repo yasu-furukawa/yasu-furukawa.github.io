@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A curve is a sum of waves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#e9edf1;
+  --field:#f8fafb;
+  --edge:#c3cdd5;
+  --grid:#d7dfe5;
+  --ink:#0f212c;
+  --ink-soft:#546673;
+  --source:#0f212c;
+  --recon:#c32b52;
+  --ghost:#aab8c2;
+  --c-lo:#2b3a8f;
+  --c-hi:#1aa0b4;
+  --focus:#c32b52;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0d171d;
+    --field:#132029;
+    --edge:#2c3e49;
+    --grid:#233440;
+    --ink:#dfe9ef;
+    --ink-soft:#8ba0ad;
+    --source:#e6eef3;
+    --recon:#ff6b8e;
+    --ghost:#41545f;
+    --c-lo:#7f8fee;
+    --c-hi:#4fd6e8;
+    --focus:#ff6b8e;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0d171d;
+  --field:#132029;
+  --edge:#2c3e49;
+  --grid:#233440;
+  --ink:#dfe9ef;
+  --ink-soft:#8ba0ad;
+  --source:#e6eef3;
+  --recon:#ff6b8e;
+  --ghost:#41545f;
+  --c-lo:#7f8fee;
+  --c-hi:#4fd6e8;
+  --focus:#ff6b8e;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 72px}
+
+h1{
+  font-family:"Bricolage Grotesque",Archivo,sans-serif;
+  font-weight:800;
+  font-size:clamp(28px,5.2vw,46px);
+  line-height:1.02;
+  letter-spacing:-0.02em;
+  margin:0 0 10px;
+}
+.lede{
+  margin:0 0 26px;
+  max-width:62ch;
+  color:var(--ink-soft);
+  font-size:clamp(15px,1.6vw,17px);
+}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+button{
+  font:inherit;
+  font-weight:500;
+  color:var(--ink);
+  background:var(--field);
+  border:1px solid var(--edge);
+  border-radius:3px;
+  padding:7px 13px;
+  cursor:pointer;
+}
+button:hover{border-color:var(--ink-soft)}
+button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.spacer{flex:1 1 20px}
+
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--field);border:1px solid var(--edge);border-radius:3px;padding:12px 12px 8px}
+.panel h2{
+  margin:0 0 2px;
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:-0.01em;
+}
+.panel p{margin:0 0 8px;font-size:13.5px;color:var(--ink-soft);min-height:20px}
+.panel canvas{display:block;width:100%;height:clamp(170px,24vw,280px);touch-action:none}
+.panel.drawable canvas{cursor:crosshair}
+
+.readout{display:flex;gap:18px;align-items:baseline;margin-top:6px;font-size:13.5px;color:var(--ink-soft)}
+.readout b{font-weight:600;color:var(--ink);font-size:16px}
+
+.transport{
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+  margin:18px 0 6px;padding:12px 14px;
+  background:var(--field);border:1px solid var(--edge);border-radius:3px;
+}
+.transport label{font-size:14px;display:flex;align-items:center;gap:10px}
+input[type=range]{width:210px;accent-color:var(--recon)}
+input[type=range]:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.count{font-weight:600;min-width:2.2ch;display:inline-block;text-align:right}
+
+.stack{margin-top:22px;border-top:1px solid var(--edge)}
+.row{
+  display:grid;
+  grid-template-columns:52px 1fr 240px 66px;
+  gap:14px;align-items:center;
+  padding:9px 0;
+  border-bottom:1px solid var(--grid);
+  opacity:.34;
+  transition:opacity .18s ease;
+}
+.row.on{opacity:1}
+.row.active{opacity:1;background:color-mix(in srgb, var(--recon) 8%, transparent)}
+.row .k{font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+.row.on .k{color:var(--ink)}
+.row canvas.mini{display:block;width:100%;height:50px}
+.row canvas.cx{display:block;width:66px;height:66px}
+.algebra{font-size:13px;line-height:1.5;color:var(--ink-soft)}
+.algebra .eq{color:var(--ink)}
+.algebra .amp{font-weight:600;color:var(--ink)}
+
+.notes{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:none}
+.notes h3{font-family:"Bricolage Grotesque",Archivo,sans-serif;font-weight:600;font-size:19px;margin:0 0 8px;letter-spacing:-0.01em}
+.notes p{margin:0 0 10px;font-size:14.5px;color:var(--ink-soft);max-width:56ch}
+.notes .formula{color:var(--ink);font-weight:500}
+
+@media (max-width:820px){
+  .panels{grid-template-columns:1fr}
+  .notes{grid-template-columns:1fr;gap:18px}
+  .row{grid-template-columns:44px 1fr;grid-template-areas:"k plot" "alg alg" "cx cx";gap:8px 12px}
+  .row .k{grid-area:k}
+  .row .plotcell{grid-area:plot}
+  .row .algebra{grid-area:alg}
+  .row .cxcell{grid-area:cx}
+  .row canvas.cx{margin:0 auto}
+}
+@media (prefers-reduced-motion: reduce){
+  .row{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>A curve is a sum of waves</h1>
+  <p class="lede">Pick a shape or draw your own. We read it off at 256 evenly spaced points, work out how much cosine and how much sine sits at each frequency, then add those waves back one at a time and watch the original reappear.</p>
+
+  <div class="controls">
+    <button data-sample="square" aria-pressed="true">Square</button>
+    <button data-sample="triangle" aria-pressed="false">Triangle</button>
+    <button data-sample="sawtooth" aria-pressed="false">Sawtooth</button>
+    <button data-sample="pulse" aria-pressed="false">Pulse</button>
+    <span class="spacer"></span>
+    <button id="drawBtn" aria-pressed="false">Draw your own</button>
+  </div>
+
+  <div class="panels">
+    <section class="panel" id="srcPanel">
+      <h2>Your curve</h2>
+      <p id="srcHint">256 samples, marked as dots</p>
+      <canvas id="src"></canvas>
+      <div class="readout"><span>&nbsp;</span></div>
+    </section>
+
+    <section class="panel">
+      <h2>Sum of the waves so far</h2>
+      <p>Original shown faintly behind</p>
+      <canvas id="rec"></canvas>
+      <div class="readout">
+        <span>using <b id="usedN">10</b> harmonics</span>
+        <span>off by <b id="err">0.00</b></span>
+      </div>
+    </section>
+  </div>
+
+  <div class="transport">
+    <label for="kSlider">Harmonics <input type="range" id="kSlider" min="1" max="20" value="10"><span class="count" id="kVal">10</span></label>
+    <span class="spacer"></span>
+    <button id="playBtn">Add them up</button>
+    <button id="stepBtn">Add one</button>
+    <button id="resetBtn">Back to flat</button>
+  </div>
+
+  <div class="stack" id="stack"></div>
+
+  <div class="notes">
+    <div>
+      <h3>Why each frequency needs two numbers</h3>
+      <p>A wave at frequency <i>k</i> can sit anywhere in its cycle. One cosine alone can't express that — it always starts at its peak. So each frequency gets a pair: <span class="formula">a<sub>k</sub>cos(2πkt) + b<sub>k</sub>sin(2πkt)</span>. The cosine carries the part of the curve that's symmetric about <i>t</i> = 0, the sine carries the antisymmetric part, and together they can land the wave at any height and any shift.</p>
+      <p>That same pair can be written as one shifted cosine, <span class="formula">A<sub>k</sub>cos(2πkt − φ<sub>k</sub>)</span>, with A<sub>k</sub> = √(a<sub>k</sub>² + b<sub>k</sub>²) and φ<sub>k</sub> = atan2(b<sub>k</sub>, a<sub>k</sub>). Same information, read as size and shift instead of as two ingredients.</p>
+    </div>
+    <div>
+      <h3>Which is what a complex number is for</h3>
+      <p>Plot the pair (a<sub>k</sub>, b<sub>k</sub>) as a point in a plane — the small squares in the right-hand column. Its distance from the origin is the amplitude; its angle is the phase. A point in a plane whose length and angle are the meaningful quantities is exactly a complex number: <span class="formula">c<sub>k</sub> = a<sub>k</sub> + i b<sub>k</sub></span>.</p>
+      <p>Nothing mystical is happening. The complex number is bookkeeping that keeps the two components fastened together, and it earns its keep because shifting a wave in time becomes plain multiplication by e<sup>iθ</sup>. (A library DFT hands you the conjugate, a<sub>k</sub> − i b<sub>k</sub>; same length, opposite-sign angle.)</p>
+      <p>One honest caveat: this treats your curve as one period of something that repeats forever. Draw a curve whose ends don't match and you'll see overshoot at the edges — Gibbs ringing, and a genuine property of the series, not a bug in the page.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const N = 256;          // fixed, dense sample count
+const KMAX = 20;
+const VRANGE = 1.35;    // plotted vertical half-range
+
+const samples = new Float64Array(N);
+let coef = { a0:0, a:new Float64Array(KMAX+1), b:new Float64Array(KMAX+1),
+             A:new Float64Array(KMAX+1), phi:new Float64Array(KMAX+1), Amax:1 };
+
+let K = 10;             // harmonics requested
+let p = 10;             // harmonics currently shown (continuous during play)
+let playing = false;
+let drawMode = false;
+let lastFrame = 0;
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- sample curves ---------- */
+const curves = {
+  square:   t => (t < 0.5 ? 1 : -1),
+  triangle: t => (t < 0.5 ? 4*t - 1 : 3 - 4*t),
+  sawtooth: t => 2*(t < 0.5 ? t : t - 1),
+  pulse:    t => 1.6*Math.exp(-Math.pow((t-0.38)/0.06,2)) - 0.9*Math.exp(-Math.pow((t-0.68)/0.10,2))
+};
+
+function loadCurve(name){
+  const f = curves[name];
+  for (let n = 0; n < N; n++) samples[n] = f(n/N);
+  analyse();
+  p = K;
+  redrawAll();
+}
+
+/* ---------- analysis ---------- */
+function analyse(){
+  let s = 0;
+  for (let n = 0; n < N; n++) s += samples[n];
+  coef.a0 = s / N;
+
+  let amax = 1e-9;
+  for (let k = 1; k <= KMAX; k++){
+    let ca = 0, cb = 0;
+    const w = 2*Math.PI*k/N;
+    for (let n = 0; n < N; n++){
+      const ang = w*n;
+      ca += samples[n]*Math.cos(ang);
+      cb += samples[n]*Math.sin(ang);
+    }
+    coef.a[k] = 2*ca/N;
+    coef.b[k] = 2*cb/N;
+    coef.A[k] = Math.hypot(coef.a[k], coef.b[k]);
+    coef.phi[k] = Math.atan2(coef.b[k], coef.a[k]);
+    if (coef.A[k] > amax) amax = coef.A[k];
+  }
+  coef.Amax = amax;
+}
+
+function reconAt(t, upto){
+  let v = coef.a0;
+  const full = Math.min(Math.floor(upto), K);
+  for (let k = 1; k <= full; k++){
+    const ang = 2*Math.PI*k*t;
+    v += coef.a[k]*Math.cos(ang) + coef.b[k]*Math.sin(ang);
+  }
+  const frac = upto - Math.floor(upto);
+  const nk = full + 1;
+  if (frac > 0 && nk <= K){
+    const ang = 2*Math.PI*nk*t;
+    v += frac*(coef.a[nk]*Math.cos(ang) + coef.b[nk]*Math.sin(ang));
+  }
+  return v;
+}
+
+function rmsError(upto){
+  let se = 0, sy = 0;
+  for (let n = 0; n < N; n++){
+    const d = samples[n] - reconAt(n/N, upto);
+    se += d*d;
+    sy += samples[n]*samples[n];
+  }
+  return { abs: Math.sqrt(se/N), rel: Math.sqrt(se/Math.max(sy,1e-12)) };
+}
+
+/* ---------- canvas helpers ---------- */
+function css(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+function fit(cv){
+  const r = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cv.width  = Math.max(1, Math.round(r.width*dpr));
+  cv.height = Math.max(1, Math.round(r.height*dpr));
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,r.width,r.height);
+  return { ctx, w:r.width, h:r.height };
+}
+function mixHex(h1, h2, u){
+  const p1 = parseInt(h1.slice(1),16), p2 = parseInt(h2.slice(1),16);
+  const r = Math.round(((p1>>16)&255)*(1-u) + ((p2>>16)&255)*u);
+  const g = Math.round(((p1>>8)&255)*(1-u) + ((p2>>8)&255)*u);
+  const b = Math.round((p1&255)*(1-u) + (p2&255)*u);
+  return "rgb("+r+","+g+","+b+")";
+}
+function bandColor(k){
+  const u = KMAX > 1 ? (k-1)/(KMAX-1) : 0;
+  return mixHex(css("--c-lo"), css("--c-hi"), u);
+}
+
+const PAD = { l:14, r:14, t:10, b:10 };
+function mapX(t,w){ return PAD.l + t*(w - PAD.l - PAD.r); }
+function mapY(v,h){ const mid = h/2, span = (h - PAD.t - PAD.b)/2; return mid - (v/VRANGE)*span; }
+function unmapY(y,h){ const mid = h/2, span = (h - PAD.t - PAD.b)/2; return -(y - mid)/span*VRANGE; }
+
+function grid(ctx,w,h){
+  ctx.save();
+  ctx.strokeStyle = css("--grid");
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 3; i++){
+    const v = i*0.5;
+    for (const s of [v,-v]){
+      const y = Math.round(mapY(s,h)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(w-PAD.r,y); ctx.stroke();
+    }
+  }
+  for (let i = 1; i < 8; i++){
+    const x = Math.round(mapX(i/8,w)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,h-PAD.b); ctx.stroke();
+  }
+  ctx.strokeStyle = css("--edge");
+  const y0 = Math.round(mapY(0,h)) + 0.5;
+  ctx.beginPath(); ctx.moveTo(PAD.l,y0); ctx.lineTo(w-PAD.r,y0); ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- top panels ---------- */
+const srcCv = document.getElementById("src");
+const recCv = document.getElementById("rec");
+
+function drawSource(){
+  const { ctx, w, h } = fit(srcCv);
+  grid(ctx,w,h);
+
+  ctx.strokeStyle = css("--source");
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let n = 0; n < N; n++){
+    const x = mapX(n/N,w), y = mapY(samples[n],h);
+    n ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = css("--source");
+  for (let n = 0; n < N; n += 2){
+    ctx.beginPath();
+    ctx.arc(mapX(n/N,w), mapY(samples[n],h), 1.35, 0, 6.2832);
+    ctx.fill();
+  }
+}
+
+function drawRecon(){
+  const { ctx, w, h } = fit(recCv);
+  grid(ctx,w,h);
+
+  ctx.strokeStyle = css("--ghost");
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let n = 0; n < N; n++){
+    const x = mapX(n/N,w), y = mapY(samples[n],h);
+    n ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+  }
+  ctx.stroke();
+
+  const M = 700;
+  ctx.strokeStyle = css("--recon");
+  ctx.lineWidth = 2.4;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= M; i++){
+    const t = i/M;
+    const x = mapX(t,w), y = mapY(reconAt(t,p),h);
+    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+  }
+  ctx.stroke();
+
+  const e = rmsError(p);
+  document.getElementById("usedN").textContent = Math.min(Math.floor(p),K);
+  document.getElementById("err").textContent =
+    e.abs.toFixed(3) + "  (" + (e.rel*100).toFixed(1) + "%)";
+}
+
+/* ---------- component stack ---------- */
+const stack = document.getElementById("stack");
+const rows = [];
+
+function buildStack(){
+  stack.innerHTML = "";
+  rows.length = 0;
+
+  const dc = document.createElement("div");
+  dc.className = "row on";
+  dc.innerHTML =
+    '<div class="k">avg</div>' +
+    '<div class="plotcell"><canvas class="mini"></canvas></div>' +
+    '<div class="algebra"><span class="eq">a<sub>0</sub> = <span class="amp">' +
+      coef.a0.toFixed(3) + '</span></span><br>the height the curve hovers around</div>' +
+    '<div class="cxcell"></div>';
+  stack.appendChild(dc);
+  rows.push({ el:dc, k:0, mini:dc.querySelector(".mini"), cx:null });
+
+  for (let k = 1; k <= K; k++){
+    const el = document.createElement("div");
+    el.className = "row";
+    const a = coef.a[k], b = coef.b[k], A = coef.A[k], ph = coef.phi[k];
+    el.innerHTML =
+      '<div class="k">k = ' + k + '</div>' +
+      '<div class="plotcell"><canvas class="mini"></canvas></div>' +
+      '<div class="algebra"><span class="eq">' +
+        fmt(a) + ' cos(2π·' + k + '·t) ' + (b < 0 ? '−' : '+') + ' ' + fmt(Math.abs(b)) + ' sin(2π·' + k + '·t)</span><br>' +
+        '= <span class="amp">' + A.toFixed(3) + '</span> cos(2π·' + k + '·t − ' + ph.toFixed(2) + ')</div>' +
+      '<div class="cxcell"><canvas class="cx"></canvas></div>';
+    stack.appendChild(el);
+    rows.push({ el, k, mini:el.querySelector(".mini"), cx:el.querySelector(".cx") });
+  }
+  drawStack();
+}
+
+function fmt(x){ return (x < 0 ? "−" : "") + Math.abs(x).toFixed(3); }
+
+function drawStack(){
+  for (const r of rows){
+    if (r.k === 0){
+      const { ctx, w, h } = fit(r.mini);
+      ctx.strokeStyle = css("--ink-soft");
+      ctx.lineWidth = 2;
+      const y = h/2 - (coef.a0/coef.Amax)*(h/2 - 6);
+      ctx.beginPath(); ctx.moveTo(2,y); ctx.lineTo(w-2,y); ctx.stroke();
+      continue;
+    }
+    drawMini(r);
+    drawComplex(r);
+  }
+}
+
+function drawMini(r){
+  const { ctx, w, h } = fit(r.mini);
+  const k = r.k, col = bandColor(k);
+  const half = h/2 - 4;
+  const sc = half/(coef.Amax*1.05);
+
+  ctx.strokeStyle = css("--grid");
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, Math.round(h/2)+0.5); ctx.lineTo(w, Math.round(h/2)+0.5);
+  ctx.stroke();
+
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  const M = 400;
+  for (let i = 0; i <= M; i++){
+    const t = i/M;
+    const v = coef.a[k]*Math.cos(2*Math.PI*k*t) + coef.b[k]*Math.sin(2*Math.PI*k*t);
+    const x = t*w, y = h/2 - v*sc;
+    i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+  }
+  ctx.stroke();
+}
+
+function drawComplex(r){
+  if (!r.cx) return;
+  const { ctx, w, h } = fit(r.cx);
+  const k = r.k, col = bandColor(k);
+  const cx = w/2, cy = h/2, R = Math.min(w,h)/2 - 6;
+  const sc = R/(coef.Amax*1.05);
+
+  ctx.strokeStyle = css("--grid");
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(4,cy+0.5); ctx.lineTo(w-4,cy+0.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+0.5,4); ctx.lineTo(cx+0.5,h-4); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,6.2832); ctx.stroke();
+
+  const px = cx + coef.a[k]*sc;
+  const py = cy - coef.b[k]*sc;
+
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py); ctx.stroke();
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(px,py,2.6,0,6.2832); ctx.fill();
+}
+
+function syncStackState(){
+  const full = Math.floor(p);
+  const frac = p - full;
+  for (const r of rows){
+    const included = r.k <= Math.min(full,K);
+    const active = frac > 0 && r.k === full + 1 && r.k <= K;
+    r.el.classList.toggle("on", included || active);
+    r.el.classList.toggle("active", active);
+  }
+}
+
+/* ---------- drawing input ---------- */
+let drawing = false, lastIdx = -1, touched = null;
+
+function idxFromEvent(ev){
+  const r = srcCv.getBoundingClientRect();
+  const t = (ev.clientX - r.left - PAD.l) / (r.width - PAD.l - PAD.r);
+  return Math.max(0, Math.min(N-1, Math.round(t*(N-1))));
+}
+function valFromEvent(ev){
+  const r = srcCv.getBoundingClientRect();
+  const v = unmapY(ev.clientY - r.top, r.height);
+  return Math.max(-VRANGE, Math.min(VRANGE, v));
+}
+
+srcCv.addEventListener("pointerdown", ev => {
+  if (!drawMode) return;
+  srcCv.setPointerCapture(ev.pointerId);
+  drawing = true;
+  touched = new Uint8Array(N);
+  const i = idxFromEvent(ev), v = valFromEvent(ev);
+  samples[i] = v; touched[i] = 1; lastIdx = i;
+  drawSource();
+});
+
+srcCv.addEventListener("pointermove", ev => {
+  if (!drawing) return;
+  const i = idxFromEvent(ev), v = valFromEvent(ev);
+  if (lastIdx >= 0 && i !== lastIdx){
+    const step = i > lastIdx ? 1 : -1;
+    const v0 = samples[lastIdx];
+    const span = Math.abs(i - lastIdx);
+    for (let j = 1; j <= span; j++){
+      const idx = lastIdx + step*j;
+      samples[idx] = v0 + (v - v0)*(j/span);
+      touched[idx] = 1;
+    }
+  } else {
+    samples[i] = v; touched[i] = 1;
+  }
+  lastIdx = i;
+  drawSource();
+});
+
+function endDraw(){
+  if (!drawing) return;
+  drawing = false;
+  let first = -1, last = -1;
+  for (let n = 0; n < N; n++) if (touched[n]){ if (first < 0) first = n; last = n; }
+  if (first < 0) return;
+  for (let n = 0; n < first; n++) samples[n] = samples[first];
+  for (let n = last+1; n < N; n++) samples[n] = samples[last];
+  analyse();
+  p = K;
+  redrawAll();
+}
+srcCv.addEventListener("pointerup", endDraw);
+srcCv.addEventListener("pointercancel", endDraw);
+
+/* ---------- controls ---------- */
+document.querySelectorAll("[data-sample]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-sample]").forEach(b => b.setAttribute("aria-pressed","false"));
+    btn.setAttribute("aria-pressed","true");
+    setDrawMode(false);
+    stop();
+    loadCurve(btn.dataset.sample);
+  });
+});
+
+const drawBtn = document.getElementById("drawBtn");
+function setDrawMode(on){
+  drawMode = on;
+  drawBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  document.getElementById("srcPanel").classList.toggle("drawable", on);
+  document.getElementById("srcHint").textContent = on
+    ? "Drag across from left to right"
+    : "256 samples, marked as dots";
+  if (on){
+    document.querySelectorAll("[data-sample]").forEach(b => b.setAttribute("aria-pressed","false"));
+    samples.fill(0);
+    analyse();
+    p = K;
+    redrawAll();
+  }
+}
+drawBtn.addEventListener("click", () => { stop(); setDrawMode(!drawMode); });
+
+const kSlider = document.getElementById("kSlider");
+kSlider.addEventListener("input", () => {
+  K = +kSlider.value;
+  document.getElementById("kVal").textContent = K;
+  if (!playing) p = K;
+  buildStack();
+  drawRecon();
+  syncStackState();
+});
+
+const playBtn = document.getElementById("playBtn");
+playBtn.addEventListener("click", () => playing ? stop() : start());
+document.getElementById("stepBtn").addEventListener("click", () => {
+  stop();
+  p = Math.min(K, Math.floor(p) + 1);
+  drawRecon(); syncStackState();
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  stop(); p = 0; drawRecon(); syncStackState();
+});
+
+function start(){
+  if (p >= K) p = 0;
+  playing = true;
+  playBtn.textContent = "Pause";
+  lastFrame = performance.now();
+  if (reduceMotion){
+    stepTimer = setInterval(() => {
+      p = Math.floor(p) + 1;
+      if (p >= K){ p = K; stop(); }
+      drawRecon(); syncStackState();
+    }, 550);
+  } else {
+    requestAnimationFrame(tick);
+  }
+}
+let stepTimer = null;
+function stop(){
+  playing = false;
+  playBtn.textContent = "Add them up";
+  if (stepTimer){ clearInterval(stepTimer); stepTimer = null; }
+}
+function tick(now){
+  if (!playing) return;
+  const dt = Math.min(0.05, (now - lastFrame)/1000);
+  lastFrame = now;
+  p = Math.min(K, p + dt*1.6);
+  drawRecon();
+  syncStackState();
+  if (p >= K){ stop(); return; }
+  requestAnimationFrame(tick);
+}
+
+/* ---------- wiring ---------- */
+function redrawAll(){
+  drawSource();
+  drawRecon();
+  buildStack();
+  syncStackState();
+}
+
+const ro = new ResizeObserver(() => { drawSource(); drawRecon(); drawStack(); });
+ro.observe(srcCv);
+ro.observe(document.body);
+
+window.matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", () => setTimeout(redrawAll, 30));
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawAll);
+
+loadCurve("square");
+})();
+</script>
+</body>
+</html>
