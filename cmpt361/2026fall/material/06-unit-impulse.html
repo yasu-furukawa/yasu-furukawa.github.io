@@ -137,10 +137,12 @@
   .canvas-box{padding:12px 10px 4px}
   canvas{display:block;width:100%;max-width:100%}
   #c1{height:280px}
+  #c9{height:470px}
   #c6{height:400px}
   #c7{height:470px}
   @media (max-width:560px){
     #c1{height:210px}
+    #c9{height:420px}
     #c6{height:340px}
     #c7{height:430px}
   }
@@ -308,7 +310,59 @@
   </section>
 
   <section class="col">
-    <h2>2 · A finite train, and its exact spectrum</h2>
+    <h2>2 · Using a bump: multiply, then read the area</h2>
+    <p>Here is a function given the way data usually arrives — as a set of samples with a curve through them. Slide a unit-area bump along it and multiply the two pointwise. The product is the third panel, and it is the only thing the impulse ever really does.</p>
+    <p>Narrow the bump and watch the third panel carefully. Its shape barely changes. What changes is the <em>number on its vertical axis</em>, which climbs without any limit at all — 5, then 20, then 200. The three panels are drawn with axes of identical length, so that climbing number is the honest report of how tall the product has become.</p>
+    <p>Then look at the area. It does not climb. It settles almost immediately on <span class="m ff"><i>f</i>(<i>a</i>)</span> and stays there while the peak runs off to infinity. Between the two numbers the product gives you, the height is the one that has no limit and no meaning; the area is the one that answers a question.</p>
+  </section>
+
+  <figure>
+    <div class="fig-head">
+      <span class="t">Fig. 2 — Multiply by a bump</span>
+      <span class="d">three panels, three axes of equal length, three very different scales</span>
+    </div>
+    <div class="canvas-box"><canvas id="c9" aria-label="A sampled function, a movable bump, and their pointwise product"></canvas></div>
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Width <span class="m"><i>σ</i></span> <span class="v" id="v-bs">0.322</span></span>
+        <input type="range" id="bs" min="0" max="1000" value="700" aria-label="bump width">
+      </div>
+      <div class="ctl">
+        <span class="lab">Location <span class="m"><i>a</i></span> <span class="v" id="v-ba">0.60</span></span>
+        <input type="range" id="ba" min="-200" max="200" value="60" aria-label="bump location">
+      </div>
+      <div class="ctl">
+        <span class="lab">Bump</span>
+        <div class="seg" id="bfam" role="radiogroup" aria-label="Bump shape">
+          <label><input type="radio" name="bfam" id="bf-gauss" value="gauss" checked><span>Gaussian</span></label>
+          <label><input type="radio" name="bfam" id="bf-box" value="box"><span>Box</span></label>
+          <label><input type="radio" name="bfam" id="bf-tri" value="tri"><span>Triangle</span></label>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab">Lower axes</span>
+        <div class="seg" id="bax" role="radiogroup" aria-label="Vertical axis behaviour for the lower panels">
+          <label><input type="radio" name="bax" id="bax-auto" value="auto" checked><span>Rescale</span></label>
+          <label><input type="radio" name="bax" id="bax-lock" value="lock"><span>Locked</span></label>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab">&nbsp;</span>
+        <div class="btnrow"><button id="anim-bs" type="button">Animate σ → 0</button></div>
+      </div>
+    </div>
+    <div class="readout">
+      <div><span class="k">bump peak</span><span class="val" id="r-bpk">1.24</span></div>
+      <div><span class="k">product peak</span><span class="val" id="r-ppk">1.94</span></div>
+      <div><span class="k">product area</span><span class="val" id="r-par">1.430</span></div>
+      <div><span class="k">f(a)</span><span class="val" id="r-bfa">1.443</span></div>
+      <div><span class="k">area − f(a)</span><span class="val" id="r-bgap">−0.013</span></div>
+    </div>
+    <figcaption><strong>The two lower axes rescale; the top one never moves.</strong> That is what lets you see the product's peak run away — at <span class="m"><i>σ</i></span> near zero its axis reads in the hundreds while the top panel still reads about 2. Switch the lower axes to <em>Locked</em> and the product simply leaves the chart, which is the same fact told less usefully. Meanwhile the area readout barely twitches: it is already <span class="m ff"><i>f</i>(<i>a</i>)</span> by the time the bump is narrow enough to look like a spike, and moving <span class="m"><i>a</i></span> is how you choose which value of <span class="m ff"><i>f</i></span> you get. The two printed numbers are the pair to watch: <span class="m ff"><i>f</i>(<i>a</i>)</span> sits on the top curve at the dotted line, the area sits on the shaded lump directly below it, and the gap between them closes as the bump narrows.</figcaption>
+  </figure>
+
+  <section class="col">
+    <h2>3 · A finite train, and its exact spectrum</h2>
     <p>Put <span class="m"><i>N</i></span> boxes of width <span class="m"><i>w</i></span> in a row, spaced <span class="m"><i>T</i></span>. This object is finite, ordinary, and completely non-controversial, so its transform can be written down exactly with no distributions anywhere:</p>
     <p class="display"><span class="m">Ŝ<sub><i>N</i></sub>(<i>u</i>) = sinc(<i>wu</i>) · <sup>sin(π<i>NuT</i>)</sup>⁄<sub>sin(π<i>uT</i>)</sub></span></p>
     <p>One factor per ingredient. The <em>box</em> contributes the sinc — a fixed envelope that depends on <span class="m"><i>w</i></span> and nothing else. The <em>repetition</em> contributes the second factor, which is what builds the peaks: tall and narrow near <span class="m"><i>u</i> = <i>k</i>/<i>T</i></span>, small everywhere else. It is a perfectly ordinary continuous curve at every finite <span class="m"><i>N</i></span>.</p>
@@ -318,7 +372,7 @@
 
   <figure>
     <div class="fig-head">
-      <span class="t">Fig. 2 — <span class="m"><i>N</i></span> boxes, exact transform</span>
+      <span class="t">Fig. 3 — <span class="m"><i>N</i></span> boxes, exact transform</span>
       <span class="d">a continuous curve — no impulses in this figure</span>
     </div>
     <div class="canvas-box"><canvas id="c6" aria-label="A finite train of N boxes and its exact continuous Fourier transform"></canvas></div>
@@ -348,16 +402,16 @@
   </figure>
 
   <section class="col">
-    <h2>3 · Sampling an image is this product</h2>
+    <h2>4 · Sampling an image is this product</h2>
     <p>A sensor does not evaluate the world at a point. Each photosite is a little square window of width <span class="m"><i>w</i></span>, sitting on a grid of pitch <span class="m">Δ</span>, and the number it reports is the light falling inside that window — which is the scene multiplied by the window and integrated. Lay the windows out across the row and you have a box train, one box per pixel. Sampling is that product, read off one box at a time.</p>
     <p class="display"><span class="m">pixel[<i>k</i>] = ∫ <span class="ff"><i>f</i></span>(<i>x</i>) box<sub><i>w</i></sub>(<i>x</i> − <i>k</i>Δ) d<i>x</i></span></p>
-    <p>Two knobs, two familiar limits. The <em>pitch</em> <span class="m">Δ</span> decides how many pixels you get. The <em>aperture</em> <span class="m"><i>w</i></span> decides what each one means: at full width each pixel is an honest average over its cell, and as <span class="m"><i>w</i></span> shrinks toward zero the box becomes an impulse and the pixel becomes a bare point sample of <span class="m ff"><i>f</i></span>. In between sits the whole story of the page: the box has area 1 either way, and it is the area — never the height — that decides what the pixel reads.</p>
+    <p>Two knobs, two familiar limits. The <em>pitch</em> <span class="m">Δ</span> decides how many pixels you get. The <em>aperture</em> <span class="m"><i>w</i></span> decides what each one means: at full width each pixel is an honest average over its cell, and as <span class="m"><i>w</i></span> shrinks toward zero the box becomes an impulse and the pixel becomes a bare point sample of <span class="m ff"><i>f</i></span>. It is the product of Fig. 2 again, with the bump fixed to a grid and one box per pixel — and as there, what the pixel reads is the area, never the height.</p>
     <p>The signal is a chirp — slow on the left, faster and faster to the right — because it makes the difference visible. Drop the aperture to a point and the fast end of the row comes back as a lazy, entirely fictional wave. Open the aperture and that region averages toward flat grey, which is the honest answer for detail the grid cannot hold.</p>
   </section>
 
   <figure>
     <div class="fig-head">
-      <span class="t">Fig. 3 — One row, sampled</span>
+      <span class="t">Fig. 4 — One row, sampled</span>
       <span class="d">grey strips: the row as light, before and after</span>
     </div>
     <div class="canvas-box"><canvas id="c7" aria-label="A one-dimensional image row multiplied by a train of aperture boxes, giving pixel values"></canvas></div>
@@ -651,6 +705,138 @@
     document.getElementById('r-area').textContent = area.toFixed(3);
   }
 
+
+  /* =======================================================
+     FIG 2 — a sampled function times a movable bump
+     ======================================================= */
+  var s9 = Stage('c9');
+  var bsEl = document.getElementById('bs'), baEl = document.getElementById('ba');
+  var BS_MIN = 0.015, BS_MAX = 1.2;
+
+  // f is given as data: 12 samples, Catmull-Rom through them.
+  var SAMP = [0.55, 1.35, 1.05, 0.40, 0.75, 1.85, 2.05, 1.30, 0.62, 1.10, 1.55, 0.85];
+  var SX0 = -2.5, SX1 = 2.5, SN = SAMP.length, SDX = (SX1 - SX0)/(SN - 1);
+  function sAt(k){ return SAMP[Math.max(0, Math.min(SN-1, k))]; }
+  function fSamp(x){
+    if (x <= SX0) return SAMP[0];
+    if (x >= SX1) return SAMP[SN-1];
+    var t = (x - SX0)/SDX, i = Math.floor(t), u = t - i;
+    var p0 = sAt(i-1), p1 = sAt(i), p2 = sAt(i+1), p3 = sAt(i+2);
+    return 0.5*((2*p1) + (-p0 + p2)*u + (2*p0 - 5*p1 + 4*p2 - p3)*u*u + (-p0 + 3*p1 - 3*p2 + p3)*u*u*u);
+  }
+  var F_TOP = 2.45;
+
+  function draw9(){
+    var st = s9, ctx = st.ctx;
+    ctx.clearRect(0,0,st.w,st.h);
+    var fam = famOf('bfam');
+    var sg = sigFrom(bsEl, BS_MIN, BS_MAX);
+    var a = (+baEl.value)/100;
+    var locked = document.getElementById('bax-lock').checked;
+    var XR = [SX0, SX1];
+
+    var bump = function(x){ return fam.f(x - a, sg); };
+    var prod = function(x){ return fSamp(x)*bump(x); };
+
+    var bpk = fam.peak(sg);
+    var ppk = 0, i, xx;
+    for (i = 0; i <= 3000; i++){ xx = SX0 + (SX1-SX0)*i/3000; ppk = Math.max(ppk, prod(xx)); }
+
+    // three panels of IDENTICAL height, so axis length never encodes scale
+    var gap = 12, xlab = 20, PL = 58, PR = 16;
+    var hh = (st.h - 2*gap - xlab)/3;
+    var mk = function(idx, yr, last){
+      return frame({ x:0, y:idx*(hh+gap), w:st.w, h:hh + (last ? xlab : 0),
+                     pl:PL, pr:PR, pt:6, pb:(last ? xlab + 4 : 8) }, XR, yr);
+    };
+
+    var yr2 = locked ? [0, F_TOP] : [0, bpk*1.22];
+    var yr3 = locked ? [0, F_TOP] : [0, Math.max(0.35, ppk*1.22)];
+
+    function axisNote(fr, txt, color){
+      ctx.save();
+      ctx.font = '500 11.5px ' + MONO; ctx.fillStyle = color;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+      ctx.fillText(txt, fr.R - 2, fr.T + 2);
+      ctx.restore();
+    }
+
+    /* panel 1 — the data */
+    var p1 = mk(0, [0, F_TOP], false);
+    grid(ctx, p1, { ydiv:3, xticks:false });
+    curve(ctx, p1, fSamp, C.f, null, 2, 1600);
+    ctx.save();
+    ctx.fillStyle = C.f;
+    for (i = 0; i < SN; i++){
+      ctx.beginPath(); ctx.arc(p1.X(SX0 + i*SDX), p1.Y(SAMP[i]), 3, 0, 6.2832); ctx.fill();
+    }
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([2,4]);
+    ctx.beginPath(); ctx.moveTo(p1.X(a), p1.T); ctx.lineTo(p1.X(a), p1.B); ctx.stroke();
+    ctx.restore();
+
+    // the value we are trying to read off, printed where it lives
+    var fa = fSamp(a);
+    var flip = a > 1.1;
+    ctx.save();
+    ctx.fillStyle = C.f;
+    ctx.beginPath(); ctx.arc(p1.X(a), p1.Y(fa), 4.5, 0, 6.2832); ctx.fill();
+    ctx.font = '600 13px ' + MONO;
+    ctx.textAlign = flip ? 'right' : 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('f(a) = ' + fa.toFixed(3), p1.X(a) + (flip ? -9 : 9), Math.max(p1.T + 30, p1.Y(fa) - 7));
+    ctx.restore();
+
+    tag(ctx, p1, 'f(x) — 12 samples, curve through them', C.f, 'left');
+    axisNote(p1, 'axis top ' + F_TOP.toFixed(2) + ' — never moves', C.muted);
+
+    /* panel 2 — the bump */
+    var p2 = mk(1, yr2, false);
+    grid(ctx, p2, { ydiv:3, xticks:false });
+    ctx.save();
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([2,4]);
+    ctx.beginPath(); ctx.moveTo(p2.X(a), p2.T); ctx.lineTo(p2.X(a), p2.B); ctx.stroke();
+    ctx.restore();
+    curve(ctx, p2, bump, C.k, C.ks, 2, 2600);
+    tag(ctx, p2, 'bump: ' + fam.label.toLowerCase() + ', width σ = ' + sg.toFixed(3) + ', area 1', C.k, 'left');
+    axisNote(p2, 'axis top ' + fmt(yr2[1]) + (locked && bpk > F_TOP ? ' — peak off the chart' : ''), C.k);
+
+    /* panel 3 — the product */
+    var area = integrateBreaks(prod, SX0, SX1, breaksOf(fam, sg, a), 7000);
+    var p3 = mk(2, yr3, true);
+    grid(ctx, p3, { ydiv:3, xlabels:true, xticks:false });
+    ctx.save();
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([2,4]);
+    ctx.beginPath(); ctx.moveTo(p3.X(a), p3.T); ctx.lineTo(p3.X(a), p3.B); ctx.stroke();
+    ctx.restore();
+    curve(ctx, p3, prod, C.p, C.ps, 2, 3000);
+    tag(ctx, p3, 'f(x) · bump(x)', C.p, 'left');
+    axisNote(p3, 'axis top ' + fmt(yr3[1]) + (locked && ppk > F_TOP ? ' — peak off the chart' : ''), C.p);
+
+    // the shaded area, printed on the shading
+    ctx.save();
+    ctx.fillStyle = C.p;
+    ctx.font = '600 13px ' + MONO;
+    ctx.textAlign = flip ? 'right' : 'left';
+    ctx.textBaseline = 'bottom';
+    var ytxt = Math.max(p3.T + 46, p3.Y(Math.min(ppk, yr3[1])) - 7);
+    ctx.fillText('area = ' + area.toFixed(3), p3.X(a) + (flip ? -9 : 9), ytxt);
+    ctx.font = '500 11.5px ' + MONO;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillStyle = C.muted;
+    var gap3 = area - fa;
+    ctx.fillText('peak ' + fmt(ppk) + '   ·   area − f(a) = ' + (gap3 >= 0 ? '+' : '−') + Math.abs(gap3).toFixed(3),
+                 p3.R - 2, p3.T + 18);
+    ctx.restore();
+
+    document.getElementById('v-bs').textContent = sg.toFixed(3);
+    document.getElementById('v-ba').textContent = a.toFixed(2);
+    document.getElementById('r-bpk').textContent = fmt(bpk);
+    document.getElementById('r-ppk').textContent = fmt(ppk);
+    document.getElementById('r-par').textContent = area.toFixed(3);
+    document.getElementById('r-bfa').textContent = fa.toFixed(3);
+    document.getElementById('r-bgap').textContent = (area - fa >= 0 ? '+' : '−') + Math.abs(area - fa).toFixed(3);
+  }
+
   /* ---------- shared drawing helpers ---------- */
   function sincn(z){ if (Math.abs(z) < 1e-10) return 1; var a = Math.PI*z; return Math.sin(a)/a; }
 
@@ -911,14 +1097,22 @@
   }
 
   /* ---------- wiring ---------- */
-  function drawAll(){ draw1(); draw6(); draw7(); }
-  function fitAll(){ s1.fit(); s6.fit(); s7.fit(); drawAll(); }
+  function drawAll(){ draw1(); draw9(); draw6(); draw7(); }
+  function fitAll(){ s1.fit(); s9.fit(); s6.fit(); s7.fit(); drawAll(); }
 
   function on(id, ev, fn){ var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); }
 
   on('sig1', 'input', draw1);
   document.getElementById('fam1').addEventListener('change', draw1);
   document.getElementById('ax1').addEventListener('change', draw1);
+
+  ['bs','ba'].forEach(function(id){ on(id,'input',draw9); });
+  document.getElementById('bfam').addEventListener('change', draw9);
+  document.getElementById('bax').addEventListener('change', draw9);
+  document.getElementById('anim-bs').addEventListener('click', function(){
+    if (+bsEl.value < 60) bsEl.value = 1000;
+    animate(bsEl, 0, draw9);
+  });
 
   ['lim','per2'].forEach(function(id){ on(id,'input',draw6); });
   document.getElementById('anim-lim').addEventListener('click', function(){
@@ -953,7 +1147,7 @@
 
   if (window.ResizeObserver){
     var ro = new ResizeObserver(function(){ fitAll(); });
-    ['c1','c6','c7'].forEach(function(id){ ro.observe(document.getElementById(id)); });
+    ['c1','c9','c6','c7'].forEach(function(id){ ro.observe(document.getElementById(id)); });
   } else {
     window.addEventListener('resize', fitAll);
   }
