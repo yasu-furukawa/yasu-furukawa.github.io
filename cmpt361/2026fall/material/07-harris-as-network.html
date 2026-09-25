@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harris, rebuilt from network layers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F3; --panel:#F7F9FA; --ink:#16222E; --muted:#5B6773; --line:#C9D1D9;
+  --fixed:#2E5FA8; --fixed-soft:#DCE6F4; --built:#A8680F; --built-soft:#F3E5CC; --focus:#2E5FA8;
+  --th:58px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121A22; --panel:#18222C; --ink:#E4E9EE; --muted:#93A0AC; --line:#2C3945;
+    --fixed:#86ABE3; --fixed-soft:#1E2E45; --built:#E3AA52; --built-soft:#3A2C16; --focus:#86ABE3;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121A22; --panel:#18222C; --ink:#E4E9EE; --muted:#93A0AC; --line:#2C3945;
+  --fixed:#86ABE3; --fixed-soft:#1E2E45; --built:#E3AA52; --built-soft:#3A2C16; --focus:#86ABE3;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.5}
+main{max-width:1400px;margin:0 auto;padding:26px 20px 60px;min-width:0}
+h1{font-size:clamp(1.6rem,3.6vw,2.4rem);line-height:1.1;margin:0 0 8px}
+h2{font-size:1.15rem;margin:0}
+h3{font-size:.95rem;margin:14px 0 6px}
+p{margin:0 0 8px;max-width:74ch}
+.lede{color:var(--muted)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;margin:18px 0 14px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:160px}
+.ctl > label,.ctl > .lab{font-size:.88rem;color:var(--muted)}
+.ctl output{font-weight:700;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.samples{display:flex;gap:8px;flex-wrap:wrap}
+.samples button{padding:0;border:2px solid transparent;border-radius:6px;background:none;cursor:pointer;line-height:0}
+.samples button[aria-pressed="true"]{border-color:var(--ink)}
+.samples canvas{width:48px;height:48px;border-radius:4px;image-rendering:pixelated;display:block}
+.upload{position:relative;display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border:2px dashed var(--line);
+  border-radius:6px;color:var(--muted);font-size:.74rem;text-align:center;cursor:pointer;line-height:1.2}
+.upload input{position:absolute;opacity:0;width:1px;height:1px}
+.radio{display:flex;gap:12px;font-size:.9rem}
+.radio label{display:flex;gap:5px;align-items:center;cursor:pointer}
+.rule{font-size:.88rem;color:var(--muted);margin:0 0 10px}
+.rule .g{display:inline-block;width:52px;height:10px;border-radius:2px;vertical-align:middle;margin:0 4px;
+  background:linear-gradient(90deg,#000,#808080,#fff);border:1px solid var(--line)}
+
+/* feature table */
+.table-wrap{overflow-x:auto;border-top:1.5px solid var(--line);border-bottom:1.5px solid var(--line);padding:12px 0 16px}
+.table{display:flex;align-items:flex-start;min-width:max-content;padding:0 4px}
+.fcol{display:flex;flex-direction:column;align-items:center;padding:0 4px}
+.fh{height:52px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;margin-bottom:8px;text-align:center}
+.fh .t{font-weight:700;font-size:.9rem;line-height:1.15;white-space:nowrap}
+.fh .s{font-size:.74rem;color:var(--muted)}
+.fbody{display:flex;gap:4px;align-items:flex-start}
+.fcol{--th:108px}
+.fcol.hidden-l{--th:22px}
+.fcol.hidden-l .gcol{gap:1px;min-width:36px}
+.fcol.hidden-l .fbody{gap:3px}
+.fcol.hidden-l .thumb{border-width:1px}
+.fcol.hidden-l .gh{font-size:.66rem}
+@media (max-width:760px){.fcol{--th:76px}.fcol.hidden-l{--th:18px}}
+.gcol{display:flex;flex-direction:column;gap:4px;align-items:center}
+.gh{font-size:.72rem;color:var(--muted);height:16px;line-height:16px;white-space:nowrap}
+.thumb{appearance:none;padding:0;border:2px solid transparent;background:none;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;border-radius:4px;font:inherit;color:inherit}
+.thumb[aria-pressed="true"]{border-color:var(--ink)}
+.thumb canvas{width:var(--th);height:var(--th);image-rendering:pixelated;display:block;border-radius:2px}
+.thumb .cap{font-size:.74rem;color:var(--muted);margin-top:2px;white-space:nowrap}
+.opcol{padding:60px 2px 0;display:flex}
+.op{appearance:none;font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:8px;
+  padding:6px 6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:66px;line-height:1.15}
+.op.fixed{border-color:var(--fixed)} .op.built{border-color:var(--built)}
+.op .t{font-size:.8rem;font-weight:700;white-space:nowrap}
+.op .s{font-size:.7rem;color:var(--muted)}
+.op .ar{font-size:1rem;color:var(--muted)}
+.op.fixed .t{color:var(--fixed)} .op.built .t{color:var(--built)}
+.op[aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px currentColor;background:var(--paper)}
+.op.fixed[aria-pressed="true"]{color:var(--fixed)} .op.built[aria-pressed="true"]{color:var(--built)}
+
+/* bottom */
+.bottom{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;margin-top:20px}
+@media (max-width:860px){.bottom{grid-template-columns:minmax(0,1fr)}}
+.dh{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:8px}
+.tag{font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:99px}
+.tag.fixed{background:var(--fixed-soft);color:var(--fixed)} .tag.built{background:var(--built-soft);color:var(--built)}
+.tag.plain{background:var(--line);color:var(--ink)}
+.kwrap{display:inline-block;vertical-align:top;margin:4px 18px 10px 0}
+.kern{display:inline-grid;gap:2px}
+.kern .cell{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:3px;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.8rem;font-weight:600}
+.kern.small .cell{width:28px;height:28px;font-size:.7rem}
+.kcap,.legend,.readout{font-size:.8rem;color:var(--muted)}
+.kcap{margin-top:4px}
+.mat-wrap{margin:4px 0 6px}
+.mat{image-rendering:pixelated;display:block;border:1px solid var(--line);border-radius:2px}
+.mat.W1{width:120px;height:auto;max-height:420px}
+.mat.W2{width:100%;max-width:640px;height:auto;min-height:24px}
+.plot{width:100%;max-width:440px;height:auto;display:block;margin-top:8px}
+.big-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,260px));gap:14px}
+.big{width:100%;aspect-ratio:1;image-rendering:pixelated;display:block;border-radius:3px}
+figure{margin:0} figcaption{font-size:.84rem;color:var(--muted);margin-top:4px}
+.note{font-size:.88rem;color:var(--muted)}
+.summary canvas{width:100%;max-width:300px;aspect-ratio:1;image-rendering:pixelated;border-radius:3px;display:block}
+</style>
+</head>
+<body>
+<main>
+  <h1>Harris, rebuilt from network layers</h1>
+  <p class="lede">Features flow left to right, from the image to the Harris response. Blue layers use the classical kernels exactly. Ochre layers approximate multiplication with ReLUs, weights set by hand.</p>
+
+  <div class="top">
+    <div class="ctl"><span class="lab">Sample image</span><div class="samples" id="samples"></div></div>
+    <div class="ctl"><label for="knots">ReLU kinks per side <output id="knotsOut"></output></label>
+      <input id="knots" type="range" min="1" max="24" step="1" value="8"></div>
+    <div class="ctl"><label for="win">Window size <output id="winOut"></output></label>
+      <input id="win" type="range" min="3" max="9" step="2" value="5"></div>
+    <div class="ctl"><label for="kk">Harris k <output id="kOut"></output></label>
+      <input id="kk" type="range" min="0.02" max="0.15" step="0.01" value="0.05"></div>
+    <div class="ctl"><span class="lab">Brightness scale</span>
+      <div class="radio"><label><input type="radio" name="scale" value="channel" checked>Per channel</label>
+      <label><input type="radio" name="scale" value="layer">Per layer</label></div></div>
+  </div>
+  <p class="rule">Every feature map uses the same rule: negative<span class="g"></span>positive, gray is zero. Click a layer between columns for its kernels, or a feature map to enlarge it.</p>
+
+  <div class="table-wrap"><div class="table" id="table"></div></div>
+
+  <div class="bottom">
+    <section id="detail" aria-live="polite"></section>
+    <aside class="summary">
+      <h2>Corners found</h2>
+      <p class="note">Local maxima of the network's output, drawn on the image. It differs from classical Harris by at most <b id="errOut"></b> of the peak.</p>
+      <canvas id="cornersCv" width="288" height="288"></canvas>
+    </aside>
+  </div>
+</main>
+<script>
+
+(() => {
+const S = 96;              // image size
+const NPX = S * S;
+
+/* ---------------- sample images ---------------- */
+function raster(f, ss = 4) {
+  const out = new Float32Array(NPX);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    let acc = 0;
+    for (let j = 0; j < ss; j++) for (let i = 0; i < ss; i++)
+      acc += f(x + (i + .5) / ss, y + (j + .5) / ss);
+    out[y * S + x] = acc / (ss * ss);
+  }
+  return out;
+}
+function inPoly(px, py, pts) {
+  let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+function rng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+const rects = [[14, 14, 40, 34], [52, 20, 82, 44], [22, 54, 46, 84], [58, 58, 84, 78]];
+const SAMPLES = [
+  { name: "Checkerboard", img: raster((x, y) => {
+      const m = 12; if (x < m || y < m || x > S - m || y > S - m) return 0.5;
+      return ((Math.floor((x - m) / 18) + Math.floor((y - m) / 18)) % 2) ? 0.9 : 0.1; }) },
+  { name: "Blocks", img: raster((x, y) => rects.some(([a, b, c, d]) => x > a && x < c && y > b && y < d) ? 0.9 : 0.12) },
+  { name: "Shapes", img: raster((x, y) => {
+      if (inPoly(x, y, [[10, 42], [40, 42], [25, 12]])) return 0.9;
+      const cx = 68, cy = 28, r = 14, a = Math.PI / 5;
+      const u = (x - cx) * Math.cos(a) + (y - cy) * Math.sin(a), v = -(x - cx) * Math.sin(a) + (y - cy) * Math.cos(a);
+      if (Math.abs(u) < r && Math.abs(v) < r) return 0.85;
+      if ((x - 30) ** 2 + (y - 72) ** 2 < 15 ** 2) return 0.8;     // circle: no corners
+      if (inPoly(x, y, [[56, 58], [86, 58], [86, 88], [72, 88], [72, 72], [56, 72]])) return 0.9; // L shape
+      return 0.1; }) },
+  { name: "Noisy blocks", img: (() => {
+      const base = raster((x, y) => rects.some(([a, b, c, d]) => x > a && x < c && y > b && y < d) ? 0.85 : 0.15);
+      const r = rng(7);
+      for (let i = 0; i < NPX; i++) {
+        const g = Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r());
+        base[i] = Math.min(1, Math.max(0, base[i] + 0.06 * g));
+      }
+      return base; })() },
+];
+
+/* ---------------- layers ---------------- */
+const SOBEL_X = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+const SOBEL_Y = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+function niceCeil(v) {               // round up to 1, 2 or 5 times a power of ten, at two significant digits
+  if (v <= 0) return 1;
+  const e = Math.pow(10, Math.floor(Math.log10(v)) - 1);
+  return Math.ceil(v * 1.02 / e) * e;
+}
+const clampi = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+
+function conv3(img, k) {               // correlation, replicate padding
+  const out = new Float32Array(NPX);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    let a = 0;
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++)
+      a += k[(j + 1) * 3 + (i + 1)] * img[clampi(y + j, 0, S - 1) * S + clampi(x + i, 0, S - 1)];
+    out[y * S + x] = a;
+  }
+  return out;
+}
+function boxSum(img, w) {              // all-ones kernel, replicate padding
+  const r = (w - 1) / 2, out = new Float32Array(NPX);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    let a = 0;
+    for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++)
+      a += img[clampi(y + j, 0, S - 1) * S + clampi(x + i, 0, S - 1)];
+    out[y * S + x] = a;
+  }
+  return out;
+}
+
+/* A "square block": 1x1 conv (inDim -> H), ReLU, 1x1 conv (H -> outDim).
+   Each quantity q = v . x gets 2N ReLU units with kinks at 0, h, ..., (N-1)h on both sides.
+   Sum_j c_j [ReLU(q - jh) + ReLU(-q - jh)], c_0 = h, c_j = 2h, equals the piecewise-linear
+   interpolation of q^2 on the grid {jh}. Outputs are linear combinations of these squares. */
+function buildBlock(quantities, combos, N) {
+  const Q = quantities.length, inDim = quantities[0].v.length, H = Q * 2 * N, outDim = combos.length;
+  const W1 = new Float32Array(H * inDim), b1 = new Float32Array(H), W2 = new Float32Array(outDim * H);
+  const meta = [];
+  let u = 0;
+  quantities.forEach((q, qi) => {
+    const h = q.R / N;
+    const order = [];
+    for (let j = N - 1; j >= 0; j--) order.push([-1, j]);   // left side, read left to right
+    for (let j = 0; j < N; j++) order.push([1, j]);
+    order.forEach(([s, j]) => {
+      for (let i = 0; i < inDim; i++) W1[u * inDim + i] = s * q.v[i];
+      b1[u] = -j * h;
+      const c = j === 0 ? h : 2 * h;
+      for (let o = 0; o < outDim; o++) W2[o * H + u] = combos[o][qi] * c;
+      meta.push({ q: qi, s, j, kink: s * j * h });
+      u++;
+    });
+  });
+  return { quantities, combos, N, Q, inDim, H, outDim, W1, b1, W2, meta };
+}
+function runBlock(B, inputs) {
+  const { H, inDim, outDim, W1, b1, W2 } = B;
+  const pre = Array.from({ length: H }, () => new Float32Array(NPX));
+  const out = Array.from({ length: outDim }, () => new Float32Array(NPX));
+  const x = new Float32Array(inDim), acc = new Float64Array(outDim);
+  for (let p = 0; p < NPX; p++) {
+    for (let i = 0; i < inDim; i++) x[i] = inputs[i][p];
+    acc.fill(0);
+    for (let u = 0; u < H; u++) {
+      let z = b1[u];
+      for (let i = 0; i < inDim; i++) z += W1[u * inDim + i] * x[i];
+      pre[u][p] = z;
+      if (z > 0) for (let o = 0; o < outDim; o++) acc[o] += W2[o * H + u] * z;
+    }
+    for (let o = 0; o < outDim; o++) out[o][p] = acc[o];
+  }
+  return { pre, out };
+}
+function sqApprox(q, R, N) {           // scalar version of the block's square, for plotting
+  const h = R / N; let a = 0;
+  for (let j = 0; j < N; j++) {
+    const c = j === 0 ? h : 2 * h;
+    a += c * (Math.max(0, q - j * h) + Math.max(0, -q - j * h));
+  }
+  return a;
+}
+
+/* ---------------- state + compute ---------------- */
+const st = { sample: 0, img: SAMPLES[0].img, N: 8, w: 5, k: 0.05, sel: "sobel", R: null };
+
+function compute() {
+  const { img, N, w, k } = st;
+  const Ix = conv3(img, SOBEL_X), Iy = conv3(img, SOBEL_Y);
+  // Block 1: products. |Ix|,|Iy| <= 4 and |Ix +- Iy| <= 8 for images in [0,1].
+  const B1 = buildBlock(
+    [{ name: "Ix", v: [1, 0], R: 4 }, { name: "Iy", v: [0, 1], R: 4 },
+     { name: "Ix+Iy", v: [1, 1], R: 8 }, { name: "Ix−Iy", v: [1, -1], R: 8 }],
+    [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0.25, -0.25]], N);
+  const r1 = runBlock(B1, [Ix, Iy]);
+  const [Pxx, Pyy, Pxy] = r1.out;
+  // exact products
+  const Exx = new Float32Array(NPX), Eyy = new Float32Array(NPX), Exy = new Float32Array(NPX);
+  for (let p = 0; p < NPX; p++) { Exx[p] = Ix[p] * Ix[p]; Eyy[p] = Iy[p] * Iy[p]; Exy[p] = Ix[p] * Iy[p]; }
+  // window sums
+  const A = boxSum(Pxx, w), Bs = boxSum(Pyy, w), C = boxSum(Pxy, w);
+  const eA = boxSum(Exx, w), eB = boxSum(Eyy, w), eC = boxSum(Exy, w);
+  // Block 2: response. R = (1/4 - k)(A+B)^2 - 1/4 (A-B)^2 - C^2
+  // Kink range: cover the values this layer actually receives, rounded up.
+  let mp = 0, md = 0, mc = 0;
+  for (let p = 0; p < NPX; p++) {
+    mp = Math.max(mp, Math.abs(A[p] + Bs[p])); md = Math.max(md, Math.abs(A[p] - Bs[p])); mc = Math.max(mc, Math.abs(C[p]));
+  }
+  const B2 = buildBlock(
+    [{ name: "A+B", v: [1, 1, 0], R: niceCeil(mp) }, { name: "A−B", v: [1, -1, 0], R: niceCeil(md) }, { name: "C", v: [0, 0, 1], R: niceCeil(mc) }],
+    [[0.25 - k, -0.25, -1]], N);
+  const r2 = runBlock(B2, [A, Bs, C]);
+  const Rnet = r2.out[0];
+  const Rblk = new Float32Array(NPX), Rcls = new Float32Array(NPX);
+  for (let p = 0; p < NPX; p++) {
+    Rblk[p] = A[p] * Bs[p] - C[p] * C[p] - k * (A[p] + Bs[p]) ** 2;       // exact response of the network's own sums
+    Rcls[p] = eA[p] * eB[p] - eC[p] * eC[p] - k * (eA[p] + eB[p]) ** 2;  // fully classical
+  }
+  st.R = { Ix, Iy, B1, r1, Pxx, Pyy, Pxy, Exx, Eyy, Exy, A, Bs, C, eA, eB, eC, B2, r2, Rnet, Rblk, Rcls };
+}
+
+/* ---------------- drawing (one rule for every feature map) ---------------- */
+const maxAbs = a => { let m = 0; for (let i = 0; i < a.length; i++) { const v = Math.abs(a[i]); if (v > m) m = v; } return m || 1; };
+// gray = 0, white = +scale, black = -scale
+function drawMap(cv, data, scale) {
+  cv.width = S; cv.height = S;
+  const ctx = cv.getContext("2d"), im = ctx.createImageData(S, S), m = scale || maxAbs(data);
+  for (let p = 0; p < NPX; p++) {
+    const g = Math.round(255 * clampi(0.5 + 0.5 * data[p] / m, 0, 1));
+    im.data[p * 4] = g; im.data[p * 4 + 1] = g; im.data[p * 4 + 2] = g; im.data[p * 4 + 3] = 255;
+  }
+  ctx.putImageData(im, 0, 0);
+}
+function mk(tag, attrs = {}, html) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+const relu = a => { const r = new Float32Array(NPX); for (let p = 0; p < NPX; p++) r[p] = a[p] > 0 ? a[p] : 0; return r; };
+const pct = e => e < 1e-6 ? "0%" : (e * 100).toFixed(e < 0.01 ? 2 : 1) + "%";
+function relErr(a, b) { let m = 0; for (let i = 0; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - b[i])); return m / maxAbs(b); }
+
+/* ---------------- the feature table ---------------- */
+// Each feature: { id, title, groups: [{ head, maps: [{ name, data }] }] }
+// Each op sits between two features: { id, title, kind }
+function features() {
+  const R = st.R, N = st.N;
+  const hid = (B, pre, act) => B.quantities.map((q, qi) => ({
+    head: q.name,
+    maps: pre.slice(qi * 2 * N, (qi + 1) * 2 * N).map((a, i) => ({
+      name: `${q.name} unit, kink ${B.meta[qi * 2 * N + i].kink.toFixed(q.R >= 20 ? 0 : 1)}${B.meta[qi * 2 * N + i].s < 0 ? " (mirrored)" : ""}`,
+      data: act ? relu(a) : a })) }));
+  return [
+    { id: "f0", title: "Image", groups: [{ maps: [{ name: "Image", data: st.img }] }] },
+    { op: { id: "sobel", title: "Conv 3×3", sub: "Sobel", kind: "fixed" } },
+    { id: "f1", title: "Gradients", groups: [{ maps: [{ name: "Ix", data: R.Ix }, { name: "Iy", data: R.Iy }] }] },
+    { op: { id: "p1", title: "Conv 1×1", sub: "shift", kind: "built" } },
+    { id: "f2", title: "Shifted copies", groups: hid(R.B1, R.r1.pre, false) },
+    { op: { id: "p2", title: "ReLU", sub: "", kind: "built" } },
+    { id: "f3", title: "Ramps", groups: hid(R.B1, R.r1.pre, true) },
+    { op: { id: "p3", title: "Conv 1×1", sub: "sum", kind: "built" } },
+    { id: "f4", title: "Products", groups: [{ maps: [{ name: "Ix²", data: R.Pxx, ref: R.Exx }, { name: "Iy²", data: R.Pyy, ref: R.Eyy }, { name: "IxIy", data: R.Pxy, ref: R.Exy }] }] },
+    { op: { id: "box", title: `Conv ${st.w}×${st.w}`, sub: "all ones", kind: "fixed" } },
+    { id: "f5", title: "Window sums", groups: [{ maps: [{ name: "A = ΣIx²", data: R.A }, { name: "B = ΣIy²", data: R.Bs }, { name: "C = ΣIxIy", data: R.C }] }] },
+    { op: { id: "r1", title: "Conv 1×1", sub: "shift", kind: "built" } },
+    { id: "f6", title: "Shifted copies", groups: hid(R.B2, R.r2.pre, false) },
+    { op: { id: "r2", title: "ReLU", sub: "", kind: "built" } },
+    { id: "f7", title: "Ramps", groups: hid(R.B2, R.r2.pre, true) },
+    { op: { id: "r3", title: "Conv 1×1", sub: "sum", kind: "built" } },
+    { id: "f8", title: "Harris", groups: [{ maps: [{ name: "Harris response R", data: R.Rnet, ref: R.Rcls }] }] },
+  ];
+}
+
+function buildTable() {
+  const tbl = document.getElementById("table"); tbl.innerHTML = "";
+  const perLayer = st.scale === "layer";
+  features().forEach(f => {
+    if (f.op) {
+      const o = f.op, c = mk("div", { class: "opcol" });
+      const b = mk("button", { class: "op " + o.kind, "aria-pressed": String(st.sel === o.id) },
+        `<span class="t">${o.title}</span>${o.sub ? `<span class="s">${o.sub}</span>` : ""}<span class="ar" aria-hidden="true">→</span>`);
+      b.onclick = () => { st.sel = o.id; st.selMap = null; buildTable(); renderDetail(); document.getElementById("detail").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" }); };
+      c.append(b); tbl.append(c); return;
+    }
+    const col = mk("div", { class: "fcol" + (f.groups.some(g => g.head) ? " hidden-l" : "") });
+    const nch = f.groups.reduce((a, g) => a + g.maps.length, 0);
+    col.append(mk("div", { class: "fh" }, `<span class="t">${f.title}</span><span class="s">${nch} channel${nch > 1 ? "s" : ""}</span>`));
+    let lm = 0; if (perLayer) f.groups.forEach(g => g.maps.forEach(m => lm = Math.max(lm, maxAbs(m.data))));
+    const body = mk("div", { class: "fbody" });
+    f.groups.forEach(g => {
+      const gc = mk("div", { class: "gcol" });
+      if (g.head) gc.append(mk("div", { class: "gh" }, g.head));
+      g.maps.forEach((m, i) => {
+        const b = mk("button", { class: "thumb", title: m.name, "aria-label": m.name,
+          "aria-pressed": String(st.selMap && st.selMap.f === f.id && st.selMap.name === m.name) });
+        const cv = mk("canvas"); drawMap(cv, m.data, perLayer ? lm : 0); b.append(cv);
+        if (!g.head) b.append(mk("span", { class: "cap" }, m.name));
+        b.onclick = () => { st.selMap = { f: f.id, name: m.name }; buildTable(); renderDetail(); };
+        gc.append(b);
+      });
+      body.append(gc);
+    });
+    col.append(body); tbl.append(col);
+  });
+}
+
+/* ---------------- detail panel: kernels, or one feature enlarged ---------------- */
+function kernelGrid(vals, n, cap) {
+  const wrap = mk("div", { class: "kwrap" });
+  const g = mk("div", { class: "kern" + (n > 5 ? " small" : ""), style: `grid-template-columns:repeat(${n},auto)` });
+  const m = Math.max(...vals.map(Math.abs)) || 1;
+  vals.forEach(v => {
+    const t = 0.5 + 0.5 * v / m, gg = Math.round(255 * t);
+    g.append(mk("div", { class: "cell", style: `background:rgb(${gg},${gg},${gg});color:${t > 0.55 ? "#111" : "#f4f4f4"}` }, String(v)));
+  });
+  wrap.append(g, mk("div", { class: "kcap" }, cap));
+  return wrap;
+}
+// A 1x1 conv is a matrix: rows = output channels, columns = input channels (+ bias).
+function matrix(B, which, inNames, outNames, fmt) {
+  const wrap = mk("div", { class: "mat-wrap" });
+  const rows = which === "W1" ? B.H : B.outDim, cols = which === "W1" ? B.inDim + 1 : B.H;
+  const val = (r, c) => which === "W1" ? (c < B.inDim ? B.W1[r * B.inDim + c] : B.b1[r]) : B.W2[r * B.H + c];
+  const colMax = [];
+  for (let c = 0; c < cols; c++) { let m = 0; for (let r = 0; r < rows; r++) m = Math.max(m, Math.abs(val(r, c))); colMax.push(m || 1); }
+  const rowMax = [];
+  for (let r = 0; r < rows; r++) { let m = 0; for (let c = 0; c < cols; c++) m = Math.max(m, Math.abs(val(r, c))); rowMax.push(m || 1); }
+  const cv = mk("canvas", { width: cols, height: rows, class: "mat " + which });
+  const ctx = cv.getContext("2d"), im = ctx.createImageData(cols, rows);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const m = which === "W1" ? colMax[c] : rowMax[r];
+    const g = Math.round(255 * clampi(0.5 + 0.5 * val(r, c) / m, 0, 1));
+    im.data.set([g, g, g, 255], (r * cols + c) * 4);
+  }
+  ctx.putImageData(im, 0, 0);
+  const ro = mk("div", { class: "readout" }, "Hover or tap a cell to read it.");
+  const show = e => {
+    const rc = cv.getBoundingClientRect();
+    const c = clampi(Math.floor((e.clientX - rc.left) / rc.width * cols), 0, cols - 1);
+    const r = clampi(Math.floor((e.clientY - rc.top) / rc.height * rows), 0, rows - 1);
+    ro.textContent = `${outNames(r)} ← ${inNames(c)}: ${fmt(val(r, c))}`;
+  };
+  cv.addEventListener("pointermove", show); cv.addEventListener("pointerdown", show);
+  wrap.append(cv, ro);
+  return wrap;
+}
+function squarePlot(R, N, label) {
+  const W = 420, Hh = 190, pad = 26, xs = x => pad + (x + R) / (2 * R) * (W - 2 * pad);
+  const ys = y => Hh - pad - y / (R * R) * (Hh - 2 * pad);
+  let exact = "", approx = "", dots = "", maxE = 0;
+  for (let i = 0; i <= 200; i++) { const x = -R + 2 * R * i / 200; maxE = Math.max(maxE, Math.abs(sqApprox(x, R, N) - x * x));
+    exact += (i ? "L" : "M") + xs(x).toFixed(1) + "," + ys(x * x).toFixed(1); }
+  const h = R / N;
+  for (let j = -N; j <= N; j++) approx += (j === -N ? "M" : "L") + xs(j * h).toFixed(1) + "," + ys((j * h) ** 2).toFixed(1);
+  for (let j = -(N - 1); j <= N - 1; j++) dots += `<circle cx="${xs(j * h).toFixed(1)}" cy="${ys((j * h) ** 2).toFixed(1)}" r="3" fill="var(--built)"/>`;
+  const d = mk("div", {}, `<svg class="plot" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Square and its ReLU approximation">
+    <line x1="${pad}" y1="${Hh - pad}" x2="${W - pad}" y2="${Hh - pad}" stroke="var(--line)"/>
+    <path d="${exact}" fill="none" stroke="var(--muted)" stroke-width="5" stroke-opacity=".35"/>
+    <path d="${approx}" fill="none" stroke="var(--built)" stroke-width="2"/>${dots}
+    <text x="${pad}" y="${Hh - 8}" font-size="12" fill="var(--muted)">−${R}</text>
+    <text x="${W - pad}" y="${Hh - 8}" font-size="12" fill="var(--muted)" text-anchor="end">${R}</text></svg>`);
+  d.append(mk("p", { class: "legend" }, `${label}² (thick gray) and the sum of ${2 * N} ramps (line, one kink per dot). Largest gap: ${(maxE / (R * R) * 100).toFixed(2)}% of the peak.`));
+  return d;
+}
+function unitName(B) { return u => { const m = B.meta[u]; return `${B.quantities[m.q].name} unit, kink ${m.kink.toFixed(1)}`; }; }
+
+function renderDetail() {
+  const R = st.R, el = document.getElementById("detail"); el.innerHTML = "";
+  const H = (t, tag, kind) => { const h = mk("div", { class: "dh" }); h.append(mk("h2", {}, t)); if (tag) h.append(mk("span", { class: "tag " + kind }, tag)); el.append(h); };
+  const P = (t, c) => el.append(mk("p", c ? { class: c } : {}, t));
+
+  if (st.selMap) {                       // one feature map enlarged
+    const f = features().find(x => x.id === st.selMap.f);
+    let m; f.groups.forEach(g => g.maps.forEach(x => { if (x.name === st.selMap.name) m = x; }));
+    if (!m) { st.selMap = null; return renderDetail(); }
+    H(`${f.title}: ${m.name}`);
+    let lo = Infinity, hi = -Infinity; for (const v of m.data) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    const row = mk("div", { class: "big-row" });
+    const fig = (data, cap, scale) => { const fg = mk("figure"), cv = mk("canvas", { class: "big" }); drawMap(cv, data, scale); fg.append(cv, mk("figcaption", {}, cap)); return fg; };
+    if (m.ref) {
+      const sc = maxAbs(m.ref), D = new Float32Array(NPX); for (let p = 0; p < NPX; p++) D[p] = m.data[p] - m.ref[p];
+      row.append(fig(m.data, "This network", sc), fig(m.ref, "Exact, computed with real multiplication", sc), fig(D, `Difference, same scale (max ${pct(relErr(m.data, m.ref))} of peak)`, sc));
+    } else row.append(fig(m.data, `Values from ${lo.toFixed(2)} to ${hi.toFixed(2)}`));
+    el.append(row);
+    return;
+  }
+
+  switch (st.sel) {
+    case "sobel":
+      H("Conv 3×3, 1 → 2 channels", "Exact", "fixed");
+      P("The kernels are the Sobel filters. Channel 1 is Ix, channel 2 is Iy, exactly.");
+      el.append(kernelGrid(SOBEL_X, 3, "Kernel for Ix"), kernelGrid(SOBEL_Y, 3, "Kernel for Iy"));
+      break;
+    case "p1": {
+      const B = R.B1;
+      H(`Conv 1×1, 2 → ${B.H} channels`, "Weights by hand", "built");
+      P("A conv can only add, but Harris needs Ix², Iy², IxIy. Since IxIy = ¼(Ix+Iy)² − ¼(Ix−Iy)², four squares are enough: of Ix, Iy, Ix+Iy, Ix−Iy. This layer makes shifted copies of those four quantities; the bias sets each shift.");
+      el.append(mk("h3", {}, "Weight matrix, one row per output channel"),
+        matrix(B, "W1", c => ["Ix", "Iy", "bias"][c], unitName(B), v => v.toFixed(2)));
+      P("Columns: from Ix, from Iy, bias. Each column scaled to its own range; gray is 0.", "legend");
+      break;
+    }
+    case "p2": case "r2":
+      H("ReLU", "No weights", "plain");
+      P("Keeps each shifted copy only where it is positive, so each channel becomes a ramp that switches on past its kink. Channels further down a column switch on only where the value is large.");
+      el.append(squarePlot(st.sel === "p2" ? 4 : R.B2.quantities[2].R, st.N, st.sel === "p2" ? "Ix" : "C"));
+      break;
+    case "p3": {
+      const B = R.B1;
+      H(`Conv 1×1, ${B.H} → 3 channels`, "Weights by hand", "built");
+      P("Adds the ramps. Weights h, 2h, 2h, … turn a column of ramps into a piecewise-linear parabola, and ±¼ combines two squares into IxIy.");
+      el.append(mk("h3", {}, "Weight matrix, one row per output channel"),
+        matrix(B, "W2", unitName(B), r => ["Ix²", "Iy²", "IxIy"][r], v => v.toFixed(3)), squarePlot(4, st.N, "Ix"));
+      break;
+    }
+    case "box": {
+      const w = st.w;
+      H(`Conv ${w}×${w}, depthwise, 3 → 3 channels`, "Exact", "fixed");
+      P("The same kernel of ones slides over each product channel separately: Harris's sum over a square window.");
+      el.append(kernelGrid(new Array(w * w).fill(1), w, `${w} × ${w} ones, applied to each channel`));
+      break;
+    }
+    case "r1": {
+      const B = R.B2;
+      H(`Conv 1×1, 3 → ${B.H} channels`, "Weights by hand", "built");
+      P("R = AB − C² − k(A+B)² = (¼ − k)(A+B)² − ¼(A−B)² − C². Same trick as before: shifted copies of A+B, A−B and C.");
+      P(`Kinks cover the values this layer receives for the current image (A+B up to ${B.quantities[0].R}, A−B up to ${B.quantities[1].R}, C up to ${B.quantities[2].R}), so these biases change with the image.`, "note");
+      el.append(mk("h3", {}, "Weight matrix, one row per output channel"),
+        matrix(B, "W1", c => ["A", "B", "C", "bias"][c], unitName(B), v => v.toFixed(1)));
+      break;
+    }
+    case "r3": {
+      const B = R.B2;
+      H(`Conv 1×1, ${B.H} → 1 channel`, "Weights by hand", "built");
+      P("Adds the ramps with coefficients ¼ − k, −¼ and −1. Changing k only changes this layer.");
+      el.append(mk("h3", {}, "Weight matrix"), matrix(B, "W2", unitName(B), () => "R", v => v.toFixed(2)));
+      break;
+    }
+  }
+}
+
+/* ---------------- corners (reference) ---------------- */
+function corners(R) {
+  const pts = [], thr = 0.1 * maxAbs(R), r = 3;
+  for (let y = r; y < S - r; y++) for (let x = r; x < S - r; x++) {
+    const v = R[y * S + x]; if (v < thr) continue;
+    let ok = true;
+    for (let j = -r; j <= r && ok; j++) for (let i = -r; i <= r; i++) {
+      const w = R[(y + j) * S + x + i];
+      if ((i || j) && (w > v || (w === v && (j < 0 || (j === 0 && i < 0))))) { ok = false; break; }
+    }
+    if (ok) pts.push([x, y]);
+  }
+  return pts;
+}
+function drawSummary() {
+  const R = st.R, cv = document.getElementById("cornersCv"), ctx = cv.getContext("2d");
+  const off = document.createElement("canvas"); drawMap(off, st.img.map(v => 2 * v - 1), 1);
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(off, 0, 0, 288, 288);
+  const sc = 288 / S;
+  for (const [x, y] of corners(R.Rnet)) {
+    ctx.beginPath(); ctx.arc((x + .5) * sc, (y + .5) * sc, 6, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 4; ctx.stroke(); ctx.strokeStyle = "#D2361E"; ctx.lineWidth = 2.2; ctx.stroke();
+  }
+  document.getElementById("errOut").textContent = pct(relErr(R.Rnet, R.Rcls));
+}
+
+/* ---------------- wiring ---------------- */
+function thumbs() {
+  const box = document.getElementById("samples"); box.innerHTML = "";
+  SAMPLES.forEach((s, i) => {
+    const b = mk("button", { "aria-pressed": String(st.sample === i), "aria-label": s.name, title: s.name });
+    const cv = mk("canvas"); drawMap(cv, s.img.map(v => 2 * v - 1), 1); b.append(cv);
+    b.onclick = () => { st.sample = i; st.img = s.img; thumbs(); refresh(); };
+    box.append(b);
+  });
+  const up = mk("label", { class: "upload", title: "Use your own image" }, "Your image");
+  const inp = mk("input", { type: "file", accept: "image/*" });
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => {
+      const c = document.createElement("canvas"); c.width = S; c.height = S;
+      const x = c.getContext("2d"), side = Math.min(im.width, im.height);
+      x.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, 0, 0, S, S);
+      const d = x.getImageData(0, 0, S, S).data, g = new Float32Array(NPX);
+      for (let p = 0; p < NPX; p++) g[p] = (0.299 * d[p * 4] + 0.587 * d[p * 4 + 1] + 0.114 * d[p * 4 + 2]) / 255;
+      const idx = SAMPLES.findIndex(s => s.name === "Your image");
+      if (idx >= 0) SAMPLES[idx].img = g; else SAMPLES.push({ name: "Your image", img: g });
+      st.sample = SAMPLES.findIndex(s => s.name === "Your image"); st.img = g; URL.revokeObjectURL(url); thumbs(); refresh();
+    };
+    im.src = url;
+  };
+  up.append(inp); box.append(up);
+}
+let raf = 0;
+function refresh() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { compute(); buildTable(); renderDetail(); drawSummary(); }); }
+const bind = (id, outId, key, fmt) => {
+  const e = document.getElementById(id), o = document.getElementById(outId);
+  const upd = () => { st[key] = parseFloat(e.value); o.textContent = fmt(st[key]); };
+  e.addEventListener("input", () => { upd(); refresh(); }); upd();
+};
+bind("knots", "knotsOut", "N", v => v);
+bind("win", "winOut", "w", v => `${v} × ${v}`);
+bind("kk", "kOut", "k", v => v.toFixed(2));
+document.querySelectorAll('input[name=scale]').forEach(r => r.addEventListener("change", () => { st.scale = r.value; buildTable(); }));
+st.sel = "sobel"; st.selMap = null; st.scale = "channel";
+thumbs(); refresh();
+})();
+
+</script>
+</body>
+</html>
