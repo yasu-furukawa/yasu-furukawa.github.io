@@ -153,7 +153,7 @@ canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-acti
   <div class="pyramid panel">
     <div class="octs" id="octs"></div>
     <div class="strip" id="strip"></div>
-    <p class="cap">Each red-outlined <b>D</b> is the difference of the two outlined <b>L</b> images above it. Faded ends have no neighbour on one side, so only the middle three are searched for extrema.</p>
+    <p class="cap">Images are drawn at their true size: each octave is half the width of the one before. Each red-outlined <b>D</b> is the difference of the two outlined <b>L</b> images above it. Faded ends have no neighbour on one side, so only the middle three are searched for extrema.</p>
   </div>
 
   <div class="scalebar">
@@ -645,6 +645,7 @@ function renderStrip() {
     const cv = document.createElement('canvas'); const src = thumb(kind, o, idx);
     const sc = 160 / Math.max(src.width, src.height); cv.width = Math.round(src.width * sc); cv.height = Math.round(src.height * sc);
     const x = cv.getContext('2d'); x.imageSmoothingEnabled = o > 0 ? false : true; x.drawImage(src, 0, 0, cv.width, cv.height);
+    cv.style.width = (100 * st.pyr.W[o] / st.pyr.W[0]) + '%'; cv.style.margin = '0 auto';
     d.appendChild(cv);
     const l = document.createElement('div'); l.className = 'lbl';
     l.textContent = kind === 'G' ? `L  σ=${(sig[idx] * f).toFixed(1)}` : `D${idx}`;
