@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="True/false positives and negatives, precision, recall and the ROC curve, shown on a toy feature-matching problem: 8 features per image, all 64 candidate pairs scored, one draggable threshold.">
+<title>Feature matching: TP / FP / precision / recall / ROC</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#fff; --ink:#15181d; --muted:#6b7280; --line:#e3e6ea;
+    --tp:#16a34a; --fp:#dc2626; --fn:#e08a00; --tn:#64748b; --accent:#1f6feb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+  h2{font-size:19px;margin:0 0 10px;letter-spacing:-.01em}
+  h3{font-size:16px;margin:22px 0 8px}
+  .sub{color:var(--muted);margin:0 0 22px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:20px}
+  .row{display:flex;gap:22px;flex-wrap:wrap}
+  .controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  button:hover{background:#f0f2f5}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{filter:brightness(1.08)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;border-radius:0;padding:7px 14px}
+  .seg button.on{background:var(--ink);color:#fff}
+  input[type=range]{width:240px;vertical-align:middle}
+  label.ck{font-size:13.5px;color:var(--muted);display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+  code,.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:20px;height:0;border-top-width:3px;border-top-style:solid;display:inline-block}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  table.cm{border-collapse:collapse;margin-top:4px;table-layout:fixed;width:336px;max-width:100%}
+  table.cm td,table.cm th{border:1px solid var(--line);padding:7px 8px;text-align:center}
+  table.cm th{background:#f3f4f6;font-weight:600;font-size:13px;color:var(--muted)}
+  td.cell{height:76px}
+  table.cm th{font-size:12px}
+  table.cm tr>th:first-child{width:94px;font-size:11.5px;line-height:1.3}
+  td.cell .lab{font-size:11.5px;letter-spacing:.04em;font-weight:800}
+  td.cell .cnt{font-size:24px;font-weight:700;line-height:1.1}
+  td.cell .nm{font-size:10.5px;color:var(--muted);line-height:1.25}
+  .tpc{background:rgba(22,163,74,.10);color:var(--tp)}
+  .fpc{background:rgba(220,38,38,.10);color:var(--fp)}
+  .fnc{background:rgba(224,138,0,.12);color:var(--fn)}
+  .tnc{background:rgba(100,116,139,.10);color:var(--tn)}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;margin-top:14px}
+  .metric{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fcfcfd}
+  .metric .name{font-size:13px;font-weight:650}
+  .metric .formula{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .metric .val{font-size:20px;font-weight:700;margin-top:2px}
+  table.cand{border-collapse:collapse;font-size:13px;width:100%}
+  table.cand th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:4px 8px;border-bottom:1px solid var(--line)}
+  table.cand td{padding:3px 8px;border-bottom:1px solid #f1f3f5}
+  table.cand tr.hover td{background:#fff8e1}
+  .tag{font-weight:800;font-size:11.5px;letter-spacing:.03em}
+  .note{font-size:13.5px;color:var(--muted);margin-top:10px}
+  .tally{font-size:13.5px;margin-top:8px}
+  .tally b{font-size:14px}
+  .aucbox{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .aucrow{border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:#fcfcfd;min-width:0;flex:1 1 130px}
+  .aucrow .t{font-size:12px}
+  .aucrow .v{font-size:20px}
+  .aucrow .t{font-size:13px;color:var(--muted)}
+  .aucrow .v{font-size:22px;font-weight:700}
+  .active-out{outline:2px solid var(--accent);outline-offset:1px}
+  .hl{background:#fff3c4;padding:0 3px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Feature matching: what counts as a true positive?</h1>
+<p class="sub">Eight features in image A, eight in image B, so <b>64 candidate pairs</b> &mdash; and the matcher gives every one of them a score. You pick a <b>threshold</b>: accept the pair as a match, or reject it. Features are numbered so that <b>A<i>i</i> truly corresponds to B<i>i</i></b> (B?1 and B?2 are spurious detections with no partner), so six of the 64 pairs are the real correspondences and the other 58 are not.</p>
+
+<!-- ============ ONE COMPACT WORKBENCH ============ -->
+<div class="panel">
+  <div class="controls">
+    <span class="seg" id="detSeg">
+      <button data-det="good" class="on">Good matcher</button>
+      <button data-det="bad">Weak matcher</button>
+    </span>
+    <label>Threshold&nbsp; <input type="range" id="thr" min="0" max="1" step="0.01" value="0.5">
+      <span class="num" id="thrVal">0.50</span></label>
+    <button class="primary" id="play">&#9654;&nbsp; Animate threshold sweep</button>
+    <button id="reroll">New scene &amp; scores</button>
+    <label class="ck"><input type="checkbox" id="showTN"> draw rejected wrong pairs (TN)</label>
+    <label class="ck"><input type="checkbox" id="showGT"> show ground truth</label>
+    <button id="reset" style="display:none"></button>
+  </div>
+
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1 1 560px;min-width:min(480px,100%)">
+      <svg id="fig" viewBox="0 0 680 250" style="width:100%;height:auto"></svg>
+      <div class="legend">
+        <span class="chip"><span class="swatch" style="border-color:var(--tp)"></span> accepted &amp; correct = <b style="color:var(--tp)">TP</b></span>
+        <span class="chip"><span class="swatch" style="border-color:var(--fp)"></span> accepted &amp; wrong = <b style="color:var(--fp)">FP</b></span>
+        <span class="chip"><span class="swatch" style="border-color:var(--fn);border-top-style:dashed"></span> rejected but correct = <b style="color:var(--fn)">FN</b></span>
+        <span class="chip"><span class="swatch" style="border-color:var(--tn);border-top-style:dashed"></span> rejected &amp; wrong = <b style="color:var(--tn)">TN</b></span>
+      </div>
+      <div class="tally" id="tally"></div>
+      <div style="margin-top:8px">
+      <svg id="strip" viewBox="0 0 760 256" style="width:100%;height:auto"></svg>
+      <div class="legend">
+        <span class="chip"><span class="dot" style="background:#7c3aed"></span> correct match</span>
+        <span class="chip"><span class="dot" style="background:#0891b2"></span> wrong match</span>
+        <span class="chip">drag the line &middot; hover a dot to see that pair</span>
+      </div>
+    </div>
+    </div>
+
+    <div style="flex:1 1 312px;max-width:min(312px,100%)">
+      <svg id="roc" viewBox="0 0 420 420" style="width:306px;max-width:100%;height:auto"></svg>
+      <div class="aucbox" style="margin-top:0">
+        <div class="aucrow" id="aucGoodBox"><div class="t">Good matcher &mdash; AUC</div><div class="v" id="aucGood">&mdash;</div></div>
+        <div class="aucrow" id="aucBadBox"><div class="t">Weak matcher &mdash; AUC</div><div class="v" id="aucBad">&mdash;</div></div>
+      </div>
+      <div class="note" id="rocReadout" style="font-size:13.5px;max-width:306px"></div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:14px;align-items:flex-start">
+    <div style="flex:1 1 302px;max-width:min(302px,100%)">
+      <svg id="grid" viewBox="0 0 300 264" style="width:300px;max-width:100%;height:auto"></svg>
+    </div>
+
+    <div style="flex:0 0 auto">
+      <table class="cm">
+        <tr><th></th><th>Match is<br>correct</th><th>Match is<br>wrong</th></tr>
+        <tr>
+          <th>Accepted<br><span style="font-weight:400">(score &ge; t)</span></th>
+          <td class="cell tpc"><div class="lab">TRUE POSITIVE</div><div class="cnt" id="cTP">0</div><div class="nm">accepted a real correspondence</div></td>
+          <td class="cell fpc"><div class="lab">FALSE POSITIVE</div><div class="cnt" id="cFP">0</div><div class="nm">accepted a wrong pair</div></td>
+        </tr>
+        <tr>
+          <th>Rejected<br><span style="font-weight:400">(score &lt; t)</span></th>
+          <td class="cell fnc"><div class="lab">FALSE NEGATIVE</div><div class="cnt" id="cFN">0</div><div class="nm">rejected a real correspondence</div></td>
+          <td class="cell tnc"><div class="lab">TRUE NEGATIVE</div><div class="cnt" id="cTN">0</div><div class="nm">rejected a wrong pair &mdash; nearly all of them</div></td>
+        </tr>
+      </table>
+      <div class="note" id="cmNote" style="max-width:336px"></div>
+    </div>
+  </div>
+
+  <div class="note">
+        Every pair is a sample here, which is what makes FPR, specificity and ROC well defined: the negatives are the 58
+        pairs that do not correspond, and a true negative is one of those the threshold rejected. Nearly all of them are
+        trivially easy (A1 against a dot on the far side of the image), which is why the TN count is huge, why accuracy is
+        useless, and why the matching literature usually plots precision&ndash;recall instead. Picking one partner per
+        feature (a one-to-one assignment, mutual nearest neighbour, ratio test) is a <i>separate</i> step that happens after
+        this scoring &mdash; it prunes the 64 pairs down before any threshold is applied.
+        <b>ROC</b>: each threshold gives one (FPR, TPR) dot; sweeping it from 1 down to 0 traces the curve, whose area (AUC)
+        is the probability that a true correspondence outscores a wrong pair. The good matcher bulges toward the top-left
+        corner; the weak one hugs the diagonal, and no threshold rescues it.
+      </div>
+
+  <div class="metrics" id="metrics"></div>
+
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= tiny scene: 5 shapes, 1 feature each ================= */
+var IW=272, IH=212, GAP=70, LX=10, RX=LX+IW+GAP, TY=24;
+var CX=136, CY=106;
+var TH=-11*Math.PI/180, SC=0.9, DX=16, DY=10;
+function fwd(p){ var x=p[0]-CX,y=p[1]-CY,c=Math.cos(TH),s=Math.sin(TH);
+  return [SC*(x*c-y*s)+CX+DX, SC*(x*s+y*c)+CY+DY]; }
+
+var PTS=[[50,44],[142,30],[228,62],[244,146],[168,186],[80,176],[34,110],[140,110]];
+var HUES=["#e05252","#4b9fd6","#6cbf6c","#f0b23c","#a78bda","#e2739b","#3bb5a6","#c98b3c"];
+var SHAPES=PTS.map(function(p,i){
+  return { p:p, d:(function(col){ return function(x,y){
+    return '<circle cx="'+x+'" cy="'+y+'" r="9.5" fill="'+col+'" stroke="#2b3138" stroke-width="1.6"/>';};})(HUES[i]) };
+});
+
+/* ================= data ================= */
+var L=[],R=[],cand=[],det="good",thr=0.5,hover=-1;
+function randn(){var u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function clamp01(x){return Math.max(0.01,Math.min(0.99,x));}
+
+function build(){
+  // image B: two features the detector missed, two spurious ones
+  var drop={}; while(Object.keys(drop).length<2) drop[Math.floor(Math.random()*SHAPES.length)]=1;
+  L=SHAPES.map(function(sh,i){ return {i:i, p:sh.p, draw:sh.d, partner:-1}; });
+  R=[];
+  L.forEach(function(l){ if(drop[l.i])return;
+    l.partner=R.length;
+    R.push({j:R.length, name:'B'+(l.i+1), p:fwd(l.p), draw:l.draw, spurious:false}); });
+  for(var k=0;k<2;k++){
+    var sp,tries=0;
+    do{ sp=[34+Math.random()*(IW-68), 34+Math.random()*(IH-68)]; tries++; }
+    while(tries<200 && R.some(function(r){var dx=r.p[0]-sp[0],dy=r.p[1]-sp[1];return dx*dx+dy*dy<38*38;}));
+    R.push({j:R.length, name:'B?'+(k+1), p:sp, spurious:true,
+      draw:function(x,y){return '<circle cx="'+x+'" cy="'+y+'" r="9.5" fill="#b9c0c8" stroke="#2b3138" stroke-width="1.6"/>';}});
+  }
+  // EVERY pair (A_i, B_j) is a candidate: the matcher scores the whole 8x8 table
+  cand=[];
+  L.forEach(function(l){ R.forEach(function(r){
+    var ok=(r.j===l.partner);
+    cand.push({ id:cand.length, li:l.i, rj:r.j, pos:ok,
+      good: clamp01( ok ? 0.82+0.09*randn() : 0.20+0.09*randn() ),
+      bad:  clamp01( ok ? 0.53+0.24*randn() : 0.47+0.24*randn() ),
+      jit: Math.random() });
+  });});
+  cand.sort(function(x,y){return x.li-y.li;});
+  cand.forEach(function(m,i){m.id=i;});
+  // make sure the picture always shows all four cases: one correct match the good
+  // matcher is unsure about (a false negative), one mismatch it is confident about (a false positive)
+  var corr=cand.filter(function(m){return m.pos;}), wrong=cand.filter(function(m){return !m.pos;});
+  if(corr.length>1){ var f=corr[Math.floor(Math.random()*corr.length)];
+    f.good=0.33+0.12*Math.random(); }
+  if(wrong.length){ var g=wrong[Math.floor(Math.random()*wrong.length)];
+    g.good=0.58+0.12*Math.random(); }
+}
+function sc(m){return m[det];}
+function counts(d,t){ var c={TP:0,FP:0,FN:0,TN:0};
+  cand.forEach(function(m){ var a=m[d]>=t;
+    if(m.pos&&a)c.TP++; else if(!m.pos&&a)c.FP++; else if(m.pos&&!a)c.FN++; else c.TN++; });
+  return c; }
+function catOf(m){ var a=sc(m)>=thr; return m.pos?(a?"TP":"FN"):(a?"FP":"TN"); }
+var COL={TP:"#16a34a",FP:"#dc2626",FN:"#e08a00",TN:"#64748b"};
+
+/* ================= figure ================= */
+var fig=document.getElementById("fig");
+function drawFig(){
+  var showTN=document.getElementById("showTN").checked;
+  var showGT=document.getElementById("showGT").checked;
+  var s='<defs><clipPath id="cl"><rect x="'+LX+'" y="'+TY+'" width="'+IW+'" height="'+IH+'"/></clipPath>'
+       +'<clipPath id="cr"><rect x="'+RX+'" y="'+TY+'" width="'+IW+'" height="'+IH+'"/></clipPath></defs>';
+  s+='<rect x="'+LX+'" y="'+TY+'" width="'+IW+'" height="'+IH+'" fill="#f2f4f7"/>';
+  s+='<rect x="'+RX+'" y="'+TY+'" width="'+IW+'" height="'+IH+'" fill="#f2f4f7"/>';
+  s+='<g clip-path="url(#cl)">';
+  L.forEach(function(l){ s+=l.draw(LX+l.p[0], TY+l.p[1]); });
+  s+='</g><g clip-path="url(#cr)">';
+  R.forEach(function(r){ s+=r.draw(RX+r.p[0], TY+r.p[1]); });
+  s+='</g>';
+  s+='<rect x="'+LX+'" y="'+TY+'" width="'+IW+'" height="'+IH+'" fill="none" stroke="#9aa3ad"/>';
+  s+='<rect x="'+RX+'" y="'+TY+'" width="'+IW+'" height="'+IH+'" fill="none" stroke="#9aa3ad"/>';
+  s+='<text x="'+(LX+2)+'" y="'+(TY-6)+'" font-size="12.5" fill="#6b7280">image A</text>';
+  s+='<text x="'+(RX+2)+'" y="'+(TY-6)+'" font-size="12.5" fill="#6b7280">image B &mdash; shifted &amp; rotated view</text>';
+
+  function lp(l){return [LX+l.p[0],TY+l.p[1]];}
+  function rp(r){return [RX+r.p[0],TY+r.p[1]];}
+
+  if(showGT){
+    L.forEach(function(l){ if(l.partner<0)return;
+      var a=lp(l),b=rp(R[l.partner]);
+      s+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="#7c3aed" stroke-opacity=".28" stroke-width="7"/>';});
+  }
+  // TN first (faint), then FN, then accepted on top
+  ["TN","FN","FP","TP"].forEach(function(want){
+    cand.forEach(function(m){
+      var cat=catOf(m); if(cat!==want) return;
+      if(cat==="TN"&&!showTN) return;
+      var a=lp(L[m.li]),b=rp(R[m.rj]),hi=(hover===m.id);
+      var acc=(cat==="TP"||cat==="FP");
+      var w = hi?5 : (cat==="TN"?1.1 : (cat==="FN"?2.6:2.6));
+      s+='<line data-i="'+m.id+'" x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+
+         '" stroke="'+COL[cat]+'" stroke-width="'+w+'" stroke-opacity="'+(hi?1:(cat==="TN"?0.45:0.92))+'"'+
+         (acc?"":' stroke-dasharray="7 5"')+'/>';
+    });
+  });
+  // feature points
+  L.forEach(function(l){ var a=lp(l);
+    s+='<circle cx="'+a[0]+'" cy="'+a[1]+'" r="4.6" fill="#fff" stroke="#15181d" stroke-width="2"/>';
+    s+='<text x="'+(a[0]-9)+'" y="'+(a[1]-9)+'" font-size="12" font-weight="700" fill="#15181d" font-family="ui-monospace,Menlo,monospace">A'+(l.i+1)+'</text>';});
+  R.forEach(function(r){ var b=rp(r);
+    s+='<circle cx="'+b[0]+'" cy="'+b[1]+'" r="4.6" fill="#fff" stroke="#15181d" stroke-width="2"/>';
+    s+='<text x="'+(b[0]+8)+'" y="'+(b[1]-8)+'" font-size="12" font-weight="700" fill="#15181d" font-family="ui-monospace,Menlo,monospace">'+r.name+'</text>';});
+  fig.innerHTML=s;
+  Array.prototype.forEach.call(fig.querySelectorAll("line[data-i]"),function(el){
+    el.style.cursor="pointer";
+    el.onmouseenter=function(){hover=+el.getAttribute("data-i");draw();};
+    el.onmouseleave=function(){hover=-1;draw();};});
+}
+
+/* ================= score table (all A x B pairs) ================= */
+var grid=document.getElementById("grid");
+function drawGrid(){
+  var n=L.length, m=R.length, cw=32, ch=28, x0=34, y0=30, s="";
+  s+='<text x="'+x0+'" y="12" font-size="11.5" fill="#6b7280">all 64 scores &mdash; outlined = true correspondence</text>';
+  R.forEach(function(r,c){
+    s+='<text x="'+(x0+c*cw+cw/2)+'" y="'+(y0-6)+'" text-anchor="middle" font-size="10.5" fill="#6b7280" font-family="ui-monospace,Menlo,monospace">'+r.name+'</text>';});
+  L.forEach(function(l,rw){
+    s+='<text x="'+(x0-5)+'" y="'+(y0+rw*ch+ch/2+3.5)+'" text-anchor="end" font-size="10.5" fill="#6b7280" font-family="ui-monospace,Menlo,monospace">A'+(l.i+1)+'</text>';});
+  cand.forEach(function(mm){
+    var rw=mm.li, c=mm.rj, cat=catOf(mm), hi=(hover===mm.id);
+    var x=x0+c*cw, y=y0+rw*ch;
+    var fill = cat==="TP"?"rgba(22,163,74,.22)":cat==="FP"?"rgba(220,38,38,.22)":
+               cat==="FN"?"rgba(224,138,0,.26)":"rgba(100,116,139,.07)";
+    s+='<rect data-i="'+mm.id+'" x="'+x+'" y="'+y+'" width="'+(cw-2)+'" height="'+(ch-2)+'" rx="3" fill="'+fill+
+       '" stroke="'+(hi?"#15181d":(mm.pos?"#7c3aed":"#e3e6ea"))+'" stroke-width="'+(hi?2.4:(mm.pos?2:1))+'"/>';
+    s+='<text x="'+(x+(cw-2)/2)+'" y="'+(y+ch/2+2)+'" text-anchor="middle" font-size="9.5" fill="'+
+       (cat==="TN"?"#8a939c":COL[cat])+'" font-weight="'+(cat==="TN"?400:700)+'" font-family="ui-monospace,Menlo,monospace">'+
+       sc(mm).toFixed(2).slice(1)+'</text>';
+  });
+  grid.innerHTML=s;
+  Array.prototype.forEach.call(grid.querySelectorAll("rect[data-i]"),function(el){
+    el.style.cursor="pointer";
+    el.onmouseenter=function(){hover=+el.getAttribute("data-i");draw();};
+    el.onmouseleave=function(){hover=-1;draw();};});
+}
+
+/* ================= score strip ================= */
+var strip=document.getElementById("strip");
+var SX0=78,SX1=724,LANE_P=72,LANE_N=168;
+function xOf(v){return SX0+v*(SX1-SX0);} function vOf(x){return (x-SX0)/(SX1-SX0);}
+function drawStrip(){
+  var xt=xOf(thr),s="";
+  s+='<rect x="'+SX0+'" y="30" width="'+(xt-SX0)+'" height="84" fill="rgba(224,138,0,.09)"/>';
+  s+='<rect x="'+xt+'" y="30" width="'+(SX1-xt)+'" height="84" fill="rgba(22,163,74,.09)"/>';
+  s+='<rect x="'+SX0+'" y="126" width="'+(xt-SX0)+'" height="84" fill="rgba(100,116,139,.09)"/>';
+  s+='<rect x="'+xt+'" y="126" width="'+(SX1-xt)+'" height="84" fill="rgba(220,38,38,.09)"/>';
+  function q(x,y,t,c,an){return '<text x="'+x+'" y="'+y+'" fill="'+c+'" font-size="12" font-weight="800" letter-spacing=".06em" text-anchor="'+an+'">'+t+'</text>';}
+  s+=q(SX1-6,46,"TRUE POSITIVES","#16a34a","end");
+  s+=q(SX0+6,46,"FALSE NEGATIVES (correct matches thrown away)","#e08a00","start");
+  s+=q(SX1-6,142,"FALSE POSITIVES","#dc2626","end");
+  s+=q(SX0+6,142,"TRUE NEGATIVES","#64748b","start");
+  s+='<text x="'+(SX0-10)+'" y="'+(LANE_P-2)+'" text-anchor="end" font-size="12.5" fill="#7c3aed" font-weight="650">correct</text>';
+  s+='<text x="'+(SX0-10)+'" y="'+(LANE_P+13)+'" text-anchor="end" font-size="12.5" fill="#7c3aed" font-weight="650">match</text>';
+  s+='<text x="'+(SX0-10)+'" y="'+(LANE_N-2)+'" text-anchor="end" font-size="12.5" fill="#0891b2" font-weight="650">not</text>';
+  s+='<text x="'+(SX0-10)+'" y="'+(LANE_N+13)+'" text-anchor="end" font-size="12.5" fill="#0891b2" font-weight="650">match</text>';
+  s+='<line x1="'+SX0+'" y1="216" x2="'+SX1+'" y2="216" stroke="#cbd2d9"/>';
+  for(var k=0;k<=10;k++){var v=k/10,x=xOf(v);
+    s+='<line x1="'+x+'" y1="216" x2="'+x+'" y2="221" stroke="#cbd2d9"/>';
+    if(k%2===0)s+='<text x="'+x+'" y="234" text-anchor="middle" font-size="11" fill="#6b7280">'+v.toFixed(1)+'</text>';}
+  s+='<text x="'+SX1+'" y="252" text-anchor="end" font-size="12.5" fill="#6b7280">match score →</text>';
+  cand.forEach(function(m){
+    var v=sc(m),x=xOf(v),y=(m.pos?LANE_P:LANE_N)+(m.jit-0.5)*54;
+    var col=m.pos?"#7c3aed":"#0891b2",ok=((v>=thr)===m.pos),hi=(hover===m.id);
+    s+='<circle data-i="'+m.id+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(hi?10:7)+'" fill="'+col+
+       '" fill-opacity="'+(ok?0.95:0.35)+'" stroke="'+(hi?"#15181d":(ok?col:"#dc2626"))+'" stroke-width="'+(hi?3:(ok?1:2.2))+'"/>';
+    if(hi) s+='<text x="'+x.toFixed(1)+'" y="'+(y-15).toFixed(1)+'" text-anchor="middle" font-size="11.5" font-weight="700" font-family="ui-monospace,Menlo,monospace">A'+(m.li+1)+'→'+R[m.rj].name+'</text>';
+  });
+  s+='<line x1="'+xt+'" y1="24" x2="'+xt+'" y2="222" stroke="#15181d" stroke-width="2.5"/>';
+  s+='<rect x="'+(xt-26)+'" y="6" width="52" height="19" rx="5" fill="#15181d"/>';
+  s+='<text x="'+xt+'" y="20" text-anchor="middle" font-size="12" fill="#fff" font-family="ui-monospace,Menlo,monospace">t='+thr.toFixed(2)+'</text>';
+  strip.innerHTML=s;
+  Array.prototype.forEach.call(strip.querySelectorAll("circle[data-i]"),function(el){
+    el.style.cursor="pointer";
+    el.onmouseenter=function(){hover=+el.getAttribute("data-i");draw();};
+    el.onmouseleave=function(){hover=-1;draw();};});
+}
+var dragging=false;
+function stripSet(e){var r=strip.getBoundingClientRect();
+  var cx=(e.touches?e.touches[0].clientX:e.clientX);
+  setThr(Math.max(0,Math.min(1,vOf((cx-r.left)/r.width*760))));}
+strip.addEventListener("mousedown",function(e){dragging=true;stripSet(e);});
+window.addEventListener("mousemove",function(e){if(dragging)stripSet(e);});
+window.addEventListener("mouseup",function(){dragging=false;});
+strip.addEventListener("touchstart",function(e){dragging=true;stripSet(e);e.preventDefault();},{passive:false});
+strip.addEventListener("touchmove",function(e){if(dragging){stripSet(e);e.preventDefault();}},{passive:false});
+window.addEventListener("touchend",function(){dragging=false;});
+
+/* ================= numbers ================= */
+function fmt(x){return (x===null||isNaN(x))?"—":x.toFixed(2);}
+function drawNumbers(){
+  var c=counts(det,thr);
+  document.getElementById("cTP").textContent=c.TP;
+  document.getElementById("cFP").textContent=c.FP;
+  document.getElementById("cFN").textContent=c.FN;
+  document.getElementById("cTN").textContent=c.TN;
+  var nP=c.TP+c.FN,nN=c.FP+c.TN,acc=c.TP+c.FP,tot=nP+nN;
+  document.getElementById("cmNote").innerHTML=
+    tot+" candidate pairs &middot; "+nP+" true correspondences, "+nN+" wrong pairs &middot; "+acc+" accepted at t="+thr.toFixed(2);
+  document.getElementById("tally").innerHTML=
+    'Drawn above: <b style="color:var(--tp)">'+c.TP+' TP</b> (solid green), '+
+    '<b style="color:var(--fp)">'+c.FP+' FP</b> (solid red), '+
+    '<b style="color:var(--fn)">'+c.FN+' FN</b> (dashed amber &mdash; the correct matches this threshold threw away), '+
+    '<b style="color:var(--tn)">'+c.TN+' TN</b> '+(document.getElementById("showTN").checked?'(dashed grey)':'(not drawn as lines — look at the score table instead)')+'.';
+
+  var prec=acc?c.TP/acc:null,rec=nP?c.TP/nP:null,fpr=nN?c.FP/nN:null,spec=nN?c.TN/nN:null;
+  var accy=(c.TP+c.TN)/tot,f1=(prec!==null&&rec!==null&&prec+rec>0)?2*prec*rec/(prec+rec):null;
+  var M=[
+   ["Precision","TP / (TP + FP) = "+c.TP+" / ("+c.TP+" + "+c.FP+") = "+c.TP+"/"+acc,
+     acc?fmt(prec):"undefined (nothing accepted)","of the matches we kept, how many were right"],
+   ["Recall (TPR)","TP / (TP + FN) = "+c.TP+" / ("+c.TP+" + "+c.FN+") = "+c.TP+"/"+nP,fmt(rec),
+     "of the "+nP+" true correspondences, how many we found"],
+   ["False positive rate","FP / (FP + TN) = "+c.FP+" / ("+c.FP+" + "+c.TN+") = "+c.FP+"/"+nN,fmt(fpr),
+     "of the "+nN+" wrong pairs, how many slipped through"],
+   ["Specificity","TN / (FP + TN) = "+c.TN+"/"+nN,fmt(spec),"= 1 − FPR"],
+   ["Accuracy","(TP + TN) / all = ("+c.TP+" + "+c.TN+") / "+tot,fmt(accy),
+     "rejecting every pair already scores "+(nN/tot).toFixed(2)+" \u2014 useless here"],
+   ["F1","2PR / (P + R)",f1===null?"—":fmt(f1),"one number balancing precision and recall"]
+  ];
+  document.getElementById("metrics").innerHTML=M.map(function(m){
+    return '<div class="metric"><div class="name">'+m[0]+'</div><div class="formula num">'+m[1]+
+           '</div><div class="val">'+m[2]+'</div><div class="formula">'+m[3]+'</div></div>';}).join("");
+
+}
+
+/* ================= ROC ================= */
+var roc=document.getElementById("roc");
+var RX0=62,RX1=392,RY0=42,RY1=372;
+function rxf(f){return RX0+f*(RX1-RX0);} function ryf(t){return RY1-t*(RY1-RY0);}
+var ptsGood=[],ptsBad=[],revealT=-0.01;
+function rocPoints(d){
+  var ts=cand.map(function(m){return m[d];}).slice().sort(function(a,b){return b-a;});
+  var u=[1.01]; ts.forEach(function(v){if(u[u.length-1]!==v)u.push(v);}); u.push(-0.01);
+  return u.map(function(t){var c=counts(d,t);
+    return {t:t,fpr:c.FP/((c.FP+c.TN)||1),tpr:c.TP/((c.TP+c.FN)||1)};});}
+function aucOf(d){
+  var P=cand.filter(function(m){return m.pos;}),N=cand.filter(function(m){return !m.pos;});
+  if(!P.length||!N.length)return NaN;
+  var s=0;P.forEach(function(p){N.forEach(function(n){s+=p[d]>n[d]?1:(p[d]===n[d]?0.5:0);});});
+  return s/(P.length*N.length);}
+function recompute(){
+  ptsGood=rocPoints("good");ptsBad=rocPoints("bad");
+  document.getElementById("aucGood").textContent=aucOf("good").toFixed(3);
+  document.getElementById("aucBad").textContent=aucOf("bad").toFixed(3);}
+function pathFor(pts,up){var u=pts.filter(function(p){return p.t>=up;});if(!u.length)u=[pts[0]];
+  return u.map(function(p,i){return (i?"L":"M")+rxf(p.fpr).toFixed(1)+" "+ryf(p.tpr).toFixed(1);}).join(" ");}
+function areaFor(pts,up){var u=pts.filter(function(p){return p.t>=up;});if(u.length<2)return "";
+  return "M"+rxf(u[0].fpr).toFixed(1)+" "+ryf(0).toFixed(1)+" "+
+    u.map(function(p){return "L"+rxf(p.fpr).toFixed(1)+" "+ryf(p.tpr).toFixed(1);}).join(" ")+
+    " L"+rxf(u[u.length-1].fpr).toFixed(1)+" "+ryf(0).toFixed(1)+" Z";}
+function drawROC(){
+  var act=det==="good"?ptsGood:ptsBad,oth=det==="good"?ptsBad:ptsGood;
+  var ac=det==="good"?"#1f6feb":"#b45309",oc=det==="good"?"#b45309":"#1f6feb",s="";
+  for(var k=0;k<=5;k++){var f=k/5;
+    s+='<line x1="'+rxf(f)+'" y1="'+RY0+'" x2="'+rxf(f)+'" y2="'+RY1+'" stroke="#eef0f3"/>';
+    s+='<line x1="'+RX0+'" y1="'+ryf(f)+'" x2="'+RX1+'" y2="'+ryf(f)+'" stroke="#eef0f3"/>';
+    s+='<text x="'+rxf(f)+'" y="'+(RY1+18)+'" text-anchor="middle" font-size="11" fill="#6b7280">'+f.toFixed(1)+'</text>';
+    s+='<text x="'+(RX0-9)+'" y="'+(ryf(f)+4)+'" text-anchor="end" font-size="11" fill="#6b7280">'+f.toFixed(1)+'</text>';}
+  s+='<rect x="'+RX0+'" y="'+RY0+'" width="'+(RX1-RX0)+'" height="'+(RY1-RY0)+'" fill="none" stroke="#cbd2d9"/>';
+  s+='<line x1="'+rxf(0)+'" y1="'+ryf(0)+'" x2="'+rxf(1)+'" y2="'+ryf(1)+'" stroke="#9aa3ad" stroke-dasharray="5 5"/>';
+  s+='<text x="'+((RX0+RX1)/2)+'" y="'+(RY1+36)+'" text-anchor="middle" font-size="12.5" fill="#6b7280">False positive rate</text>';
+  s+='<text transform="translate(18,'+((RY0+RY1)/2)+') rotate(-90)" text-anchor="middle" font-size="12.5" fill="#6b7280">True positive rate (recall)</text>';
+  s+='<text x="'+RX0+'" y="'+(RY0-16)+'" font-size="12.5" fill="#6b7280">perfect = top-left corner</text>';
+  s+='<path d="'+pathFor(oth,-1)+'" fill="none" stroke="'+oc+'" stroke-opacity=".28" stroke-width="2"/>';
+  s+='<path d="'+areaFor(act,revealT)+'" fill="'+ac+'" fill-opacity=".13"/>';
+  s+='<path d="'+pathFor(act,revealT)+'" fill="none" stroke="'+ac+'" stroke-width="2.8" stroke-linejoin="round"/>';
+  act.filter(function(p){return p.t>=revealT&&p.t<=1;}).forEach(function(p){
+    s+='<circle cx="'+rxf(p.fpr).toFixed(1)+'" cy="'+ryf(p.tpr).toFixed(1)+'" r="2.6" fill="'+ac+'"/>';});
+  var c=counts(det,thr),nP=c.TP+c.FN,nN=c.FP+c.TN,cf=c.FP/(nN||1),ct=c.TP/(nP||1);
+  s+='<circle cx="'+rxf(cf).toFixed(1)+'" cy="'+ryf(ct).toFixed(1)+'" r="7" fill="#fff" stroke="#15181d" stroke-width="2.5"/>';
+  roc.innerHTML=s;
+  document.getElementById("rocReadout").innerHTML=
+    'At <span class="hl num">t = '+thr.toFixed(2)+'</span>: TPR = '+c.TP+'/'+nP+' = <b>'+ct.toFixed(2)+
+    '</b>, FPR = '+c.FP+'/'+nN+' = <b>'+cf.toFixed(2)+'</b> &nbsp;→&nbsp; that is the black dot.';
+  document.getElementById("aucGoodBox").className="aucrow"+(det==="good"?" active-out":"");
+  document.getElementById("aucBadBox").className="aucrow"+(det==="bad"?" active-out":"");
+}
+
+/* ================= animation & wiring ================= */
+var anim=null;
+function stop(){if(anim){cancelAnimationFrame(anim);anim=null;
+  document.getElementById("play").innerHTML="&#9654;&nbsp; Animate threshold sweep";}}
+function play(){stop();revealT=1.01;var t0=null,DUR=8000;
+  document.getElementById("play").innerHTML="&#10073;&#10073;&nbsp; Pause";
+  function step(ts){if(t0===null)t0=ts;var u=Math.min(1,(ts-t0)/DUR);
+    revealT=1-u;setThr(1-u,true);
+    if(u<1)anim=requestAnimationFrame(step);
+    else{anim=null;revealT=-0.01;document.getElementById("play").innerHTML="&#9654;&nbsp; Replay sweep";draw();}}
+  anim=requestAnimationFrame(step);}
+document.getElementById("play").onclick=function(){anim?stop():play();};
+document.getElementById("reset").onclick=function(){stop();revealT=-0.01;setThr(0.5);};
+function setThr(v,fromAnim){
+  thr=Math.max(0,Math.min(1,v));
+  document.getElementById("thr").value=thr;
+  document.getElementById("thrVal").textContent=thr.toFixed(2);
+  if(!fromAnim&&anim)stop();
+  if(!fromAnim&&revealT>-0.01)revealT=-0.01;
+  draw();}
+function draw(){drawFig();drawGrid();drawStrip();drawNumbers();drawROC();}
+document.getElementById("thr").oninput=function(){setThr(parseFloat(this.value));};
+document.getElementById("reroll").onclick=function(){stop();revealT=-0.01;build();recompute();draw();};
+document.getElementById("showTN").onchange=draw;
+document.getElementById("showGT").onchange=draw;
+Array.prototype.forEach.call(document.querySelectorAll("#detSeg button"),function(b){
+  b.onclick=function(){
+    Array.prototype.forEach.call(document.querySelectorAll("#detSeg button"),function(x){x.className="";});
+    b.className="on";det=b.getAttribute("data-det");stop();revealT=-0.01;draw();};});
+build();recompute();draw();
+})();
+</script>
+</div>
+</body>
+</html>
