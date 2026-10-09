@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Radial lens distortion as a stretch factor L(r) applied along each ray: pick a point in either frame and watch its distance from the principal point change.">
+<style>
+:root{color-scheme:light; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0; font:14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background:#fafafa}
+img{max-width:100%}
+[hidden]{display:none !important}
+</style>
+<title>Radial Distortion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@1,400;1,500&display=swap">
+<style>
+/* Layout: one idea, then one workbench. The idea panel carries the equation beside a
+   rail diagram of points sliding along a ray. The workbench pairs the recorded frame
+   with the corrected frame; picking a point annotates both. Image frames keep a fixed
+   film palette in either theme, the way a photograph would. */
+:root{
+  --bg:#f1f4f6; --surface:#ffffff; --surface-2:#e8edf1; --line:#d3dbe2;
+  --ink:#121a21; --muted:#596876; --ink-faint:#8395a3;
+  --accent:#0e7490; --accent-soft:#d9eef4;
+  --warm:#b04405; --warm-soft:#fbe7d9;
+  --film-paper:#dde4ea; --film-ink:#1a2430; --film-rule:#5a6b7c;
+  --film-void:#0d1217;
+  --radius:10px;
+  --fs:'IBM Plex Sans',ui-sans-serif,system-ui,'Segoe UI',Helvetica,Arial,sans-serif;
+  --fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --fv:'IBM Plex Serif',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1419; --surface:#151d24; --surface-2:#1d262f; --line:#2a353f;
+    --ink:#e2e9ef; --muted:#8d9fae; --ink-faint:#6b7c8b;
+    --accent:#2cb8cf; --accent-soft:#0f2e36;
+    --warm:#f0920d; --warm-soft:#38240d;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1419; --surface:#151d24; --surface-2:#1d262f; --line:#2a353f;
+  --ink:#e2e9ef; --muted:#8d9fae; --ink-faint:#6b7c8b;
+  --accent:#2cb8cf; --accent-soft:#0f2e36;
+  --warm:#f0920d; --warm-soft:#38240d;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--fs);font-size:15px;line-height:1.55;
+     -webkit-font-smoothing:antialiased}
+.page{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:30px 56px}
+
+h1{font-size:clamp(26px,4vw,38px);font-weight:600;letter-spacing:-.02em;margin:0 0 8px;text-wrap:balance}
+h2{font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+   margin:0 0 14px;display:flex;align-items:center;gap:10px}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
+h3{font-size:13.5px;font-weight:600;margin:0 0 8px}
+p{margin:0 0 12px;max-width:68ch}
+.lede{color:var(--muted);font-size:16px;max-width:66ch;margin-bottom:0}
+section{margin-top:36px}
+i.v,.iv{font-family:var(--fv);font-style:italic}
+
+/* ---------- the idea ---------- */
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+.rail-wrap{margin-bottom:20px}
+.rail-wrap canvas{width:100%;aspect-ratio:620/132;max-width:100%;display:block}
+.steps{display:grid;gap:13px;border-top:1px solid var(--line);padding-top:18px}
+.step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:14px;align-items:start}
+.num{font-family:var(--fm);font-size:11px;color:var(--accent);background:var(--accent-soft);
+     border-radius:4px;height:20px;display:grid;place-items:center;font-weight:500;margin-top:3px}
+.step .what{font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.eq{font-size:16.5px;line-height:1.85;overflow-x:auto;padding-bottom:2px}
+.eq v{font-family:var(--fv);font-style:italic;font-size:1.06em}
+.eq sub{font-size:.68em;font-style:normal;font-family:var(--fs)}
+.eq sup{font-size:.68em}
+.eq .op{color:var(--muted);padding:0 .12em}
+.eq em{font-style:normal;color:var(--warm)}
+.punch{margin:18px 0 0;padding:13px 16px;background:var(--surface-2);border-radius:8px;font-size:14px;
+       color:var(--muted);max-width:none}
+.punch strong{color:var(--ink);font-weight:500}
+.punch code{font-family:var(--fm);font-size:12.5px;color:var(--warm)}
+
+/* ---------- workbench ---------- */
+.bench{display:grid;grid-template-columns:minmax(0,1fr) 262px;gap:20px;align-items:start}
+.bench>div{min-width:0}
+.frames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.frame{display:grid;gap:8px;min-width:0}
+.frame canvas{width:100%;aspect-ratio:1;max-width:100%;display:block;border-radius:7px;
+              background:var(--film-void);border:1px solid var(--line);touch-action:none;cursor:crosshair}
+.cap{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.tag{font-family:var(--fm);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+     padding:2px 6px;border-radius:4px;font-weight:500}
+.tag.sensor{background:var(--warm-soft);color:var(--warm)}
+.tag.fixed{background:var(--accent-soft);color:var(--accent)}
+.cap small{color:var(--muted);font-size:12px}
+
+.readout{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+         padding:14px 16px}
+.rtab{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:12.5px;
+      font-variant-numeric:tabular-nums}
+.rtab th{text-align:left;font-weight:500;color:var(--ink-faint);font-size:10.5px;letter-spacing:.07em;
+         text-transform:uppercase;padding:0 10px 6px 0;font-family:var(--fs)}
+.rtab td{padding:3px 10px 3px 0;white-space:nowrap}
+.rtab td:first-child{color:var(--muted)}
+.rtab .a{color:var(--accent)}
+.rtab .w{color:var(--warm)}
+.rscroll{overflow-x:auto}
+.warn{display:block;margin-top:10px;font-family:var(--fm);font-size:11.5px;color:var(--warm);
+      background:var(--warm-soft);border-radius:5px;padding:5px 8px}
+
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+      padding:16px;display:grid;gap:15px;min-width:0}
+.ctl{display:grid;gap:5px}
+.ctl .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl label{font-family:var(--fm);font-size:12.5px}
+.ctl label i{font-family:var(--fv);font-style:italic;font-size:14px}
+.ctl label sub{font-size:.7em}
+.ctl output{font-family:var(--fm);font-size:12px;color:var(--warm);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.group-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+         font-weight:600;margin-bottom:-6px}
+.scenes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.chip{font:inherit;font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);
+      background:var(--surface-2);color:var(--muted);cursor:pointer;text-align:center}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toggles{display:grid;gap:8px}
+.tg{display:flex;gap:9px;align-items:flex-start;font-size:13px;cursor:pointer}
+.tg input{margin:3px 0 0;accent-color:var(--accent);flex:none}
+.tg span small{display:block;color:var(--muted);font-size:11.5px;line-height:1.4}
+.reset{font:inherit;font-size:12.5px;padding:7px;border-radius:6px;border:1px solid var(--line);
+       background:transparent;color:var(--muted);cursor:pointer}
+.reset:hover{color:var(--ink);border-color:var(--ink-faint)}
+
+.profile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+         padding:16px 18px;margin-top:14px}
+.profile canvas{width:100%;aspect-ratio:620/190;max-width:100%;display:block}
+@media (max-width:520px){ .profile canvas{aspect-ratio:620/280} }
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:6px}
+
+.note{font-size:13.5px;color:var(--muted);background:var(--surface-2);border-left:2px solid var(--accent);
+      border-radius:0 8px 8px 0;padding:12px 16px}
+.note strong{color:var(--ink);font-weight:500}
+.note code{font-family:var(--fm);font-size:12.5px}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-faint)}
+
+@media (max-width:900px){ .bench{grid-template-columns:1fr} .rail{order:-1} }
+@media (max-width:520px){ .frames{grid-template-columns:1fr} .step{grid-template-columns:1fr} .num{display:none} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>Radial distortion</h1>
+  <p class="lede">A real lens does not put a point where the pinhole model says it should. It leaves
+  the direction alone and changes only the distance from the centre of the image &mdash; pulling points
+  in, or pushing them out, by an amount that grows with that distance.</p>
+</header>
+
+<section>
+  <h2>The idea</h2>
+  <div class="idea">
+
+    <div class="rail-wrap">
+      <canvas id="cvRail" width="620" height="132" aria-label="Diagram of points sliding along a ray from the principal point"></canvas>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <div class="what">Strip out the intrinsics, so the principal point is the origin</div>
+          <div class="eq"><v>x</v> = (<v>u</v> <span class="op">&minus;</span> <v>c</v><sub>x</sub>) / <v>f</v><sub>x</sub>
+            <span class="op">,</span>&nbsp;&nbsp; <v>y</v> = (<v>v</v> <span class="op">&minus;</span> <v>c</v><sub>y</sub>) / <v>f</v><sub>y</sub></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <div class="what">Measure how far out the point is</div>
+          <div class="eq"><v>r</v> = &radic;<span style="border-top:1px solid currentColor;padding:0 .15em">
+            <v>x</v><sup>2</sup> <span class="op">+</span> <v>y</v><sup>2</sup></span></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          <div class="what">Work out the stretch for that distance &mdash; even powers only, because it cannot depend on direction</div>
+          <div class="eq"><v>L</v>(<v>r</v>) = 1 <span class="op">+</span> <v>k</v><sub>1</sub><v>r</v><sup>2</sup>
+            <span class="op">+</span> <v>k</v><sub>2</sub><v>r</v><sup>4</sup>
+            <span class="op">+</span> <v>k</v><sub>3</sub><v>r</v><sup>6</sup></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div>
+          <div class="what">Slide the point along its own ray by that factor &mdash; this is the whole model</div>
+          <div class="eq">(<v>x</v><sub>d</sub><span class="op">,</span> <v>y</v><sub>d</sub>)
+            = <em><v>L</v>(<v>r</v>)</em> <span class="op">&middot;</span> (<v>x</v><span class="op">,</span> <v>y</v>)
+            &nbsp;&nbsp;&nbsp;<span class="op">so</span>&nbsp;&nbsp;&nbsp;
+            <v>r</v><sub>d</sub> = <em><v>L</v>(<v>r</v>)</em> <span class="op">&middot;</span> <v>r</v></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">5</div>
+        <div>
+          <div class="what">Put the intrinsics back to get the pixel the sensor records</div>
+          <div class="eq"><v>u</v><sub>d</sub> = <v>f</v><sub>x</sub><v>x</v><sub>d</sub> <span class="op">+</span> <v>c</v><sub>x</sub>
+            <span class="op">,</span>&nbsp;&nbsp; <v>v</v><sub>d</sub> = <v>f</v><sub>y</sub><v>y</v><sub>d</sub> <span class="op">+</span> <v>c</v><sub>y</sub></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="punch" id="punch"></p>
+  </div>
+</section>
+
+<section>
+  <h2>Workbench</h2>
+  <div class="bench">
+    <div>
+      <div class="frames">
+        <div class="frame">
+          <div class="cap"><span class="tag sensor">Recorded</span><small>what the sensor sees</small></div>
+          <canvas id="cvD" width="420" height="420" aria-label="Simulated distorted camera image. Click to pick a point."></canvas>
+        </div>
+        <div class="frame">
+          <div class="cap"><span class="tag fixed">Corrected</span><small>resampled with the same model</small></div>
+          <canvas id="cvU" width="420" height="420" aria-label="Undistorted image. Click to pick a point."></canvas>
+        </div>
+      </div>
+
+      <div class="readout">
+        <h3>Picked point <span style="font-weight:400;color:var(--muted);font-size:12px">&mdash; click in either frame</span></h3>
+        <div class="rscroll">
+          <table class="rtab">
+            <tr><th></th><th>Ideal (pinhole)</th><th>Recorded (lens)</th></tr>
+            <tr><td>normalized</td>
+                <td class="a" id="rNorm"></td><td class="w" id="rNormD"></td></tr>
+            <tr><td>distance from <span class="iv">c</span></td>
+                <td class="a" id="rR"></td><td class="w" id="rRD"></td></tr>
+            <tr><td>pixel</td>
+                <td class="a" id="rPix"></td><td class="w" id="rPixD"></td></tr>
+          </table>
+        </div>
+        <div style="margin-top:10px;font-family:var(--fm);font-size:13px;font-variant-numeric:tabular-nums"
+             id="rL"></div>
+        <div id="rWarn"></div>
+      </div>
+
+      <div class="profile">
+        <h3>Every distance, before and after</h3>
+        <canvas id="cvP" width="620" height="190" aria-label="Plot of recorded radius against ideal radius"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--warm)"></i>recorded distance <span class="iv">r</span><span class="iv">L</span>(<span class="iv">r</span>)</span>
+          <span><i style="border-top:2px dashed var(--ink-faint);height:0"></i>if the lens were perfect</span>
+          <span><i style="background:var(--accent)"></i>the picked point</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="group-h">Coefficients</div>
+      <div class="ctl">
+        <div class="top"><label for="k1"><i>k</i><sub>1</sub></label><output id="k1o"></output></div>
+        <input type="range" id="k1" min="-0.6" max="0.3" step="0.005">
+      </div>
+      <div class="ctl">
+        <div class="top"><label for="k2"><i>k</i><sub>2</sub></label><output id="k2o"></output></div>
+        <input type="range" id="k2" min="-0.3" max="0.4" step="0.005">
+      </div>
+      <div class="ctl">
+        <div class="top"><label for="k3"><i>k</i><sub>3</sub></label><output id="k3o"></output></div>
+        <input type="range" id="k3" min="-0.1" max="0.1" step="0.002">
+      </div>
+
+      <div class="group-h">Scene</div>
+      <div class="scenes" id="scenes"></div>
+
+      <div class="group-h">Overlays</div>
+      <div class="toggles">
+        <label class="tg"><input type="checkbox" id="tgIdeal" checked><span>Ideal lines
+          <small>where a pinhole camera would put them</small></span></label>
+        <label class="tg"><input type="checkbox" id="tgField"><span>Displacement field
+          <small>every point slides along its own ray</small></span></label>
+      </div>
+
+      <button class="reset" id="reset" type="button">Reset to pinhole</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Reading the result</h2>
+  <div class="note">
+    <p style="margin:0"><strong>Correction is a backward warp.</strong> For every pixel of the corrected
+    image we already know its ideal coordinate, so we push it <em>forward</em> through
+    <span class="iv">L</span>(<span class="iv">r</span>) and sample the recorded image there. The forward
+    model is a closed-form polynomial, so nothing has to be inverted &mdash; which is why correction runs
+    as a fixed lookup table (<code>initUndistortRectifyMap</code>) built once per calibration. Clicking in
+    the <em>recorded</em> frame does need the inverse, and because the direction is untouched that is only
+    a one-dimensional root find: solve <span class="iv">r</span><span class="iv">L</span>(<span class="iv">r</span>)
+    = <span class="iv">r</span><sub>d</sub> for <span class="iv">r</span>.</p>
+    <p style="margin:12px 0 0"><strong>Barrel distortion costs resolution at the edges.</strong> Every
+    corner pixel of the corrected image samples a point the lens had squeezed <em>inward</em>, so it is
+    still on the sensor and the corrected frame fills. But it is reconstructed from a small, densely
+    packed patch of pixels, which is why corrected corners look soft. Push
+    <span class="iv">k</span><sub>1</sub> positive for the opposite case: pincushion sends points
+    <em>outward</em>, past the sensor edge, and the corrected image comes back with hatched corners
+    nothing was recorded for.</p>
+    <p style="margin:12px 0 0"><strong>Watch where the target's edge sits.</strong> Under a strong barrel
+    the checkerboard pulls well in from the frame, leaving sensor area carrying nothing but blank card.
+    A calibration capture should push the target right out to the corners &mdash; large
+    <span class="iv">r</span> is the only place where <span class="iv">k</span><sub>2</sub> and
+    <span class="iv">k</span><sub>3</sub> are distinguishable at all.</p>
+  </div>
+</section>
+
+<footer>CMPT 361 &middot; Simon Fraser University</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- model: radial only ---------------- */
+const HALF_H = 0.72;                       // half the image height, in normalized units
+function cam(size){ return {R:size, cx:size/2, cy:size/2, F:(size/2)/HALF_H}; }
+
+function radialL(r, P){ const r2 = r*r; return 1 + P.k1*r2 + P.k2*r2*r2 + P.k3*r2*r2*r2; }
+
+// d/dr of r*L(r). Where this goes negative the map folds and stops being one-to-one.
+function foldRadius(limit, P){
+  for (let i = 1; i <= 400; i++){
+    const r = limit*i/400, r2 = r*r;
+    if (1 + 3*P.k1*r2 + 5*P.k2*r2*r2 + 7*P.k3*r2*r2*r2 < 0) return r;
+  }
+  return null;
+}
+
+// inverse: given a recorded distance rd, recover the ideal distance r (bisection,
+// which is all it takes because direction is untouched)
+function invRadius(rd, P){
+  if (rd <= 0) return 0;
+  let hi = 3.0;
+  const rf = foldRadius(hi, P);
+  if (rf !== null) hi = rf;
+  if (hi*radialL(hi, P) <= rd) return hi;
+  let lo = 0;
+  for (let i = 0; i < 64; i++){
+    const m = (lo + hi)/2;
+    if (m*radialL(m, P) < rd) lo = m; else hi = m;
+  }
+  return (lo + hi)/2;
+}
+
+function mapper(C, P){
+  return function(u, v){
+    const x = (u - C.cx)/C.F, y = (v - C.cy)/C.F;
+    const L = radialL(Math.hypot(x, y), P);
+    return [C.F*x*L + C.cx, C.F*y*L + C.cy];
+  };
+}
+const identity = function(u, v){ return [u, v]; };
+
+/* ---------------- scenes (vector, in ideal pixel coords) ---------------- */
+function subdivide(pts, closed, steps){
+  const out = [], n = closed ? pts.length : pts.length - 1;
+  for (let i = 0; i < n; i++){
+    const a = pts[i], b = pts[(i+1) % pts.length];
+    for (let s = 0; s < steps; s++){
+      const t = s/steps;
+      out.push([a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t]);
+    }
+  }
+  if (!closed) out.push(pts[pts.length-1]);
+  return out;
+}
+function rect(x, y, w, h){ return [[x,y],[x+w,y],[x+w,y+h],[x,y+h]]; }
+
+const SCENES = {
+  checker: function(R){
+    const items = [], N = 8, c = R/N;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++)
+      if ((i+j) % 2 === 0) items.push({fill:'ink', pts:subdivide(rect(i*c, j*c, c, c), true, 9)});
+    return {items:items, guides:[
+      {pts:subdivide([[0,R/2],[R,R/2]], false, 80)},
+      {pts:subdivide([[R/2,0],[R/2,R]], false, 80)},
+      {pts:subdivide(rect(2*c,2*c,4*c,4*c), true, 40)}]};
+  },
+  grid: function(R){
+    const items = [], N = 10, c = R/N;
+    for (let i = 0; i <= N; i++){
+      items.push({line:'rule', w:1.4, pts:subdivide([[i*c,0],[i*c,R]], false, 50)});
+      items.push({line:'rule', w:1.4, pts:subdivide([[0,i*c],[R,i*c]], false, 50)});
+    }
+    items.push({line:'ink', w:4, closed:true, pts:subdivide(rect(5,5,R-10,R-10), true, 50)});
+    return {items:items, guides:[{pts:subdivide(rect(5,5,R-10,R-10), true, 50)}]};
+  },
+  facade: function(R){
+    const items = [], s = R/100;
+    items.push({fill:'rule', pts:subdivide(rect(8*s, 6*s, 84*s, 88*s), true, 20)});
+    for (let i = 1; i <= 4; i++)
+      items.push({line:'ink', w:3, pts:subdivide([[8*s,(6+i*18)*s],[92*s,(6+i*18)*s]], false, 50)});
+    for (let r = 0; r < 4; r++) for (let cI = 0; cI < 5; cI++)
+      items.push({fill:'ink', pts:subdivide(rect((14 + cI*16)*s, (11 + r*18)*s, 10*s, 11*s), true, 10)});
+    items.push({line:'ink', w:3.5, closed:true, pts:subdivide(rect(8*s,6*s,84*s,88*s), true, 50)});
+    return {items:items, guides:[
+      {pts:subdivide(rect(8*s,6*s,84*s,88*s), true, 50)},
+      {pts:subdivide([[8*s,42*s],[92*s,42*s]], false, 50)},
+      {pts:subdivide([[50*s,6*s],[50*s,94*s]], false, 50)}]};
+  },
+  rings: function(R){
+    const items = [], cx = R/2, cy = R/2;
+    for (let k = 1; k <= 7; k++){
+      const rad = k*R/16, pts = [];
+      for (let a = 0; a < 96; a++){ const t = a/96*Math.PI*2; pts.push([cx + rad*Math.cos(t), cy + rad*Math.sin(t)]); }
+      items.push({line:'rule', w:1.6, closed:true, pts:pts});
+    }
+    for (let a = 0; a < 24; a++){
+      const t = a/24*Math.PI*2, L = R*0.70;
+      items.push({line:'ink', w:1.3, pts:subdivide([[cx,cy],[cx + L*Math.cos(t), cy + L*Math.sin(t)]], false, 40)});
+    }
+    [[0.22,0.22],[0.78,0.22],[0.22,0.78],[0.78,0.78]].forEach(function(o){
+      const pts = [];
+      for (let a = 0; a < 48; a++){
+        const t = a/48*Math.PI*2;
+        pts.push([o[0]*R + R*0.055*Math.cos(t), o[1]*R + R*0.055*Math.sin(t)]);
+      }
+      items.push({fill:'ink', pts:pts});
+    });
+    return {items:items, guides:[]};
+  }
+};
+const SCENE_NAMES = {checker:'Checkerboard', grid:'Grid', facade:'Facade', rings:'Rings & spokes'};
+
+const FILM = {paper:'#dde4ea', ink:'#1a2430', rule:'#5a6b7c', void:'#0d1217', hatch:'#273039',
+              label:'#eef3f7', labelbg:'rgba(10,15,20,0.88)'};
+const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+
+function drawScene(ctx, scene, map, R){
+  ctx.save();
+  ctx.fillStyle = FILM.paper; ctx.fillRect(0, 0, R, R);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  scene.items.forEach(function(it){
+    ctx.beginPath();
+    for (let i = 0; i < it.pts.length; i++){
+      const q = map(it.pts[i][0], it.pts[i][1]);
+      if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]);
+    }
+    if (it.fill){ ctx.closePath(); ctx.fillStyle = FILM[it.fill]; ctx.fill(); }
+    else { if (it.closed) ctx.closePath(); ctx.strokeStyle = FILM[it.line]; ctx.lineWidth = it.w; ctx.stroke(); }
+  });
+  ctx.restore();
+}
+
+/* ---------------- state ---------------- */
+const S = {k1:-0.325, k2:0.122, k3:0, scene:'checker', ideal:true, field:false,
+           pt:[0.40, 0.29]};          // picked point, in IDEAL normalized coordinates
+
+const cvD = document.getElementById('cvD'), ctxD = cvD.getContext('2d', {willReadFrequently:true});
+const cvU = document.getElementById('cvU'), ctxU = cvU.getContext('2d');
+const cvP = document.getElementById('cvP'), ctxP = cvP.getContext('2d');
+const cvR = document.getElementById('cvRail'), ctxR = cvR.getContext('2d');
+const R = cvD.width, CAM = cam(R);
+const work = document.createElement('canvas'); work.width = R; work.height = R;
+const workCtx = work.getContext('2d');
+const sceneCache = {};
+function scene(){ if (!sceneCache[S.scene]) sceneCache[S.scene] = SCENES[S.scene](R); return sceneCache[S.scene]; }
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function fmt(x, d){ return (x < 0 ? '' : '+') + x.toFixed(d); }
+function n3(x){ return (x < 0 ? '' : ' ') + x.toFixed(3); }
+
+/* ---------------- annotation helpers ---------------- */
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath();
+}
+function tagBox(ctx, px, py, lines, accent){
+  ctx.save();
+  ctx.font = '500 13px ' + MONO;
+  let w = 0;
+  lines.forEach(function(t){ w = Math.max(w, ctx.measureText(t).width); });
+  w += 14; const h = lines.length*17 + 9;
+  let bx = px + 13, by = py - h - 11;
+  if (bx + w > R - 4) bx = px - w - 13;
+  if (bx < 4) bx = 4;
+  if (by < 4) by = py + 13;
+  if (by + h > R - 4) by = R - h - 4;
+  roundRect(ctx, bx, by, w, h, 5);
+  ctx.fillStyle = FILM.labelbg; ctx.fill();
+  ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = FILM.label; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  lines.forEach(function(t, i){ ctx.fillText(t, bx + 7, by + 5 + i*17); });
+  ctx.restore();
+}
+// the ray from the principal point out to a point, with its length written on it
+function drawRay(ctx, px, py, color, lenLabel){
+  const c = CAM.cx, rPix = Math.hypot(px - c, py - c);
+  ctx.save();
+  // circle of equal distance
+  ctx.strokeStyle = color; ctx.globalAlpha = .35; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+  ctx.beginPath(); ctx.arc(c, c, rPix, 0, Math.PI*2); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+  // the ray
+  ctx.strokeStyle = color; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(px, py); ctx.stroke();
+  // principal point
+  ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(c-8, c); ctx.lineTo(c+8, c); ctx.moveTo(c, c-8); ctx.lineTo(c, c+8); ctx.stroke();
+  ctx.font = '500 12px ' + MONO; ctx.fillStyle = color;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText('(cx, cy)', c + 10, c + 6);
+  // length written along the ray
+  const mx = c + (px - c)*0.52, my = c + (py - c)*0.52;
+  ctx.font = '500 13px ' + MONO;
+  const tw = ctx.measureText(lenLabel).width;
+  roundRect(ctx, mx - tw/2 - 6, my - 11, tw + 12, 21, 4);
+  ctx.fillStyle = FILM.labelbg; ctx.fill();
+  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(lenLabel, mx, my);
+  // the point itself
+  ctx.beginPath(); ctx.arc(px, py, 5.5, 0, Math.PI*2);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.strokeStyle = FILM.label; ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.restore();
+}
+
+function voidFill(ctx){
+  ctx.fillStyle = FILM.void; ctx.fillRect(0, 0, R, R);
+  ctx.save(); ctx.strokeStyle = FILM.hatch; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let d = -R; d < R*2; d += 9){ ctx.moveTo(d, 0); ctx.lineTo(d - R, R); }
+  ctx.stroke(); ctx.restore();
+}
+
+function drawGuides(ctx, map){
+  const g = scene().guides;
+  if (!g.length) return;
+  ctx.save();
+  ctx.strokeStyle = css('--accent'); ctx.lineWidth = 1.6; ctx.setLineDash([5, 4]);
+  g.forEach(function(it){
+    ctx.beginPath();
+    for (let i = 0; i < it.pts.length; i++){
+      const q = map(it.pts[i][0], it.pts[i][1]);
+      if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]);
+    }
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawField(ctx, map){
+  ctx.save();
+  ctx.strokeStyle = css('--warm'); ctx.fillStyle = css('--warm'); ctx.lineWidth = 1.5;
+  const N = 9;
+  for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++){
+    const u = i*R/N, v = j*R/N, q = map(u, v);
+    const dx = q[0]-u, dy = q[1]-v, len = Math.hypot(dx, dy);
+    if (len < 1.2) continue;
+    ctx.beginPath(); ctx.moveTo(u, v); ctx.lineTo(q[0], q[1]); ctx.stroke();
+    const a = Math.atan2(dy, dx), h = Math.min(5, len*0.45);
+    ctx.beginPath(); ctx.moveTo(q[0], q[1]);
+    ctx.lineTo(q[0] - h*Math.cos(a - 0.42), q[1] - h*Math.sin(a - 0.42));
+    ctx.lineTo(q[0] - h*Math.cos(a + 0.42), q[1] - h*Math.sin(a + 0.42));
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---------------- undistort (backward warp) ---------------- */
+function undistort(srcData, dst){
+  const out = dst.createImageData(R, R), src = srcData.data, o = out.data;
+  const c = CAM.cx, F = CAM.F, k1 = S.k1, k2 = S.k2, k3 = S.k3;
+  let idx = 0;
+  for (let v = 0; v < R; v++){
+    const y = (v - c)/F;
+    for (let u = 0; u < R; u++, idx += 4){
+      const x = (u - c)/F;
+      const r2 = x*x + y*y, r4 = r2*r2;
+      const L = 1 + k1*r2 + k2*r4 + k3*r4*r2;
+      const su = F*x*L + c, sv = F*y*L + c;
+      if (su < 0 || sv < 0 || su > R-1 || sv > R-1) continue;   // alpha stays 0
+      const u0 = su|0, v0 = sv|0;
+      const u1 = u0 < R-1 ? u0+1 : u0, v1 = v0 < R-1 ? v0+1 : v0;
+      const fu = su-u0, fv = sv-v0;
+      const i00 = (v0*R+u0)*4, i10 = (v0*R+u1)*4, i01 = (v1*R+u0)*4, i11 = (v1*R+u1)*4;
+      const w00 = (1-fu)*(1-fv), w10 = fu*(1-fv), w01 = (1-fu)*fv, w11 = fu*fv;
+      o[idx]   = src[i00]  *w00 + src[i10]  *w10 + src[i01]  *w01 + src[i11]  *w11;
+      o[idx+1] = src[i00+1]*w00 + src[i10+1]*w10 + src[i01+1]*w01 + src[i11+1]*w11;
+      o[idx+2] = src[i00+2]*w00 + src[i10+2]*w10 + src[i01+2]*w01 + src[i11+2]*w11;
+      o[idx+3] = 255;
+    }
+  }
+  return out;
+}
+
+/* ---------------- the idea: points sliding along a ray ---------------- */
+function drawRail(){
+  const W = cvR.width, H = cvR.height;
+  ctxR.clearRect(0, 0, W, H);
+  const rMax = Math.hypot(HALF_H, HALF_H);
+  const x0 = 84, x1 = W - 26, yA = 36, yB = 100;
+  const X = function(r){ return x0 + (r/rMax)*(x1 - x0); };
+  const accent = css('--accent'), warm = css('--warm'), muted = css('--muted'), faint = css('--ink-faint');
+
+  ctxR.save();
+  ctxR.font = '12px ' + css('--fs');
+  ctxR.textAlign = 'right'; ctxR.textBaseline = 'middle';
+  ctxR.fillStyle = muted;
+  ctxR.fillText('ideal', x0 - 12, yA);
+  ctxR.fillText('recorded', x0 - 12, yB);
+
+  // the two rails
+  [[yA, accent], [yB, warm]].forEach(function(p){
+    ctxR.strokeStyle = css('--line'); ctxR.lineWidth = 1;
+    ctxR.beginPath(); ctxR.moveTo(x0, p[0]); ctxR.lineTo(x1, p[0]); ctxR.stroke();
+  });
+
+  // principal point
+  ctxR.strokeStyle = faint; ctxR.lineWidth = 1; ctxR.setLineDash([2, 3]);
+  ctxR.beginPath(); ctxR.moveTo(x0, yA - 14); ctxR.lineTo(x0, yB + 14); ctxR.stroke();
+  ctxR.setLineDash([]);
+  ctxR.textAlign = 'center'; ctxR.textBaseline = 'top';
+  ctxR.fillStyle = faint; ctxR.font = '12px ' + MONO;
+  ctxR.fillText('c = (cx, cy)', x0, yB + 17);
+
+  // sliding points
+  const N = 9;
+  for (let i = 1; i <= N; i++){
+    const r = rMax*i/N, rd = r*radialL(r, S);
+    const xa = X(r), xb = X(rd);
+    if (xb < x0 - 20 || xb > x1 + 60) continue;
+    ctxR.strokeStyle = faint; ctxR.lineWidth = 1; ctxR.globalAlpha = .55;
+    ctxR.beginPath(); ctxR.moveTo(xa, yA + 7); ctxR.lineTo(xb, yB - 7); ctxR.stroke();
+    ctxR.globalAlpha = 1;
+    ctxR.fillStyle = accent; ctxR.beginPath(); ctxR.arc(xa, yA, 3.6, 0, Math.PI*2); ctxR.fill();
+    ctxR.fillStyle = warm;   ctxR.beginPath(); ctxR.arc(xb, yB, 3.6, 0, Math.PI*2); ctxR.fill();
+  }
+
+  // the picked point, highlighted on both rails
+  const r = Math.hypot(S.pt[0], S.pt[1]), rd = r*radialL(r, S);
+  if (r <= rMax*1.02){
+    const xa = X(r), xb = X(rd);
+    ctxR.strokeStyle = warm; ctxR.lineWidth = 2;
+    ctxR.beginPath(); ctxR.moveTo(xa, yA + 8); ctxR.lineTo(xb, yB - 8); ctxR.stroke();
+    // arrowhead
+    const ang = Math.atan2(yB - 8 - (yA + 8), xb - xa);
+    ctxR.beginPath(); ctxR.moveTo(xb, yB - 8);
+    ctxR.lineTo(xb - 6*Math.cos(ang - 0.45), yB - 8 - 6*Math.sin(ang - 0.45));
+    ctxR.lineTo(xb - 6*Math.cos(ang + 0.45), yB - 8 - 6*Math.sin(ang + 0.45));
+    ctxR.closePath(); ctxR.fillStyle = warm; ctxR.fill();
+    ctxR.fillStyle = accent; ctxR.beginPath(); ctxR.arc(xa, yA, 5.5, 0, Math.PI*2); ctxR.fill();
+    ctxR.fillStyle = warm;   ctxR.beginPath(); ctxR.arc(xb, yB, 5.5, 0, Math.PI*2); ctxR.fill();
+    ctxR.font = '500 12.5px ' + MONO; ctxR.textBaseline = 'bottom'; ctxR.textAlign = 'center';
+    ctxR.fillStyle = accent; ctxR.fillText('r = ' + r.toFixed(3), xa, yA - 9);
+    ctxR.textBaseline = 'top'; ctxR.fillStyle = warm;
+    ctxR.fillText('rL(r) = ' + rd.toFixed(3), xb, yB + 9);
+  }
+  ctxR.restore();
+}
+
+/* ---------------- profile chart ---------------- */
+function drawProfile(){
+  const W = cvP.width, H = cvP.height, pad = {l:52, r:16, t:30, b:32};
+  ctxP.clearRect(0, 0, W, H);
+  const rMax = Math.hypot(HALF_H, HALF_H), pxMax = rMax*CAM.F;
+  let yTop = pxMax;
+  for (let i = 0; i <= 60; i++){ const r = rMax*i/60; yTop = Math.max(yTop, Math.abs(r*radialL(r, S))*CAM.F); }
+  yTop *= 1.06;
+  const X = function(p){ return pad.l + (p/pxMax)*(W - pad.l - pad.r); };
+  const Y = function(p){ return H - pad.b - (p/yTop)*(H - pad.t - pad.b); };
+
+  ctxP.save();
+  ctxP.strokeStyle = css('--line'); ctxP.lineWidth = 1;
+  ctxP.beginPath(); ctxP.moveTo(pad.l, pad.t); ctxP.lineTo(pad.l, H-pad.b); ctxP.lineTo(W-pad.r, H-pad.b); ctxP.stroke();
+
+  ctxP.font = '11px ' + MONO; ctxP.fillStyle = css('--muted');
+  ctxP.textAlign = 'right'; ctxP.textBaseline = 'middle';
+  [0, Math.round(yTop/2), Math.round(yTop)].forEach(function(t){ ctxP.fillText(String(t), pad.l - 7, Y(t)); });
+  ctxP.textAlign = 'center'; ctxP.textBaseline = 'top';
+  [0, Math.round(pxMax/2), Math.round(pxMax)].forEach(function(t){ ctxP.fillText(String(t), X(t), H - pad.b + 7); });
+  ctxP.textAlign = 'left'; ctxP.font = '11px ' + css('--fs');
+  ctxP.fillText('distance from the principal point in the ideal image (px)', pad.l, H - pad.b + 20);
+  ctxP.fillText('distance on the sensor (px)', 4, 2);
+
+  ctxP.strokeStyle = css('--ink-faint'); ctxP.setLineDash([4, 4]); ctxP.lineWidth = 1.2;
+  ctxP.beginPath(); ctxP.moveTo(X(0), Y(0)); ctxP.lineTo(X(pxMax), Y(pxMax)); ctxP.stroke();
+  ctxP.setLineDash([]);
+
+  ctxP.strokeStyle = css('--warm'); ctxP.lineWidth = 2.2;
+  ctxP.beginPath();
+  for (let i = 0; i <= 180; i++){
+    const r = rMax*i/180, a = r*CAM.F, b = r*radialL(r, S)*CAM.F;
+    if (i) ctxP.lineTo(X(a), Y(b)); else ctxP.moveTo(X(a), Y(b));
+  }
+  ctxP.stroke();
+
+  const r = Math.hypot(S.pt[0], S.pt[1]);
+  if (r <= rMax){
+    const a = r*CAM.F, b = r*radialL(r, S)*CAM.F;
+    ctxP.strokeStyle = css('--accent'); ctxP.lineWidth = 1; ctxP.setLineDash([3, 3]);
+    ctxP.beginPath(); ctxP.moveTo(X(a), Y(0)); ctxP.lineTo(X(a), Y(b)); ctxP.lineTo(X(0), Y(b)); ctxP.stroke();
+    ctxP.setLineDash([]);
+    ctxP.fillStyle = css('--accent');
+    ctxP.beginPath(); ctxP.arc(X(a), Y(b), 4, 0, Math.PI*2); ctxP.fill();
+  }
+  ctxP.restore();
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const map = mapper(CAM, S);
+
+  drawScene(ctxD, scene(), map, R);
+  const srcData = ctxD.getImageData(0, 0, R, R);
+  if (S.ideal) drawGuides(ctxD, identity);
+  if (S.field) drawField(ctxD, map);
+
+  voidFill(ctxU);
+  workCtx.putImageData(undistort(srcData, workCtx), 0, 0);
+  ctxU.drawImage(work, 0, 0);
+  if (S.ideal) drawGuides(ctxU, identity);
+
+  // annotate the picked point in both frames
+  const x = S.pt[0], y = S.pt[1];
+  const r = Math.hypot(x, y), L = radialL(r, S);
+  const pu = CAM.F*x + CAM.cx, pv = CAM.F*y + CAM.cy;
+  const pdu = CAM.F*x*L + CAM.cx, pdv = CAM.F*y*L + CAM.cy;
+
+  drawRay(ctxU, pu, pv, css('--accent'), 'r = ' + r.toFixed(3));
+  tagBox(ctxU, pu, pv, ['(x, y)', '(' + n3(x) + ', ' + n3(y) + ')'], css('--accent'));
+
+  drawRay(ctxD, pdu, pdv, css('--warm'), 'rL(r) = ' + (r*L).toFixed(3));
+  tagBox(ctxD, pdu, pdv, ['(xd, yd) = L(r)(x, y)', '(' + n3(x*L) + ', ' + n3(y*L) + ')'], css('--warm'));
+
+  drawRail();
+  drawProfile();
+  updateText(r, L);
+}
+
+function updateText(r, L){
+  const x = S.pt[0], y = S.pt[1];
+  document.getElementById('rNorm').textContent  = '(' + n3(x) + ', ' + n3(y) + ')';
+  document.getElementById('rNormD').textContent = '(' + n3(x*L) + ', ' + n3(y*L) + ')';
+  document.getElementById('rR').textContent     = 'r  = ' + r.toFixed(4);
+  document.getElementById('rRD').textContent    = 'rd = ' + (r*L).toFixed(4);
+  document.getElementById('rPix').textContent   =
+    '(' + (CAM.F*x + CAM.cx).toFixed(1) + ', ' + (CAM.F*y + CAM.cy).toFixed(1) + ')';
+  document.getElementById('rPixD').textContent  =
+    '(' + (CAM.F*x*L + CAM.cx).toFixed(1) + ', ' + (CAM.F*y*L + CAM.cy).toFixed(1) + ')';
+
+  const shift = (r*L - r)*CAM.F;
+  const word = Math.abs(shift) < 0.5 ? 'stays put'
+      : (shift < 0 ? 'moves ' + Math.abs(shift).toFixed(1) + ' px toward the centre'
+                   : 'moves ' + shift.toFixed(1) + ' px away from the centre');
+  document.getElementById('rL').innerHTML =
+    'L(r) = 1 ' + fmt(S.k1,3) + '·r² ' + fmt(S.k2,3) + '·r⁴ ' + fmt(S.k3,3) +
+    '·r⁶ = <span style="color:var(--warm)">' + L.toFixed(4) + '</span>' +
+    '<span style="font-family:var(--fs);color:var(--muted)"> — the point ' + word + '.</span>';
+
+  const rc = Math.hypot(HALF_H, HALF_H);
+  const fold = foldRadius(rc, S);
+  document.getElementById('rWarn').innerHTML = fold === null ? '' :
+    '<span class="warn">r·L(r) turns over at r = ' + fold.toFixed(2) +
+    ' — past that the map folds and is no longer invertible</span>';
+
+  const Lc = radialL(rc, S), dc = (rc*Lc - rc)*CAM.F;
+  const dirc = Math.abs(dc) < 0.5 ? 'nothing moves'
+      : (dc < 0 ? 'a corner point is pulled <strong>' + Math.abs(dc).toFixed(0) + ' px inward</strong> — barrel'
+                : 'a corner point is pushed <strong>' + dc.toFixed(0) + ' px outward</strong> — pincushion');
+  document.getElementById('punch').innerHTML =
+    '<strong>Direction is never touched</strong> — only distance. ' +
+    'L(r) &lt; 1 pulls a point toward the centre, L(r) &gt; 1 pushes it away, and because the polynomial ' +
+    'has only even powers the effect depends on how far out the point is, never on which way it lies. ' +
+    'Right now L(r) runs from <code>' + radialL(0, S).toFixed(3) + '</code> at the centre to <code>' +
+    Lc.toFixed(3) + '</code> at the corner, so ' + dirc + '.';
+
+  ['k1','k2','k3'].forEach(function(k){ document.getElementById(k+'o').textContent = fmt(S[k], 3); });
+}
+
+/* ---------------- controls ---------------- */
+function buildControls(){
+  ['k1','k2','k3'].forEach(function(k){
+    const el = document.getElementById(k);
+    el.value = String(S[k]);
+    el.addEventListener('input', function(){ S[k] = parseFloat(el.value); render(); });
+  });
+
+  const host = document.getElementById('scenes');
+  Object.keys(SCENE_NAMES).forEach(function(key){
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = SCENE_NAMES[key];
+    b.setAttribute('aria-pressed', key === S.scene ? 'true' : 'false');
+    b.addEventListener('click', function(){
+      S.scene = key;
+      host.querySelectorAll('.chip').forEach(function(o){ o.setAttribute('aria-pressed', o === b ? 'true':'false'); });
+      render();
+    });
+    host.appendChild(b);
+  });
+
+  document.getElementById('tgIdeal').addEventListener('change', function(e){ S.ideal = e.target.checked; render(); });
+  document.getElementById('tgField').addEventListener('change', function(e){ S.field = e.target.checked; render(); });
+  document.getElementById('reset').addEventListener('click', function(){
+    ['k1','k2','k3'].forEach(function(k){ S[k] = 0; document.getElementById(k).value = '0'; });
+    render();
+  });
+
+  function canvasPoint(cv, e){
+    const b = cv.getBoundingClientRect();
+    return [(e.clientX - b.left)/b.width*R, (e.clientY - b.top)/b.height*R];
+  }
+  // clicking the corrected frame: the point is already ideal
+  function pickIdeal(e){
+    const p = canvasPoint(cvU, e);
+    S.pt = [(p[0] - CAM.cx)/CAM.F, (p[1] - CAM.cy)/CAM.F];
+    render();
+  }
+  // clicking the recorded frame: invert the radius, keep the direction
+  function pickRecorded(e){
+    const p = canvasPoint(cvD, e);
+    const xd = (p[0] - CAM.cx)/CAM.F, yd = (p[1] - CAM.cy)/CAM.F;
+    const rd = Math.hypot(xd, yd);
+    if (rd < 1e-6){ S.pt = [0, 0]; render(); return; }
+    const r = invRadius(rd, S), s = r/rd;
+    S.pt = [xd*s, yd*s];
+    render();
+  }
+  [[cvU, pickIdeal], [cvD, pickRecorded]].forEach(function(pair){
+    const cv = pair[0], fn = pair[1];
+    cv.addEventListener('pointerdown', function(e){
+      e.preventDefault(); cv.setPointerCapture(e.pointerId); cv.dataset.drag = '1'; fn(e);
+    });
+    cv.addEventListener('pointermove', function(e){ if (cv.dataset.drag === '1') fn(e); });
+    cv.addEventListener('pointerup', function(e){
+      cv.dataset.drag = '0';
+      if (cv.hasPointerCapture(e.pointerId)) cv.releasePointerCapture(e.pointerId);
+    });
+    cv.addEventListener('pointercancel', function(){ cv.dataset.drag = '0'; });
+  });
+}
+
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+if (mq.addEventListener) mq.addEventListener('change', function(){ render(); });
+
+buildControls();
+render();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ render(); });
+})();
+</script>
+
+</body>
+</html>
