@@ -97,7 +97,23 @@ i.v,.iv{font-family:var(--fv);font-style:italic}
 .tag.fixed{background:var(--accent-soft);color:var(--accent)}
 .cap small{color:var(--muted);font-size:12px}
 
-.readout{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+.ringkey{margin-top:12px;background:var(--surface);border:1px solid var(--line);
+          border-radius:var(--radius);padding:12px 16px}
+.lgrid{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:3px 12px;
+       font-family:var(--fm);font-size:12.5px;font-variant-numeric:tabular-nums;
+       overflow-x:auto;padding-bottom:2px}
+.lgrid b{font-weight:500;color:var(--ink-faint);white-space:nowrap;font-family:var(--fs);font-size:11px;
+         letter-spacing:.06em;text-transform:uppercase;align-self:center}
+.lgrid span{text-align:right;white-space:nowrap}
+.lgrid .ring{color:var(--muted)}
+.lgrid .val{color:var(--warm);font-weight:500}
+.lkey{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;margin-top:10px;
+      padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.lkey i{display:inline-block;width:18px;height:0;vertical-align:middle;margin-right:6px}
+.lkey i.gh{border-top:1px dashed #9fb3c6}
+.lkey i.sd{border-top:2px solid var(--warm)}
+.lkey .grow{flex:1 1 240px;min-width:0}
+.readout{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
          padding:14px 16px}
 .rtab{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:12.5px;
       font-variant-numeric:tabular-nums}
@@ -241,6 +257,17 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
         </div>
       </div>
 
+      <div class="ringkey" id="ringKey">
+        <div class="lgrid" id="lGrid"></div>
+        <div class="lkey">
+          <span><i class="gh"></i>the distance it started at, <span class="iv">r</span></span>
+          <span><i class="sd"></i>where the lens puts it, <span class="iv">r</span><span class="iv">L</span>(<span class="iv">r</span>)</span>
+          <span class="grow">Rings 1&ndash;4 run inner to outer. The gap between each pair widens as
+            <span class="iv">r</span> grows &mdash; that is <span class="iv">L</span>(<span class="iv">r</span>)
+            pulling further away from 1.</span>
+        </div>
+      </div>
+
       <div class="readout">
         <h3>Picked point <span style="font-weight:400;color:var(--muted);font-size:12px">&mdash; click in either frame</span></h3>
         <div class="rscroll">
@@ -292,6 +319,8 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-si
       <div class="toggles">
         <label class="tg"><input type="checkbox" id="tgIdeal" checked><span>Ideal lines
           <small>where a pinhole camera would put them</small></span></label>
+        <label class="tg"><input type="checkbox" id="tgRings" checked><span>L(r) rings
+          <small>four fixed distances, each labelled with its own stretch</small></span></label>
         <label class="tg"><input type="checkbox" id="tgField"><span>Displacement field
           <small>every point slides along its own ray</small></span></label>
       </div>
@@ -466,7 +495,7 @@ function drawScene(ctx, scene, map, R){
 }
 
 /* ---------------- state ---------------- */
-const S = {k1:-0.325, k2:0.122, k3:0, scene:'checker', ideal:true, field:false,
+const S = {k1:-0.325, k2:0.122, k3:0, scene:'checker', ideal:true, field:false, rings:true,
            pt:[0.40, 0.29]};          // picked point, in IDEAL normalized coordinates
 
 const cvD = document.getElementById('cvD'), ctxD = cvD.getContext('2d', {willReadFrequently:true});
@@ -493,23 +522,35 @@ function roundRect(ctx, x, y, w, h, r){
 function tagBox(ctx, px, py, lines, accent){
   ctx.save();
   ctx.font = '500 13px ' + MONO;
+  const txt = lines.map(function(l){ return Array.isArray(l) ? l[0] : l; });
   let w = 0;
-  lines.forEach(function(t){ w = Math.max(w, ctx.measureText(t).width); });
+  txt.forEach(function(t){ w = Math.max(w, ctx.measureText(t).width); });
   w += 14; const h = lines.length*17 + 9;
   let bx = px + 13, by = py - h - 11;
   if (bx + w > R - 4) bx = px - w - 13;
   if (bx < 4) bx = 4;
   if (by < 4) by = py + 13;
   if (by + h > R - 4) by = R - h - 4;
+  // keep clear of the principal-point marker and its label
+  const av = {x: CAM.cx - 12, y: CAM.cy - 12, w: 118, h: 38};
+  if (bx < av.x + av.w && bx + w > av.x && by < av.y + av.h && by + h > av.y){
+    const up = av.y - h - 7, dn = av.y + av.h + 7;
+    by = (up >= 4 && Math.abs(by - up) <= Math.abs(by - dn)) ? up : dn;
+    if (by + h > R - 4) by = Math.max(4, up);
+  }
   roundRect(ctx, bx, by, w, h, 5);
   ctx.fillStyle = FILM.labelbg; ctx.fill();
   ctx.strokeStyle = accent; ctx.lineWidth = 1; ctx.stroke();
-  ctx.fillStyle = FILM.label; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  lines.forEach(function(t, i){ ctx.fillText(t, bx + 7, by + 5 + i*17); });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  lines.forEach(function(l, i){
+    ctx.fillStyle = Array.isArray(l) ? l[1] : FILM.label;
+    ctx.font = (Array.isArray(l) ? '600 13.5px ' : '500 13px ') + MONO;
+    ctx.fillText(txt[i], bx + 7, by + 5 + i*17);
+  });
   ctx.restore();
 }
 // the ray from the principal point out to a point, with its length written on it
-function drawRay(ctx, px, py, color, lenLabel){
+function drawRay(ctx, px, py, color){
   const c = CAM.cx, rPix = Math.hypot(px - c, py - c);
   ctx.save();
   // circle of equal distance
@@ -519,24 +560,54 @@ function drawRay(ctx, px, py, color, lenLabel){
   // the ray
   ctx.strokeStyle = color; ctx.lineWidth = 2.6;
   ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(px, py); ctx.stroke();
-  // principal point
-  ctx.lineWidth = 1.8;
-  ctx.beginPath(); ctx.moveTo(c-8, c); ctx.lineTo(c+8, c); ctx.moveTo(c, c-8); ctx.lineTo(c, c+8); ctx.stroke();
-  ctx.font = '500 12px ' + MONO; ctx.fillStyle = color;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  ctx.fillText('(cx, cy)', c + 10, c + 6);
-  // length written along the ray
-  const mx = c + (px - c)*0.52, my = c + (py - c)*0.52;
-  ctx.font = '500 13px ' + MONO;
-  const tw = ctx.measureText(lenLabel).width;
-  roundRect(ctx, mx - tw/2 - 6, my - 11, tw + 12, 21, 4);
-  ctx.fillStyle = FILM.labelbg; ctx.fill();
-  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(lenLabel, mx, my);
   // the point itself
   ctx.beginPath(); ctx.arc(px, py, 5.5, 0, Math.PI*2);
   ctx.fillStyle = color; ctx.fill();
   ctx.strokeStyle = FILM.label; ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.restore();
+}
+
+// Reference rings at fixed ideal radii, drawn on the recorded frame: the dashed
+// circle is where the radius started, the solid one is where the lens put it. The
+// gap between the two widens with r, which is L(r) changing in front of you.
+const RING_R = [0.18, 0.36, 0.54, 0.72];   // 0.72 is the inscribed circle
+function drawLRings(ctx){
+  const c = CAM.cx, F = CAM.F, warm = css('--warm'), ghost = '#9fb3c6';
+  const a = Math.PI*1.25, ca = Math.cos(a), sa = Math.sin(a);   // the spoke the gap is marked on
+  ctx.save();
+  RING_R.forEach(function(r){
+    const L = radialL(r, S), ri = r*F, rd = Math.abs(r*L)*F;
+    ctx.setLineDash([3, 4]); ctx.lineWidth = 1.2; ctx.strokeStyle = ghost; ctx.globalAlpha = .9;
+    ctx.beginPath(); ctx.arc(c, c, ri, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]); ctx.lineWidth = 1.5; ctx.strokeStyle = warm; ctx.globalAlpha = .85;
+    ctx.beginPath(); ctx.arc(c, c, rd, 0, Math.PI*2); ctx.stroke();
+    // the gap between the two, marked once so it can be read off
+    ctx.globalAlpha = 1; ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.moveTo(c + ri*ca, c + ri*sa); ctx.lineTo(c + rd*ca, c + rd*sa); ctx.stroke();
+    // just the ring's number, on the spoke opposite the gap marker; the values
+    // live in the strip below the frame, where nothing can cover them
+    const nx = c - ri*ca, ny = c - ri*sa;
+    roundRect(ctx, nx - 9, ny - 9, 18, 18, 5);
+    ctx.fillStyle = FILM.labelbg; ctx.fill();
+    ctx.font = '600 11px ' + MONO; ctx.fillStyle = warm;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(RING_R.indexOf(r) + 1), nx, ny);
+  });
+  ctx.restore();
+}
+
+// the principal point, drawn last in each frame so its label is never buried
+function drawPrincipal(ctx, color){
+  const c = CAM.cx;
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(c-8, c); ctx.lineTo(c+8, c); ctx.moveTo(c, c-8); ctx.lineTo(c, c+8); ctx.stroke();
+  ctx.font = '600 12px ' + MONO;
+  const t = '(cx, cy)', tw = ctx.measureText(t).width;
+  roundRect(ctx, c + 10, c + 2, tw + 10, 19, 4);
+  ctx.fillStyle = FILM.labelbg; ctx.fill();
+  ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(t, c + 15, c + 12);
   ctx.restore();
 }
 
@@ -742,11 +813,20 @@ function render(){
   const pu = CAM.F*x + CAM.cx, pv = CAM.F*y + CAM.cy;
   const pdu = CAM.F*x*L + CAM.cx, pdv = CAM.F*y*L + CAM.cy;
 
-  drawRay(ctxU, pu, pv, css('--accent'), 'r = ' + r.toFixed(3));
-  tagBox(ctxU, pu, pv, ['(x, y)', '(' + n3(x) + ', ' + n3(y) + ')'], css('--accent'));
+  if (S.rings) drawLRings(ctxD);
 
-  drawRay(ctxD, pdu, pdv, css('--warm'), 'rL(r) = ' + (r*L).toFixed(3));
-  tagBox(ctxD, pdu, pdv, ['(xd, yd) = L(r)(x, y)', '(' + n3(x*L) + ', ' + n3(y*L) + ')'], css('--warm'));
+  drawRay(ctxU, pu, pv, css('--accent'));
+  tagBox(ctxU, pu, pv, ['(x, y) = (' + n3(x) + ', ' + n3(y) + ')',
+                        'r        = ' + r.toFixed(4),
+                        ['L(r)     = ' + L.toFixed(4), css('--accent')]], css('--accent'));
+
+  drawRay(ctxD, pdu, pdv, css('--warm'));
+  tagBox(ctxD, pdu, pdv, [['L(r)     = ' + L.toFixed(4), css('--warm')],
+                          'r\u00B7L(r)   = ' + (r*L).toFixed(4),
+                          '(xd, yd) = (' + n3(x*L) + ', ' + n3(y*L) + ')'], css('--warm'));
+
+  drawPrincipal(ctxU, css('--accent'));
+  drawPrincipal(ctxD, css('--warm'));
 
   drawRail();
   drawProfile();
@@ -790,6 +870,14 @@ function updateText(r, L){
     'Right now L(r) runs from <code>' + radialL(0, S).toFixed(3) + '</code> at the centre to <code>' +
     Lc.toFixed(3) + '</code> at the corner, so ' + dirc + '.';
 
+  let g = '<b>ring</b>';
+  RING_R.forEach(function(_, i){ g += '<span class="ring">' + (i+1) + '</span>'; });
+  g += '<b>r</b>';
+  RING_R.forEach(function(rr){ g += '<span class="ring">' + rr.toFixed(2) + '</span>'; });
+  g += '<b>L(r)</b>';
+  RING_R.forEach(function(rr){ g += '<span class="val">' + radialL(rr, S).toFixed(3) + '</span>'; });
+  document.getElementById('lGrid').innerHTML = g;
+
   ['k1','k2','k3'].forEach(function(k){ document.getElementById(k+'o').textContent = fmt(S[k], 3); });
 }
 
@@ -815,6 +903,11 @@ function buildControls(){
   });
 
   document.getElementById('tgIdeal').addEventListener('change', function(e){ S.ideal = e.target.checked; render(); });
+  document.getElementById('tgRings').addEventListener('change', function(e){
+    S.rings = e.target.checked;
+    document.getElementById('ringKey').hidden = !S.rings;
+    render();
+  });
   document.getElementById('tgField').addEventListener('change', function(e){ S.field = e.target.checked; render(); });
   document.getElementById('reset').addEventListener('click', function(){
     ['k1','k2','k3'].forEach(function(k){ S[k] = 0; document.getElementById(k).value = '0'; });
