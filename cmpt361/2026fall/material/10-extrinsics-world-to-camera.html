@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extrinsics — where the camera is, and what it sees</title>
+<style>
+  :root{
+    --bg:#0a0e13; --panel:#121a23; --panel2:#0e151d; --line:#223243;
+    --txt:#dde7f1; --muted:#8699ad; --accent:#ffb454;
+    --cU:#ff6b6b; --cV:#3ddc97; --cW:#5aa9ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1320px;margin:0 auto;padding:18px 20px 40px}
+  header h1{margin:0 0 4px;font-size:22px;font-weight:650;letter-spacing:.2px}
+  header p{margin:0;color:var(--muted);font-size:13.5px;max-width:900px}
+
+  .views{display:grid;grid-template-columns:1fr 360px;gap:12px;margin-top:16px}
+  @media (max-width:860px){
+    .views{grid-template-columns:1fr}
+    canvas{height:380px}
+    .formula{gap:8px;padding:12px}
+  }
+  .vwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  @media (max-width:680px){ table.v{min-width:600px} }
+  .stage{background:#070b10;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative}
+  .stage h4{margin:0;position:absolute;top:10px;left:14px;z-index:2;
+    font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:#7d93a9;font-weight:650}
+  canvas{display:block;width:100%;height:470px;touch-action:none}
+  #world{cursor:grab} #world:active{cursor:grabbing}
+  .caption{margin:8px 2px 0;color:#6b7f94;font-size:12.5px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .card h3{margin:0 0 10px;font-size:11.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);font-weight:650}
+  .row{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .row label{flex:0 0 74px;font-size:12.5px;color:var(--muted);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .row input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+  .row .val{flex:0 0 52px;text-align:right;font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+  .btns{display:grid;grid-template-columns:1fr;gap:5px}
+  button{background:#1b2735;color:var(--txt);border:1px solid #2b3d52;border-radius:7px;
+    padding:7px 11px;font-size:12.5px;cursor:pointer;font-family:inherit;text-align:left}
+  button:hover{background:#243447;border-color:#3a5270}
+  button.on{background:#2c4260;border-color:#5b82ad;font-weight:600}
+  button small{color:#7f95ab;font-weight:400;float:right;font-family:ui-monospace,Menlo,monospace}
+  button.on small{color:#a9c4dc}
+  .chk{display:flex;align-items:center;gap:7px;margin:7px 0;font-size:12.5px;cursor:pointer}
+  .chk input{accent-color:var(--accent);cursor:pointer}
+
+  .formula{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .vecb{border-left:2px solid #3b5775;border-right:2px solid #3b5775;padding:6px 11px;
+    font-size:13px;line-height:1.5;color:#cfe0f0;text-align:center}
+  .eqs{color:var(--muted);font-size:17px}
+  .blk{border:1.5px solid #2b3d52;border-radius:9px;padding:8px 10px 7px;transition:.18s;position:relative}
+  .blk .cap{display:block;text-align:center;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+    color:#64798d;margin-bottom:5px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-weight:650}
+  .blk table{border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+  .blk td{padding:2px 7px;text-align:right;color:#9fb6cb}
+  .blk td.lv{color:var(--accent)}
+  .blk td.sep{border-left:1px solid #2b3d52}
+  .blk tr.sep td{border-top:1px solid #2b3d52}
+  .blk.hot{border-color:var(--accent);background:rgba(255,180,84,.07);box-shadow:0 0 0 3px rgba(255,180,84,.10)}
+  .blk.hot .cap{color:var(--accent)}
+  .blk.done{border-color:#3ddc97}
+  .blk.done .cap{color:#3ddc97}
+  .stagerow{display:flex;gap:6px;margin-top:10px}
+  .stagerow span{flex:1;text-align:center;font-size:11px;padding:5px 4px;border-radius:6px;
+    background:#16202b;color:#6f8aa6;border:1px solid #233140}
+  .stagerow span.on{background:#2c4260;color:#eaf3fb;border-color:#5b82ad;font-weight:600}
+  .mat{margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;overflow-x:auto}
+  .mat .lead{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+  .mat .lead b{color:#cfe0f0}
+  table.m{border-collapse:collapse;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:13px;font-variant-numeric:tabular-nums}
+  table.m td{padding:3px 12px;text-align:right}
+  table.m td.br{border-left:2px solid #3b5775;padding-left:16px;color:var(--accent)}
+  .bk{display:inline-block;vertical-align:middle;color:#5d7a94}
+  .brace{display:inline-block;vertical-align:middle;font-size:46px;color:#3b5775;line-height:1;
+    transform:scaleX(.5)}
+  .rowlab{color:#6f8aa6;padding-right:8px !important;text-align:left !important;font-size:11.5px}
+
+  table.v{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px;
+    font-variant-numeric:tabular-nums}
+  table.v th,table.v td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  table.v th{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
+  table.v th:first-child,table.v td:first-child{text-align:left}
+  table.v td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+  .warn{color:#ffa850}
+
+  footer{margin-top:18px;color:var(--muted);font-size:12.5px;line-height:1.65;max-width:960px}
+  footer b{color:#cfe0f0;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Extrinsics: where the camera is, and what it sees</h1>
+  <p>One tetrahedron, sitting at four integer coordinates that never change. Move the camera and
+     every number in the 3×4 matrix <b>[R | t]</b> changes — but the world does not. That matrix is
+     the entire difference between the two pictures below.</p>
+</header>
+
+<div class="views">
+  <div class="stage"><h4>World — drag to orbit, scroll to zoom</h4><canvas id="world"></canvas></div>
+  <div class="stage"><h4>What the camera sees</h4><canvas id="img"></canvas></div>
+</div>
+<p class="caption">Left: the scene, which you can orbit, and which the transform animates. Right: the camera's own image — unaffected by either.</p>
+
+<div class="formula">
+  <span class="vecb">x′<br>y′<br>z′<br>1</span>
+  <span class="eqs">=</span>
+  <span class="blk" id="blkR"><span class="cap">② rotate by R</span><table id="tR"></table></span>
+  <span class="blk" id="blkT"><span class="cap">① translate by t = −c</span><table id="tT"></table></span>
+  <span class="vecb">x<br>y<br>z<br>1</span>
+</div>
+
+<div class="grid">
+
+  <div class="card">
+    <h3>World frame → camera frame</h3>
+    <div class="btns"><button id="play">▶&nbsp; Play the whole transform</button></div>
+    <div class="row" style="margin-top:10px"><label>step</label><input type="range" id="astep" min="0" max="2" step="0.004" value="0"><span class="val" id="av">0.00</span></div>
+    <div class="stagerow" id="stages">
+      <span data-s="0">world frame</span><span data-s="1">translated</span><span data-s="2">camera frame</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Jump the camera</h3>
+    <div class="btns" id="presets"></div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="rays" checked> Draw rays to the four corners</label>
+    <label class="chk"><input type="checkbox" id="grid" checked> Ground grid and world axes</label>
+  </div>
+
+  <div class="card">
+    <h3>Camera centre c</h3>
+    <div class="row"><label>c<sub>x</sub></label><input type="range" id="cx" min="-10" max="10" step="1" value="0"><span class="val" id="cxv">0</span></div>
+    <div class="row"><label>c<sub>y</sub></label><input type="range" id="cy" min="-4"  max="10" step="1" value="3"><span class="val" id="cyv">3</span></div>
+    <div class="row"><label>c<sub>z</sub></label><input type="range" id="cz" min="-10" max="10" step="1" value="9"><span class="val" id="czv">9</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Orientation</h3>
+    <div class="row"><label>roll°</label><input type="range" id="roll" min="-60" max="60" step="1" value="0"><span class="val" id="rollv">0</span></div>
+    <div class="row"><label>f (px)</label><input type="range" id="f" min="150" max="600" step="10" value="320"><span class="val" id="fv">320</span></div>
+    <p style="margin:8px 0 0;color:#7389a0;font-size:11.5px;line-height:1.5">
+      The camera always aims at the tetrahedron. Roll spins it about its own optical axis — <b>c</b> does not
+      move, yet <b>R</b> changes completely.</p>
+  </div>
+
+</div>
+
+<div class="mat">
+  <div class="lead">Extrinsics &nbsp; <b>X<sub>cam</sub> = R (X<sub>world</sub> − c) = R X<sub>world</sub> + t</b>,
+       &nbsp; with &nbsp; <b>t = −R c</b>. &nbsp; Rows of R are the camera's own axes
+       <span style="color:var(--cU)">u</span>, <span style="color:var(--cV)">v</span>,
+       <span style="color:var(--cW)">w</span> written in world coordinates.</div>
+  <table class="m" id="mat"></table>
+</div>
+
+<div class="vwrap"><table class="v" id="verts">
+  <thead><tr>
+    <th>vertex</th><th>world X (integers)</th><th id="colnow">X during the transform</th>
+    <th>depth −z<sub>cam</sub></th><th>image (px, py)</th>
+  </tr></thead>
+  <tbody></tbody>
+</table></div>
+
+<footer>
+  <b>What to watch.</b> The four world coordinates are integers and they never move — the tetrahedron is
+  nailed to the world. Everything that changes when you jump the camera lives in those twelve numbers.
+  Watch the rows of R: they are literally the camera's right, up and backward axes, which is why they
+  are drawn in the same three colours on the frustum. Watch t: it is <em>not</em> the camera position, it
+  is −Rc, the world origin expressed in camera coordinates — which is why it swings wildly even when you
+  only move c a little. Then press <b>Play</b>. Step ① slides the whole scene by t = −c until the camera sits on the
+  origin; step ② rotates it by R until the camera's own axes <em>are</em> the axes. Nothing physical moves —
+  the ground grid is still the same grid, it just arrives tilted, because we are now writing the world down
+  from the camera's point of view. The coordinates on the vertices change as it goes, and land on exactly the
+  numbers in the table. Note the two steps carry different translations: the 4×4 on the right holds −c, but
+  multiplying the pair out gives [R | −Rc], which is the 3×4 above. And watch the roll slider, which leaves c untouched while rewriting all nine
+  entries of R: position and orientation really are independent, and the matrix holds both.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------- scene
+const V = [                                  // integer coordinates, fixed forever
+  [-2, 0, -2],
+  [ 2, 0, -2],
+  [ 0, 0,  2],
+  [ 0, 3,  0]
+];
+const VCOL = ['#ff6b6b', '#3ddc97', '#5aa9ff', '#ffd166'];
+const FACES = [[0,1,2],[0,1,3],[0,2,3],[1,2,3]];
+const FCOL  = ['rgba(120,170,220,', 'rgba(220,130,130,', 'rgba(120,210,170,', 'rgba(230,200,120,'];
+const CENTROID = [0, 0.75, -0.5];
+
+const PRESETS = [
+  {name:'Front, eye level', c:[ 0, 3,  9], roll:0},
+  {name:'High corner',      c:[ 7, 6,  7], roll:0},
+  {name:'Low, from behind', c:[-6, 1, -7], roll:0}
+];
+
+const S = { c:[0,3,9], roll:0, f:320, rays:true, grid:true, preset:0, a:0 };
+
+// ---------------------------------------------------------------- vec3
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const mul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const norm=a=>{const n=Math.hypot(...a)||1; return [a[0]/n,a[1]/n,a[2]/n];};
+const matVec=(R,p)=>[dot(R[0],p), dot(R[1],p), dot(R[2],p)];
+
+// --- rotation interpolation, so R can be applied gradually -----------------
+function matToQuat(m){
+  const tr = m[0][0]+m[1][1]+m[2][2];
+  if (tr > 0){ const k = Math.sqrt(tr+1)*2;
+    return [0.25*k, (m[2][1]-m[1][2])/k, (m[0][2]-m[2][0])/k, (m[1][0]-m[0][1])/k]; }
+  if (m[0][0] > m[1][1] && m[0][0] > m[2][2]){ const k = Math.sqrt(1+m[0][0]-m[1][1]-m[2][2])*2;
+    return [(m[2][1]-m[1][2])/k, 0.25*k, (m[0][1]+m[1][0])/k, (m[0][2]+m[2][0])/k]; }
+  if (m[1][1] > m[2][2]){ const k = Math.sqrt(1+m[1][1]-m[0][0]-m[2][2])*2;
+    return [(m[0][2]-m[2][0])/k, (m[0][1]+m[1][0])/k, 0.25*k, (m[1][2]+m[2][1])/k]; }
+  const k = Math.sqrt(1+m[2][2]-m[0][0]-m[1][1])*2;
+  return [(m[1][0]-m[0][1])/k, (m[0][2]+m[2][0])/k, (m[1][2]+m[2][1])/k, 0.25*k];
+}
+function quatToMat(q){
+  const n4 = Math.hypot(...q)||1, [w,x,y,z] = q.map(v=>v/n4);
+  return [[1-2*(y*y+z*z), 2*(x*y-z*w),   2*(x*z+y*w)],
+          [2*(x*y+z*w),   1-2*(x*x+z*z), 2*(y*z-x*w)],
+          [2*(x*z-y*w),   2*(y*z+x*w),   1-2*(x*x+y*y)]];
+}
+// slerp from the identity rotation to q
+function partialR(m, t){
+  if (t >= 1) return m;
+  if (t <= 0) return [[1,0,0],[0,1,0],[0,0,1]];
+  let q = matToQuat(m);
+  if (q[0] < 0) q = q.map(v=>-v);
+  const th = Math.acos(Math.min(1, Math.max(-1, q[0])));
+  if (th < 1e-7) return [[1,0,0],[0,1,0],[0,0,1]];
+  const sn = Math.sin(th), a = Math.sin((1-t)*th)/sn, b = Math.sin(t*th)/sn;
+  return quatToMat([a + b*q[0], b*q[1], b*q[2], b*q[3]]);
+}
+
+// The animation itself. a in [0,1]: translating by t = -c.  a in [1,2]: rotating by R.
+// Every point drawn in the world panel flows through this.
+function xf(P){
+  const a = S.a, tau = Math.min(1, a), rho = Math.max(0, a - 1);
+  const p = [P[0] - tau*S.c[0], P[1] - tau*S.c[1], P[2] - tau*S.c[2]];
+  return rho <= 0 ? p : matVec(partialR(SC.R, rho), p);
+}
+
+// ---------------------------------------------------------------- the camera being taught
+function sceneCam(){
+  const c = S.c;
+  let w = norm(sub(c, CENTROID));                      // backward: camera looks down -w
+  if (Math.hypot(w[0],w[2]) < 1e-6) w = norm([0.001, w[1], 0.001]);
+  let u = norm(cross([0,1,0], w));
+  let v = cross(w, u);
+  if (S.roll){
+    const a = S.roll*Math.PI/180, ca = Math.cos(a), sa = Math.sin(a);
+    const u2 = add(mul(u, ca), mul(v, sa));
+    const v2 = add(mul(u,-sa), mul(v, ca));
+    u = u2; v = v2;
+  }
+  const R = [u, v, w];
+  const t = mul(matVec(R, c), -1);                     // t = -R c
+  return {u, v, w, R, t, c};
+}
+let SC = sceneCam();
+
+// world point -> camera coordinates -> image pixels
+const IMG = {w:320, h:240};
+function toCam(P){ return add(matVec(SC.R, P), SC.t); }
+function toImg(P){
+  const X = toCam(P), z = X[2];
+  if (z > -1e-6) return {X, behind:true};
+  return {X, behind:false, px: IMG.w/2 - S.f*X[0]/z, py: IMG.h/2 + S.f*X[1]/z};
+}
+// a point on the image plane, back out into the world (for drawing the frustum)
+function camRayPoint(xi, yi, L){
+  return add(S.c, add(add(mul(SC.u, xi*L/S.f), mul(SC.v, yi*L/S.f)), mul(SC.w, -L)));
+}
+
+// ---------------------------------------------------------------- the view you orbit with
+const VIEW3 = {az:0.6, el:0.40, dist:25, f:760};
+const wc = document.getElementById('world'), wx = wc.getContext('2d');
+const ic = document.getElementById('img'),   ix = ic.getContext('2d');
+let WDIM = {w:0,h:0}, IDIM = {w:0,h:0};
+
+// Each panel installs its own projector; everything below draws through PRJ.
+let PRJ = null;
+function makeProjector(cam, dim, f){
+  return P => {
+    const d = sub(P, cam.eye), z = dot(d, cam.w);
+    if (z > -0.2) return null;                      // behind the orbit camera
+    return {x: dim.w/2 + f*dot(d,cam.u)/(-z),
+            y: dim.h/2 - f*dot(d,cam.v)/(-z), d:-z};
+  };
+}
+function orbitCam(target, az, el, dist){
+  const ce = Math.cos(el), se = Math.sin(el);
+  const eye = add(target, [dist*ce*Math.sin(az), dist*se, dist*ce*Math.cos(az)]);
+  const w = norm(sub(eye, target));
+  const u = norm(cross([0,1,0], w));
+  return {eye, u, v:cross(w,u), w};
+}
+const proj  = P => PRJ(xf(P));        // scene points: they flow through the transform
+const projF = P => PRJ(P);            // the measuring frame itself: it never moves
+function seg(ctx, A, B, col, lw, dash, pr){
+  const a = (pr||proj)(A), b = (pr||proj)(B); if (!a || !b) return;
+  ctx.save();
+  if (dash) ctx.setLineDash(dash);
+  ctx.strokeStyle = col; ctx.lineWidth = lw || 1;
+  ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- draw: world
+function drawWorld(){
+  const {w:W, h:H} = WDIM;
+  wx.clearRect(0,0,W,H); wx.fillStyle = '#070b10'; wx.fillRect(0,0,W,H);
+  PRJ = makeProjector(orbitCam([0,0,0], VIEW3.az, VIEW3.el, VIEW3.dist), WDIM, VIEW3.f);
+
+  if (S.grid){
+    for (let i=-6;i<=6;i++){
+      const a = i===0 ? 'rgba(90,130,170,.33)' : 'rgba(70,100,130,.16)';
+      seg(wx, [i,0,-6], [i,0,6], a, 1);
+      seg(wx, [-6,0,i], [6,0,i], a, 1);
+    }
+    // the world's own axes are part of the scene, so they travel with it
+    [[[6,0,0],'Xw','#ff6b6b'], [[0,4.5,0],'Yw','#3ddc97'], [[0,0,6],'Zw','#5aa9ff']].forEach(([P,lab,col])=>{
+      seg(wx, [0,0,0], P, col + '77', 1.4);
+      const p = proj(P); if (!p) return;
+      wx.fillStyle = col + 'aa'; wx.font = '11px ui-monospace,Menlo,monospace';
+      wx.textAlign = 'center'; wx.fillText(lab, p.x, p.y - 7);
+    });
+  }
+
+  // The axes we are writing numbers in. They stay put; the scene moves through them.
+  // At the start the world frame sits here; at the end the camera frame does.
+  const AX = 2.6;
+  [[[AX,0,0],'x','#ff6b6b'], [[0,AX,0],'y','#3ddc97'], [[0,0,AX],'z','#5aa9ff']].forEach(([P,lab,col])=>{
+    seg(wx, [0,0,0], P, col, 2.6, null, projF);
+    const p = projF(P); if (!p) return;
+    wx.fillStyle = col; wx.font = 'bold 12px ui-monospace,Menlo,monospace';
+    wx.textAlign = 'center'; wx.fillText(lab, p.x, p.y - 7);
+  });
+  {
+    const o = projF([0,0,0]);
+    if (o){ wx.fillStyle = 'rgba(190,215,240,.85)';
+            wx.beginPath(); wx.arc(o.x, o.y, 3.4, 0, 7); wx.fill();
+            wx.font = '10px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif';
+            wx.textAlign = 'right'; wx.fillStyle = '#7d93a9';
+            wx.fillText(S.a < 0.02 ? 'frame: world'
+                      : S.a > 1.88 ? 'frame: camera (u, v, w)' : 'frame', o.x - 10, o.y - 11); }
+  }
+
+  // tetrahedron, painter's algorithm
+  const faces = FACES.map((f,i)=>({f, i, d: f.reduce((s,k)=>s + (proj(V[k])?.d ?? 1e9), 0)/3}))
+                     .sort((a,b)=>b.d - a.d);
+  faces.forEach(({f,i})=>{
+    const pts = f.map(k=>proj(V[k]));
+    if (pts.some(p=>!p)) return;
+    wx.beginPath(); wx.moveTo(pts[0].x, pts[0].y);
+    wx.lineTo(pts[1].x, pts[1].y); wx.lineTo(pts[2].x, pts[2].y); wx.closePath();
+    wx.fillStyle = FCOL[i] + '.19)'; wx.fill();
+    wx.strokeStyle = 'rgba(190,220,250,.5)'; wx.lineWidth = 1.2; wx.stroke();
+  });
+  V.forEach((P,k)=>{
+    const p = proj(P); if (!p) return;
+    wx.fillStyle = VCOL[k];
+    wx.beginPath(); wx.arc(p.x, p.y, 4.5, 0, 7); wx.fill();
+    wx.font = '11px ui-monospace,Menlo,monospace'; wx.textAlign = 'left';
+    const q = xf(P);
+    const lab = `V${k} (` + (S.a < 0.02 ? P.join(',') : q.map(v=>fmt(v,1)).join(', ')) + ')';
+    const lw = wx.measureText(lab).width;
+    wx.fillStyle = 'rgba(7,11,16,.82)'; wx.fillRect(p.x+7, p.y-15, lw+5, 14);
+    wx.fillStyle = VCOL[k];
+    wx.fillText(lab, p.x+9, p.y-4);
+  });
+
+  // the camera: frustum + its own three axes
+  const L = 2.6, hw = IMG.w/2, hh = IMG.h/2;
+  const corners = [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([a,b])=>camRayPoint(a,b,L));
+  for (let i=0;i<4;i++){
+    seg(wx, S.c, corners[i], 'rgba(255,180,84,.45)', 1);
+    seg(wx, corners[i], corners[(i+1)%4], 'rgba(255,180,84,.9)', 1.5);
+  }
+  seg(wx, S.c, camRayPoint(0,0,L*1.25), 'rgba(255,180,84,.35)', 1, [4,4]);
+  [[SC.u,'u','#ff6b6b'],[SC.v,'v','#3ddc97'],[SC.w,'w','#5aa9ff']].forEach(([A,lab,col])=>{
+    const P = add(S.c, mul(A, 2.6));
+    seg(wx, S.c, P, col, 2.4);
+    const p = proj(P); if (!p) return;
+    if (S.a < 1.88){
+      wx.save(); wx.globalAlpha = Math.min(1, (1.88 - S.a)*4);
+      wx.fillStyle = col; wx.font = 'bold 12px ui-monospace,Menlo,monospace';
+      wx.textAlign = 'center'; wx.fillText(lab, p.x, p.y - 6); wx.restore();
+    }
+  });
+  if (S.rays) V.forEach((P,k)=> seg(wx, S.c, P, VCOL[k] + '66', 1, [3,4]));
+
+  const pc = proj(S.c);
+  if (pc){
+    wx.fillStyle = '#ffd089';
+    wx.beginPath(); wx.arc(pc.x, pc.y, 5, 0, 7); wx.fill();
+    wx.font = '11.5px ui-monospace,Menlo,monospace'; wx.textAlign = 'center';
+    const cc = xf(S.c);
+    const lab = 'c = (' + (S.a < 0.02 ? S.c.join(', ') : cc.map(v=>fmt(v,1)).join(', ')) + ')';
+    const lw = wx.measureText(lab).width;
+    wx.fillStyle = 'rgba(7,11,16,.92)'; wx.fillRect(pc.x-lw/2-6, pc.y+13, lw+12, 16);
+    wx.fillStyle = '#ffd089';
+    wx.fillText(lab, pc.x, pc.y + 25);
+  }
+}
+
+// ---------------------------------------------------------------- draw: the image
+function drawImage(){
+  const {w:W, h:H} = IDIM;
+  ix.clearRect(0,0,W,H); ix.fillStyle = '#070b10'; ix.fillRect(0,0,W,H);
+  const sc = Math.min((W-44)/IMG.w, (H-120)/IMG.h);
+  const ox = (W - IMG.w*sc)/2, oy = (H - IMG.h*sc)/2 - 10;
+  const P = p => ({x: ox + p.px*sc, y: oy + p.py*sc});
+
+  ix.fillStyle = '#0d141c'; ix.strokeStyle = '#3f5c78'; ix.lineWidth = 1.3;
+  ix.beginPath(); ix.rect(ox, oy, IMG.w*sc, IMG.h*sc); ix.fill(); ix.stroke();
+  ix.strokeStyle = 'rgba(120,170,210,.16)';
+  ix.beginPath();
+  ix.moveTo(ox + IMG.w*sc/2, oy); ix.lineTo(ox + IMG.w*sc/2, oy + IMG.h*sc);
+  ix.moveTo(ox, oy + IMG.h*sc/2); ix.lineTo(ox + IMG.w*sc, oy + IMG.h*sc/2);
+  ix.stroke();
+
+  const proj4 = V.map(toImg);
+  const anyBehind = proj4.some(p=>p.behind);
+
+  ix.save();
+  ix.beginPath(); ix.rect(ox, oy, IMG.w*sc, IMG.h*sc); ix.clip();
+  if (!anyBehind){
+    FACES.map((f,i)=>({f,i,d: f.reduce((s,k)=>s - proj4[k].X[2], 0)/3}))
+         .sort((a,b)=>b.d-a.d)
+         .forEach(({f,i})=>{
+      const q = f.map(k=>P(proj4[k]));
+      ix.beginPath(); ix.moveTo(q[0].x,q[0].y); ix.lineTo(q[1].x,q[1].y);
+      ix.lineTo(q[2].x,q[2].y); ix.closePath();
+      ix.fillStyle = FCOL[i] + '.30)'; ix.fill();
+      ix.strokeStyle = 'rgba(200,228,255,.75)'; ix.lineWidth = 1.4; ix.stroke();
+    });
+    proj4.forEach((p,k)=>{
+      const q = P(p);
+      ix.fillStyle = VCOL[k];
+      ix.beginPath(); ix.arc(q.x, q.y, 4.5, 0, 7); ix.fill();
+      ix.font = 'bold 11px ui-monospace,Menlo,monospace'; ix.textAlign = 'left';
+      ix.fillText('V'+k, q.x + 7, q.y - 5);
+    });
+  }
+  ix.restore();
+
+  ix.font = '11px ui-monospace,Menlo,monospace'; ix.textAlign = 'center';
+  ix.fillStyle = '#7f9bb5';
+  ix.fillText(`${IMG.w} × ${IMG.h} px   ·   f = ${S.f}`, W/2, oy + IMG.h*sc + 20);
+  if (anyBehind){
+    ix.fillStyle = '#ffa850';
+    ix.fillText('part of the tetrahedron is behind the camera', W/2, oy + IMG.h*sc + 38);
+  }
+}
+
+// ---------------------------------------------------------------- readouts
+const fmt = (x, n) => (Math.abs(x) < 5e-4 ? 0 : x).toFixed(n === undefined ? 3 : n);
+function blockHTML(M, lastCol, hotCol){
+  let h = '';
+  for (let r=0;r<3;r++){
+    h += '<tr>' + M[r].map(x=>`<td>${fmt(x)}</td>`).join('')
+       + `<td class="sep ${hotCol?'lv':''}">${fmt(lastCol[r])}</td></tr>`;
+  }
+  h += '<tr class="sep"><td>0</td><td>0</td><td>0</td><td class="sep">1</td></tr>';
+  return h;
+}
+function buildFormula(){                      // only when c / roll actually change
+  const I = [[1,0,0],[0,1,0],[0,0,1]];
+  document.getElementById('tT').innerHTML = blockHTML(I, mul(S.c,-1), true);
+  document.getElementById('tR').innerHTML = blockHTML(SC.R, [0,0,0], false);
+}
+function updateFormulaState(){                // cheap: runs every animation frame
+  const a = S.a;
+  const T = document.getElementById('blkT'), R = document.getElementById('blkR');
+  T.className = 'blk' + (a > 0 && a < 1 ? ' hot' : a >= 1 ? ' done' : '');
+  R.className = 'blk' + (a > 1 && a < 2 ? ' hot' : a >= 2 ? ' done' : '');
+  const st = a < 0.02 ? 0 : (a < 1.98 ? (a < 1 ? 0 : 1) : 2);
+  document.querySelectorAll('#stages span').forEach(el=>
+    el.classList.toggle('on', +el.dataset.s === (a >= 1.98 ? 2 : a >= 1 ? 1 : 0)));
+  document.getElementById('av').textContent = a.toFixed(2);
+  document.getElementById('astep').value = a;
+}
+
+function drawPanels(){
+  buildFormula(); updateFormulaState();
+  const R = SC.R, t = SC.t;
+  const lab = ['u ᵀ','v ᵀ','w ᵀ'], col = ['var(--cU)','var(--cV)','var(--cW)'];
+  let h = '';
+  for (let r=0;r<3;r++){
+    h += `<tr><td class="rowlab" style="color:${col[r]}">${lab[r]}</td>`
+       + R[r].map(x=>`<td>${fmt(x)}</td>`).join('')
+       + `<td class="br">${fmt(t[r])}</td></tr>`;
+  }
+  h += `<tr><td class="rowlab"></td><td colspan="3" style="color:#6f8aa6;font-size:11px;padding-top:8px">`
+     + `R &nbsp; (rotation, 3×3)</td>`
+     + `<td class="br" style="color:#6f8aa6;font-size:11px;padding-top:8px">t = −Rc</td></tr>`;
+  document.getElementById('mat').innerHTML = h;
+
+  drawVertTable();
+}
+
+function drawVertTable(){
+  const tb = document.querySelector('#verts tbody');
+  tb.innerHTML = V.map((P,k)=>{
+    const p = toImg(P), X = xf(P);
+    const img = p.behind ? '<span class="warn">behind camera</span>'
+                         : `(${p.px.toFixed(1)}, ${p.py.toFixed(1)})`;
+    return `<tr><td><span class="dot" style="background:${VCOL[k]}"></span>V${k}</td>`
+         + `<td class="mono">(${P.join(', ')})</td>`
+         + `<td class="mono">(${fmt(X[0],2)}, ${fmt(X[1],2)}, ${fmt(X[2],2)})</td>`
+         + `<td class="mono">${fmt(-p.X[2],2)}</td>`
+         + `<td class="mono">${img}</td></tr>`;
+  }).join('');
+  document.getElementById('colnow').innerHTML =
+      S.a < 0.02 ? 'X &nbsp;(still the world)'
+    : S.a < 1    ? 'X − <span style="color:var(--accent)">t·τ</span> &nbsp;(translating)'
+    : S.a < 1.98 ? '<span style="color:var(--accent)">R<sub>partial</sub></span>(X − c) &nbsp;(rotating)'
+    :              'X<sub>cam</sub> = R(X − c)';
+}
+
+function render(){ SC = sceneCam(); drawWorld(); drawImage(); drawPanels(); }
+// during the animation nothing about the camera changes, only `a` — so skip the
+// expensive DOM rebuilds and just repaint.
+function renderStep(){ drawWorld(); updateFormulaState(); drawVertTable(); }
+
+// ---------------------------------------------------------------- controls
+function resize(){
+  [[wc,wx,WDIM],[ic,ix,IDIM]].forEach(([cv,ctx,dim])=>{
+    const dpr = window.devicePixelRatio || 1;
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    dim.w = W; dim.h = H;
+  });
+  render();
+}
+
+let anim = null;
+function stopAnim(){ if (anim){ cancelAnimationFrame(anim); anim = null; } }
+function jumpTo(i){
+  stopAnim(); stopA(); S.a = 0;
+  S.preset = i;
+  document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('on', +b.dataset.preset===i));
+  const from = S.c.slice(), fromRoll = S.roll;
+  const to = PRESETS[i].c, toRoll = PRESETS[i].roll, t0 = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now - t0)/620);
+    const e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
+    S.c = [0,1,2].map(j => from[j] + (to[j]-from[j])*e);
+    S.roll = fromRoll + (toRoll-fromRoll)*e;
+    syncSliders();
+    render();
+    anim = k < 1 ? requestAnimationFrame(step) : null;
+  };
+  anim = requestAnimationFrame(step);
+}
+function syncSliders(){
+  ['cx','cy','cz'].forEach((id,j)=>{
+    document.getElementById(id).value = S.c[j];
+    document.getElementById(id+'v').textContent = S.c[j].toFixed(S.c[j]%1 ? 1 : 0);
+  });
+  document.getElementById('roll').value = S.roll;
+  document.getElementById('rollv').textContent = S.roll.toFixed(0);
+}
+
+PRESETS.forEach((p,i)=>{
+  const b = document.createElement('button');
+  b.dataset.preset = i;
+  b.innerHTML = p.name + ` <small>(${p.c.join(', ')})</small>`;
+  b.addEventListener('click', ()=> jumpTo(i));
+  document.getElementById('presets').appendChild(b);
+});
+
+['cx','cy','cz'].forEach((id,j)=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', ()=>{
+    stopAnim();
+    S.c[j] = parseFloat(el.value);
+    document.getElementById(id+'v').textContent = el.value;
+    document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('on'));
+    render();
+  });
+});
+document.getElementById('roll').addEventListener('input', e=>{
+  stopAnim(); S.roll = parseFloat(e.target.value);
+  document.getElementById('rollv').textContent = e.target.value; render();
+});
+document.getElementById('f').addEventListener('input', e=>{
+  S.f = parseFloat(e.target.value);
+  document.getElementById('fv').textContent = e.target.value; render();
+});
+['rays','grid'].forEach(id=>{
+  const el = document.getElementById(id);
+  el.checked = S[id];
+  el.addEventListener('change', ()=>{ S[id] = el.checked; render(); });
+});
+
+// orbit
+let drag = null;
+wc.addEventListener('pointerdown', e=>{
+  drag = {x:e.clientX, y:e.clientY}; wc.setPointerCapture(e.pointerId);
+});
+wc.addEventListener('pointermove', e=>{
+  if (!drag) return;
+  VIEW3.az -= (e.clientX - drag.x)*0.008;
+  VIEW3.el = Math.max(-1.45, Math.min(1.45, VIEW3.el + (e.clientY - drag.y)*0.006));
+  drag = {x:e.clientX, y:e.clientY};
+  drawWorld();
+});
+wc.addEventListener('pointerup', ()=>{ drag = null; });
+wc.addEventListener('pointercancel', ()=>{ drag = null; });
+wc.addEventListener('wheel', e=>{
+  e.preventDefault();
+  VIEW3.dist = Math.max(7, Math.min(45, VIEW3.dist * (1 + Math.sign(e.deltaY)*0.09)));
+  drawWorld();
+}, {passive:false});
+
+let aAnim = null;
+function stopA(){ if (aAnim){ cancelAnimationFrame(aAnim); aAnim = null; } }
+const ease = k => k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3)/2;   // ease in-out
+function playTransform(){
+  stopA();
+  const T1 = 1400, HOLD = 450, T2 = 1600, TOT = T1 + HOLD + T2;
+  S.a = 0; render();
+  const t0 = performance.now();
+  const step = now => {
+    const e = now - t0;
+    S.a = e < T1            ? ease(e/T1)
+        : e < T1 + HOLD     ? 1
+        : 1 + ease(Math.min(1, (e - T1 - HOLD)/T2));
+    renderStep();
+    if (e < TOT) aAnim = requestAnimationFrame(step);
+    else { S.a = 2; aAnim = null; render(); }
+  };
+  aAnim = requestAnimationFrame(step);
+}
+document.getElementById('play').addEventListener('click', playTransform);
+document.getElementById('astep').addEventListener('input', e=>{
+  stopA(); S.a = parseFloat(e.target.value); renderStep();
+});
+document.querySelectorAll('#stages span').forEach(el=>{
+  el.addEventListener('click', ()=>{ stopA(); S.a = +el.dataset.s; render(); });
+  el.style.cursor = 'pointer';
+});
+
+window.addEventListener('resize', resize);
+jumpTo(0);
+resize();
+</script>
+</body>
+</html>

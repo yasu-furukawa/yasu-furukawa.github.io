@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inside a Camera — Lens, Rays, Sensor</title>
+<style>
+  :root{
+    --bg:#0a0e13;
+    --panel:#121a23;
+    --panel2:#0e151d;
+    --line:#223243;
+    --txt:#dde7f1;
+    --muted:#8699ad;
+    --accent:#ffb454;
+    --cA:#ff6b6b;
+    --cB:#3ddc97;
+    --cC:#5aa9ff;
+    --cF:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 20px 40px}
+  header h1{margin:0 0 4px;font-size:22px;font-weight:650;letter-spacing:.2px}
+  header p{margin:0;color:var(--muted);font-size:13.5px;max-width:860px}
+  .tabs{display:flex;gap:6px;margin:16px 0 10px;border-bottom:1px solid var(--line)}
+  .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;
+    border-radius:8px 8px 0 0;background:var(--panel2);color:var(--muted);
+    font-size:13px;cursor:default;position:relative;top:1px}
+  .tab.active{background:var(--panel);color:var(--txt);border-bottom:1px solid var(--panel);font-weight:600}
+  .tab{cursor:pointer}
+  .tab:hover{color:var(--txt)}
+  .stage{background:#070b10;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative}
+  canvas{display:block;width:100%;height:460px;touch-action:none;cursor:crosshair}
+  .caption{margin:8px 2px 0;color:#6b7f94;font-size:12.5px}
+  .note{margin:6px 0 0;color:#7389a0;font-size:11.5px;line-height:1.5}
+  .note b{color:#9db5cc;font-weight:600}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .card h3{margin:0 0 10px;font-size:11.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);font-weight:650}
+  .row{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .row label{flex:0 0 96px;font-size:12.5px;color:var(--muted)}
+  .row input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+  .row .val{flex:0 0 62px;text-align:right;font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--txt)}
+  .chk{display:flex;align-items:center;gap:7px;margin:7px 0;font-size:12.5px;color:var(--txt);cursor:pointer}
+  .chk input{accent-color:var(--accent);cursor:pointer}
+  .swatch{width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 10px}
+  .btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  button{background:#1b2735;color:var(--txt);border:1px solid #2b3d52;border-radius:7px;
+    padding:6px 11px;font-size:12.5px;cursor:pointer;font-family:inherit}
+  button:hover{background:#243447;border-color:#3a5270}
+  button.ghost{background:transparent}
+  button.on{background:#2c4260;border-color:#5b82ad;color:#eaf3fb;font-weight:600}
+  .lenspick{display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:12px}
+  .lenspick button{text-align:left;padding:8px 12px;line-height:1.35}
+  .lenspick b{display:block;font-size:13px;font-weight:600}
+  .lenspick small{display:block;color:#7f95ab;font-size:11.5px;margin-top:2px;
+    font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .lenspick button.on small{color:#a9c4dc}
+
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px;
+    font-variant-numeric:tabular-nums}
+  .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  @media (max-width:680px){
+    table{min-width:460px}
+    .eq{font-size:12px;overflow-x:auto}
+  }
+  th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
+  th:first-child,td:first-child{text-align:left}
+  td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .tag.ok{background:rgba(61,220,151,.16);color:#3ddc97}
+  .tag.no{background:rgba(255,160,80,.14);color:#ffa850}
+  .tag.virt{background:rgba(160,140,255,.16);color:#a89cff}
+
+  .eq{margin-top:14px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:#bcd0e4}
+  .eq b{color:var(--accent);font-weight:600}
+  footer{margin-top:18px;color:var(--muted);font-size:12.5px;line-height:1.65;max-width:900px}
+  footer b{color:#cfe0f0;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>The ideal camera</h1>
+  <p>An imaginary camera with two magic powers: its single piece of glass can re-shape itself to any focal
+     length <em>f</em> you ask for, and its box can stretch to put the sensor at any distance <em>d</em>.
+     Nothing like this exists. Play with it anyway — what it has to do to form a sharp image is exactly what
+     a real lens spends all its glass trying to approximate.</p>
+</header>
+
+<nav class="tabs">
+  <div class="tab active" data-tab="1">1 · The ideal camera</div>
+  <div class="tab" data-tab="2">2 · How a real camera fakes it</div>
+  <div class="tab" data-tab="3">3 · Why we call it a pinhole</div>
+</nav>
+
+<div class="stage">
+  <canvas id="cv"></canvas>
+</div>
+<p class="caption" id="cap">Click anywhere in the scene to trace a point · drag the arrows to change depth · drag the sensor to refocus</p>
+
+<div class="grid">
+
+  <div class="card">
+    <h3>The two magic dials</h3>
+    <div class="row"><label>Focal length f</label><input type="range" id="f" min="42" max="240" step="1" value="100"><span class="val" id="fv">100</span></div>
+    <p class="note"><b>Re-shapes the glass.</b> Short f needs a fat, steeply curved lens; long f is nearly flat.
+       Watch the thickness change. Parallel light always lands at F′, exactly f behind it.</p>
+    <div class="row" style="margin-top:12px"><label>Distance d</label><input type="range" id="d" min="42" max="620" step="0.5" value="176.9"><span class="val" id="dv">176.9</span></div>
+    <p class="note"><b>Stretches the box.</b> Lens-to-sensor. The picture is sharp only where d lands exactly on sᵢ.</p>
+    <div class="row" id="apRow" style="margin-top:12px;display:none"><label>Opening ⌀</label><input type="range" id="ap" min="0.5" max="40" step="0.5" value="40"><span class="val" id="apv">80</span></div>
+    <p class="note" id="apNote" style="display:none"><b>Closes the iris.</b> Shrink it and both cameras go sharp everywhere — which is the moment the lens stops mattering.</p>
+  </div>
+
+  <div class="card">
+    <h3>Focus</h3>
+    <div class="btns">
+      <button data-focus="0">Focus on A</button>
+      <button data-focus="1">Focus on B</button>
+      <button data-focus="2">Focus on C</button>
+      <button data-focus="free">Focus on ✛</button>
+    </div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="autofocus"> Autofocus on selected point</label>
+    <div class="row" style="margin-top:14px"><label>Rays / point</label><input type="range" id="nr" min="3" max="15" step="2" value="7"><span class="val" id="nrv">7</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Trace which points</h3>
+    <label class="chk"><input type="checkbox" class="trc" data-i="0" checked><span class="swatch" style="background:var(--cA)"></span> A — near arrow</label>
+    <label class="chk"><input type="checkbox" class="trc" data-i="1" checked><span class="swatch" style="background:var(--cB)"></span> B — middle arrow</label>
+    <label class="chk"><input type="checkbox" class="trc" data-i="2" checked><span class="swatch" style="background:var(--cC)"></span> C — far arrow</label>
+    <label class="chk"><input type="checkbox" id="trcFree" checked><span class="swatch" style="background:var(--cF)"></span> ✛ — clicked point</label>
+    <div class="btns" style="margin-top:8px">
+      <button class="ghost" id="clearFree">Clear clicked point</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Drawing</h3>
+    <label class="chk"><input type="checkbox" id="body" checked> Camera box</label>
+    <label class="chk"><input type="checkbox" id="showF" checked> Mark focal points F, F′</label>
+    <label class="chk"><input type="checkbox" id="principal"> Show the 3 principal rays</label>
+    <label class="chk"><input type="checkbox" id="showImg" checked> Mark where the image forms</label>
+    <label class="chk"><input type="checkbox" id="showBlur" checked> Shade the blur spot</label>
+    <label class="chk" id="insetRow"><input type="checkbox" id="showInset" checked> Magnified sensor inset</label>
+    <div class="btns" style="margin-top:10px">
+      <button class="ghost" id="reset">Reset everything</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="tblwrap"><table id="tbl">
+  <thead>
+    <tr><th>Point</th><th>s₀ (object)</th><th>sᵢ (image)</th><th>magnification</th><th>spot size on sensor</th><th>state</th></tr>
+  </thead>
+  <tbody></tbody>
+</table></div>
+
+<div class="eq" id="eq"></div>
+
+<footer>
+  <b>What to watch.</b> Every ray leaving a single object point strikes a different part of the glass, and all of
+  them reconvene at one image point. That reconvening is the whole job. Where it happens is set by <em>f</em> and
+  the object's distance, and nothing else — so pick <em>f</em>, then stretch the box until <em>d</em> lands on sᵢ
+  and the sharp dot appears. You will find you can never satisfy A, B and C at once: one <em>d</em>, one sharp
+  depth, everything else a disc. <br><br>
+  Now notice what the camera had to <em>do</em>. Dial f down and the glass swells into a fat bulge; dial it up and
+  it flattens almost to a plate. Rack d out and the body distends into a long tube. A real camera can do neither —
+  its glass is cut once and never changes, and its box is a fixed shell. Tab 2 is about the trick real lenses use
+  to fake these two freedoms with a stack of fixed elements that merely slide. <br><br>
+  <b>Tab 3.</b> Close the opening down and the two pictures converge. They were never far apart: the ray through
+  the centre of the lens is undeviated, so it is the very ray a pinhole would have passed — which is why the blur
+  disc is always <em>centred</em> on the pinhole prediction, −d·y/s₀, in focus or not. Shrinking the opening simply
+  removes every ray except that one. That is the licence for the rest of the course: to work out <em>where</em> a
+  3D point lands we can throw the glass away and keep a single hole. The lens was never about the geometry. It was
+  about gathering enough light that the hole does not have to be tiny. <br><br>
+  The third band is the last move, and it is pure bookkeeping. A pinhole image is upside down, which
+  is a nuisance to carry through every equation. So we take the same straight line and read it off one
+  plane <em>earlier</em> — a screen placed in front of the hole, at the same distance d. Nothing
+  physical sits there; it is the same ray, same similar triangles, same d. But the image is upright and
+  the minus sign is gone: y′ = d·y/s₀. That is the camera every projection matrix in this course is
+  written for — one point, one plane in front of it, and no glass anywhere.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------- state
+const COL = {A:'#ff6b6b', B:'#3ddc97', C:'#5aa9ff', F:'#ffffff'};
+
+// The ideal camera has no catalogue of lenses. Just two dials with generous range.
+// f bottoms out just above the lens radius (40) — below that the glass would be a
+// full sphere and the shape stops responding. The top end is capped where the far
+// arrow can still be brought into focus inside the d range.
+const F_RANGE = {min:42,  max:240};
+const D_RANGE = {min:42,  max:620};
+
+const DEFAULTS = {
+  f: 100, d: 176.9, ap: 40, nr: 7,            // ap = lens radius; tab 1 is only about f and d
+  objects: [
+    {id:'A', x:160, h:50, color:COL.A, trace:true},
+    {id:'B', x:230, h:68, color:COL.B, trace:true},
+    {id:'C', x:400, h:86, color:COL.C, trace:true}
+  ],
+  free: null
+};
+
+const S = {
+  f: DEFAULTS.f, d: DEFAULTS.d, ap: DEFAULTS.ap, nr: DEFAULTS.nr,
+  objects: DEFAULTS.objects.map(o=>({...o})),
+  free: null,
+  traceFree: true,
+  tab: 1,
+  showF: true, principal: false, body: true,
+  showImg: true, showBlur: true, showInset: true,
+  autofocus: false,
+  selected: 1            // index of object, or 'free'
+};
+
+const SENSOR_HALF = 88;                       // half-height of the sensor, world units
+const GLASS_R = 40;                           // the glass itself never changes size;
+                                              // S.ap is the stop that closes over it
+const clampD = v => Math.min(D_RANGE.max, Math.max(D_RANGE.min, v));
+
+// ---------------------------------------------------------------- view
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const WORLD = {left:-500, right:500, halfH:125};
+let VIEW = {s:1, ox:0, oy:0, W:0, H:0};
+
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const pad = 26;
+  // Fixed scale from the worst case, so stretching the box never rescales the view.
+  const span = D_RANGE.max + 50 + 400 + 40;   // worst case, so the scale never jumps
+  const bandH = S.tab === 1 ? H : S.tab === 3 ? H*0.31 : H*0.47;
+  const s = Math.min((W-2*pad)/span, (bandH-20)/(2*WORLD.halfH));
+  VIEW = {s, ox:0, oy:H*0.455, W, H};
+  draw();
+}
+const X = wx => VIEW.ox + wx*VIEW.s;
+const Y = wy => VIEW.oy - wy*VIEW.s;
+const invX = px => (px - VIEW.ox)/VIEW.s;
+const invY = py => (VIEW.oy - py)/VIEW.s;
+
+// ---------------------------------------------------------------- optics
+// Thin lens. Lens plane at x = 0, objects at x > 0, sensor at x = -d.
+// 1/s0 + 1/si = 1/f   ->   si = f*s0/(s0 - f)
+function imageOf(p){
+  const s0 = p.x, y0 = p.y, f = S.f;
+  const den = s0 - f;
+  if (Math.abs(den) < 1e-6) return {si:Infinity, yi:0, atInfinity:true, real:false};
+  const si = f*s0/den;
+  const yi = -y0*si/s0;
+  return {si, yi, atInfinity:false, real: si > 0};
+}
+
+// Direction of the ray after the lens, for a ray that struck the lens at height h.
+function outDir(p, h){
+  const im = imageOf(p);
+  if (im.atInfinity){                       // object sits on the focal plane
+    const n = Math.hypot(-p.x, -p.y);
+    return {x:-p.x/n, y:-p.y/n};
+  }
+  let vx = -im.si - 0, vy = im.yi - h;      // toward the (real or virtual) image point
+  if (vx > 0){ vx = -vx; vy = -vy; }        // light always travels left of the lens
+  const n = Math.hypot(vx,vy);
+  return {x:vx/n, y:vy/n};
+}
+
+// Where that ray crosses the sensor plane x = -d, plus the blur radius.
+function hitSensor(p, h){
+  const v = outDir(p,h);
+  const t = (-S.d - 0)/v.x;
+  return {x:-S.d, y: h + t*v.y};
+}
+// Pinhole: no glass. A ray from the object through the hole at height h lands at
+// h - d*(p.y - h)/p.x. The CHIEF ray (h = 0) gives -d*y/s0 — the projection
+// equation — and that is exactly where the lens camera's blur disc is centred.
+function pinLanding(p){ return -S.d * p.y / p.x; }
+function pinBlur(p){ return S.ap * (1 + S.d/p.x); }
+
+function blurRadius(p){
+  const im = imageOf(p);
+  if (im.atInfinity) return S.ap;
+  return S.ap * Math.abs(1 - S.d/im.si);
+}
+function rayHeights(){
+  const n = S.nr, out = [];
+  if (n === 1) return [0];
+  for (let i=0;i<n;i++) out.push(-S.ap + 2*S.ap*i/(n-1));
+  return out;
+}
+function tracedPoints(){
+  const list = [];
+  S.objects.forEach((o,i)=>{ if(o.trace) list.push({x:o.x, y:o.h, color:o.color, id:o.id, key:i}); });
+  if (S.free && S.traceFree) list.push({x:S.free.x, y:S.free.y, color:COL.F, id:'✛', key:'free'});
+  return list;
+}
+function selectedPoint(){
+  if (S.selected === 'free') return S.free ? {x:S.free.x,y:S.free.y,id:'✛'} : null;
+  const o = S.objects[S.selected];
+  return o ? {x:o.x, y:o.h, id:o.id} : null;
+}
+
+// ---------------------------------------------------------------- drawing
+function draw(){
+  const {W,H,s} = VIEW;
+  const cL = -S.d - (S.body ? 26 : 14);
+  const cR = S.objects.reduce((m,o)=>Math.max(m,o.x), S.free?S.free.x:0) + 34;
+  VIEW.ox = (W - (cR-cL)*s)/2 - cL*s;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#070b10'; ctx.fillRect(0,0,W,H);
+
+  if (S.autofocus){
+    const p = selectedPoint();
+    if (p){ const im = imageOf(p); if (im.real && isFinite(im.si)) S.d = clampD(im.si); }
+  }
+
+  const pts = tracedPoints();
+  if (S.tab === 1){
+    VIEW.oy = H*0.455;
+    drawScene('ideal', pts, null);
+    if (S.showInset) drawInset(pts);
+  } else if (S.tab === 3){
+    const tight = 2*S.ap <= 7;
+    VIEW.oy = H*0.17;
+    drawScene('ideal', pts, 'WITH A LENS  —  opening '
+              + (2*S.ap).toFixed(1) + ' wide  ·  glass bends light, so ONE depth is sharp');
+    ctx.save();
+    ctx.strokeStyle = '#1b2735'; ctx.lineWidth = 1; ctx.setLineDash([3,5]);
+    ctx.beginPath(); ctx.moveTo(26, H/3); ctx.lineTo(W-26, H/3); ctx.stroke();
+    ctx.restore();
+    VIEW.oy = H*0.5;
+    drawScene('pinhole', pts, 'PINHOLE  —  no glass at all  ·  sharpness comes only from the hole being small');
+    ctx.save();
+    ctx.strokeStyle = '#1b2735'; ctx.lineWidth = 1; ctx.setLineDash([3,5]);
+    ctx.beginPath(); ctx.moveTo(26, H*2/3); ctx.lineTo(W-26, H*2/3); ctx.stroke();
+    ctx.restore();
+    VIEW.oy = H*0.83;
+    drawScene('virtual', pts, 'THE MODEL WE USE  —  screen moved in FRONT of the hole, same distance d  ·  image comes out upright');
+    if (tight){
+      ctx.save();
+      ctx.font = '600 12.5px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+      ctx.textAlign = 'right'; ctx.fillStyle = '#3ddc97';
+      ctx.fillText('same picture — the glass is doing nothing the hole could not', W - 26, 24);
+      ctx.restore();
+    }
+  } else {
+    VIEW.oy = H*0.265;
+    drawScene('ideal', pts, 'IMAGINARY  —  box stretches to ' + S.d.toFixed(0)
+              + ' long  ·  glass re-shapes to ' + (2*lensSag()).toFixed(1) + ' thick');
+    ctx.save();
+    ctx.strokeStyle = '#1b2735'; ctx.lineWidth = 1; ctx.setLineDash([3,5]);
+    ctx.beginPath(); ctx.moveTo(26, H*0.5); ctx.lineTo(W-26, H*0.5); ctx.stroke();
+    ctx.restore();
+    VIEW.oy = H*0.74;
+    drawScene('real', pts, 'REAL  —  housing fixed at ' + REAL.L
+              + '  ·  same three pieces of glass  ·  only the spacings slide');
+  }
+  updatePanel(pts);
+}
+
+// Everything in one band. The optics are identical in both modes — the rays bend
+// at x = 0 either way. Only the hardware drawn around them differs.
+function drawScene(mode, pts, title){
+  drawAxis();
+  if (mode === 'ideal')        { if (S.body) drawIdealCamera(); drawLens(); }
+  else if (mode === 'real')     { if (S.body) drawRealCamera(); }
+  else if (mode === 'virtual')  { if (S.body) drawVirtualCamera(); }
+  else                          { if (S.body) drawPinholeCamera(); }
+  drawSensor();
+  drawObjects();
+  if (mode === 'virtual')      pts.forEach(p => drawVirtualRays(p));
+  else if (mode === 'pinhole') pts.forEach(p => drawPinholeBundle(p));
+  else                         pts.forEach(p => drawRayBundle(p));
+  if (S.principal && mode === 'ideal'){ const p = selectedPoint(); if (p) drawPrincipalRays(p); }
+  if (mode !== 'virtual') pts.forEach(p => drawLanding(p, mode));
+  drawLabels(mode);
+  if (title){
+    ctx.save();
+    ctx.font = '600 11.5px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+    ctx.textAlign = 'left'; ctx.fillStyle = mode === 'ideal' ? '#7d93a9' : '#8fb6d6';
+    ctx.fillText(title, 26, VIEW.oy - (S.tab === 3 ? 160 : 174));
+    if (mode === 'real'){
+      ctx.font = '11px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+      ctx.fillStyle = '#64798d';
+      ctx.fillText('glass arrangement is schematic — what is exact is that the stack behaves as the dashed lens',
+                   26, VIEW.oy - 159);
+    }
+    ctx.restore();
+  }
+}
+
+function drawAxis(){
+  ctx.save();
+  ctx.strokeStyle = '#1d2a38'; ctx.lineWidth = 1; ctx.setLineDash([6,7]);
+  ctx.beginPath(); ctx.moveTo(X(WORLD.left),Y(0)); ctx.lineTo(X(WORLD.right),Y(0)); ctx.stroke();
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- the ideal camera
+// Half-thickness of the glass, derived from f. For a symmetric biconvex lens in air
+// with n = 1.5 the lensmaker equation collapses to R = f, so the sagitta is
+// R - sqrt(R^2 - a^2): short f -> fat lens, long f -> nearly flat plate.
+function lensSag(){
+  const a = GLASS_R, R = Math.max(S.f, a*1.02);
+  return R - Math.sqrt(Math.max(0, R*R - a*a));
+}
+function lensR(){ return Math.max(S.f, GLASS_R*1.02); }
+
+// A box that simply deforms to whatever you ask for: its length is d, and the
+// front plate holds one piece of glass whose shape is whatever gives focal length f.
+function drawIdealCamera(){
+  const xS = -S.d, a = GLASS_R, bh = SENSOR_HALF + 18, W = 9;
+  const wrect = (x0,x1,y0,y1) => {
+    ctx.beginPath();
+    ctx.rect(X(x0), Y(Math.max(y0,y1)), (x1-x0)*VIEW.s, Math.abs(y1-y0)*VIEW.s);
+    ctx.fill(); ctx.stroke();
+  };
+  ctx.save();
+  ctx.fillStyle = 'rgba(23,35,49,.82)'; ctx.strokeStyle = '#44627f'; ctx.lineWidth = 1.3;
+
+  const PW = Math.max(W, 2*lensSag() + 7);    // the plate thickens to hold a fatter lens
+  wrect(xS - W, xS,      -(bh+W), bh+W);      // back plate, behind the sensor
+  wrect(xS - W, PW/2,     bh,     bh+W);      // top wall  — stretches with d
+  wrect(xS - W, PW/2,   -(bh+W), -bh);        // bottom wall
+  wrect(-PW/2,  PW/2,     a,      bh);        // front plate, above the glass
+  wrect(-PW/2,  PW/2,    -bh,    -a);         // front plate, below the glass
+
+  ctx.font = '12.5px ui-monospace,Menlo,monospace'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#8fadc9';
+  if (S.tab === 1)
+    ctx.fillText('ideal camera   ·   glass ' + (2*lensSag()).toFixed(1) + ' thick'
+               + '   ·   box ' + S.d.toFixed(0) + ' long', X(xS/2), VIEW.oy - 152);
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- the real camera
+// Fixed body, fixed sensor-to-housing distance, fixed glass. Only the SPACINGS
+// change — which is what a real zoom actually does, on cams inside the barrel.
+// Zooming slides the middle group; focusing slides the front group.
+const REAL = {L:150, back:14};
+function realGroups(){
+  const zf = (S.f - F_RANGE.min)/(F_RANGE.max - F_RANGE.min);          // 0..1
+  const zd = (S.d - D_RANGE.min)/(D_RANGE.max - D_RANGE.min);          // 0..1
+  return [                                     // offsets measured from the sensor
+    {off:110 + 30*zd, f: 90, a:GLASS_R*0.78},  // front  — moved by focus
+    {off: 60 + 35*zf, f:-60, a:GLASS_R*0.64},  // middle — moved by zoom
+    {off: 30,         f: 70, a:GLASS_R*0.70}   // rear   — fixed
+  ];
+}
+
+// One element, shape straight from its focal length. Positive = biconvex,
+// negative = biconcave. Same sagitta maths as the ideal camera's single lens.
+function drawElement(cxWorld, a, fl){
+  const R = Math.max(Math.abs(fl), a*1.05);
+  const sag = R - Math.sqrt(Math.max(0, R*R - a*a));
+  const g = yy => Math.sqrt(R*R - yy*yy) - (R - sag);
+  const e = sag + 3;
+  const right = fl > 0 ? (yy => cxWorld + g(yy)) : (yy => cxWorld + e - g(yy));
+  const left  = fl > 0 ? (yy => cxWorld - g(yy)) : (yy => cxWorld - e + g(yy));
+  const N = 30;
+  ctx.beginPath();
+  for (let i=0;i<=N;i++){ const yy = -a + 2*a*i/N; ctx.lineTo(X(right(yy)), Y(yy)); }
+  for (let i=N;i>=0;i--){ const yy = -a + 2*a*i/N; ctx.lineTo(X(left(yy)),  Y(yy)); }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(120,195,255,.20)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(170,218,255,.72)'; ctx.lineWidth = 1.3; ctx.stroke();
+}
+
+function drawRealCamera(){
+  const xS = -S.d, bh = SENSOR_HALF + 18, W = 9, L = REAL.L;
+  const wrect = (x0,x1,y0,y1) => {
+    ctx.beginPath();
+    ctx.rect(X(x0), Y(Math.max(y0,y1)), (x1-x0)*VIEW.s, Math.abs(y1-y0)*VIEW.s);
+    ctx.fill(); ctx.stroke();
+  };
+  ctx.save();
+
+  // ---- housing: ALWAYS this size. Nothing about it responds to f or d.
+  ctx.fillStyle = 'rgba(23,35,49,.82)'; ctx.strokeStyle = '#44627f'; ctx.lineWidth = 1.3;
+  const aRim = GLASS_R*0.88;
+  wrect(xS - W, xS,        -(bh+W), bh+W);        // back plate
+  wrect(xS - W, xS + L,     bh,     bh+W);        // top wall
+  wrect(xS - W, xS + L,   -(bh+W), -bh);          // bottom wall
+  wrect(xS+L-W, xS + L,     aRim,   bh);          // front rim, above the glass
+  wrect(xS+L-W, xS + L,    -bh,    -aRim);        // front rim, below
+
+  // ---- the glass: fixed shapes, sliding on their cams
+  realGroups().forEach(g => drawElement(xS + g.off, g.a, g.f));
+
+  // ---- and the thing that matters: from outside, the stack behaves as ONE
+  // thin lens of focal length f, sitting exactly d in front of the sensor.
+  const outside = 0 > xS + L;
+  if (outside){
+    ctx.strokeStyle = 'rgba(255,180,84,.3)'; ctx.setLineDash([2,5]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X(xS+L), Y(0)); ctx.lineTo(X(0), Y(0)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = 'rgba(255,180,84,.85)'; ctx.setLineDash([5,4]); ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(X(0), Y(GLASS_R+16)); ctx.lineTo(X(0), Y(-GLASS_R-16)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = '10.5px ui-monospace,Menlo,monospace'; ctx.textAlign = 'center';
+  const lab = 'equivalent thin lens, f = ' + S.f, lw = ctx.measureText(lab).width;
+  ctx.fillStyle = 'rgba(7,11,16,.88)';
+  ctx.fillRect(X(0)-lw/2-6, Y(GLASS_R+24)-10, lw+12, 15);
+  ctx.fillStyle = 'rgba(255,190,110,.95)';
+  ctx.fillText(lab, X(0), Y(GLASS_R+24));
+  if (outside){
+    ctx.fillStyle = 'rgba(255,190,110,.7)';
+    ctx.fillText('sitting outside the camera — the telephoto trick', X(0), Y(-GLASS_R-24));
+  }
+
+
+  if (S.showF){
+    [[S.f,'F'],[-S.f,'F\u2032']].forEach(([fx,lab])=>{
+      ctx.fillStyle = 'rgba(255,180,84,.9)';
+      ctx.beginPath(); ctx.arc(X(fx), Y(0), 3.2, 0, 7); ctx.fill();
+      ctx.font = '11px ui-monospace,Menlo,monospace';
+      ctx.fillStyle = 'rgba(7,11,16,.85)'; ctx.fillRect(X(fx)-9, Y(0)+7, 18, 13);
+      ctx.fillStyle = 'rgba(255,180,84,.95)'; ctx.fillText(lab, X(fx), Y(0)+17);
+    });
+  }
+  ctx.restore();
+}
+
+// A box with a hole. No glass anywhere.
+function drawPinholeCamera(){
+  const xS = -S.d, a = S.ap, bh = SENSOR_HALF + 18, W = 9;
+  const wrect = (x0,x1,y0,y1) => {
+    ctx.beginPath();
+    ctx.rect(X(x0), Y(Math.max(y0,y1)), (x1-x0)*VIEW.s, Math.abs(y1-y0)*VIEW.s);
+    ctx.fill(); ctx.stroke();
+  };
+  ctx.save();
+  ctx.fillStyle = 'rgba(23,35,49,.82)'; ctx.strokeStyle = '#44627f'; ctx.lineWidth = 1.3;
+  wrect(xS - W, xS,    -(bh+W), bh+W);
+  wrect(xS - W, W/2,     bh,    bh+W);
+  wrect(xS - W, W/2,  -(bh+W), -bh);
+  wrect(-W/2,   W/2,     a,     bh);           // plate above the hole
+  wrect(-W/2,   W/2,   -bh,    -a);            // plate below the hole
+  ctx.font = '12.5px ui-monospace,Menlo,monospace'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#8fadc9';
+  if (S.tab === 1)
+    ctx.fillText('pinhole camera', X(xS/2), VIEW.oy - 152);
+  ctx.restore();
+}
+
+function drawPinholeBundle(p){
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = 1.15;
+  rayHeights().forEach(h=>{
+    const m = (p.y - h)/p.x;                   // straight line, nothing bends it
+    const len = Math.hypot(1, m), v = {x:-1/len, y:-m/len};
+    ctx.strokeStyle = hexA(p.color, .30);
+    ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(0), Y(h)); ctx.stroke();
+    const t = Math.min((-S.d)/v.x, tToWall(h, v));
+    ctx.strokeStyle = hexA(p.color, .62);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(h)); ctx.lineTo(X(t*v.x), Y(h + t*v.y)); ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// The convention the rest of the course uses: put the image plane IN FRONT of the
+// pinhole, at the same distance d. Same straight line, read off one plane earlier —
+// so the image comes out upright instead of inverted, and the minus sign disappears.
+function virtLanding(p){ return S.d * p.y / p.x; }      // = -pinLanding(p)
+
+function drawVirtualCamera(){
+  const xS = -S.d, a = S.ap, bh = SENSOR_HALF + 18, W = 9;
+  const wrect = (x0,x1,y0,y1) => {
+    ctx.beginPath();
+    ctx.rect(X(x0), Y(Math.max(y0,y1)), (x1-x0)*VIEW.s, Math.abs(y1-y0)*VIEW.s);
+    ctx.fill(); ctx.stroke();
+  };
+  ctx.save();
+  ctx.fillStyle = 'rgba(23,35,49,.82)'; ctx.strokeStyle = '#44627f'; ctx.lineWidth = 1.3;
+  wrect(xS - W, xS,    -(bh+W), bh+W);
+  wrect(xS - W, W/2,     bh,    bh+W);
+  wrect(xS - W, W/2,  -(bh+W), -bh);
+  wrect(-W/2,   W/2,     a,     bh);
+  wrect(-W/2,   W/2,   -bh,    -a);
+
+  // the pinhole itself, which the model shrinks to a single point: the COP
+  ctx.fillStyle = '#ffd089';
+  ctx.beginPath(); ctx.arc(X(0), Y(0), 3.4, 0, 7); ctx.fill();
+  ctx.font = '10.5px ui-monospace,Menlo,monospace'; ctx.textAlign = 'center';
+  ctx.fillText('COP', X(0), Y(0) + 17);
+
+  // the virtual screen, standing in front of the hole at the same distance d
+  const h = SENSOR_HALF*VIEW.s;
+  ctx.strokeStyle = 'rgba(120,220,170,.85)'; ctx.lineWidth = 1.8; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(X(S.d), Y(0)-h); ctx.lineTo(X(S.d), Y(0)+h); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(120,220,170,.9)';
+  ctx.fillText('virtual image plane', X(S.d), Y(0)-h-20);
+  ctx.fillText('upright  ·  filled dots', X(S.d), Y(0)-h-8);
+  ctx.fillStyle = '#7f9bb5';
+  ctx.fillText('real sensor', X(xS), Y(0)+h+15);
+  ctx.fillText('inverted  ·  hollow dots', X(xS), Y(0)+h+27);
+  ctx.restore();
+}
+
+// One straight line per object point: virtual image -> object -> COP -> real sensor.
+function drawVirtualRays(p){
+  const xStart = Math.max(S.d, p.x) + 26;
+  const yAt = x => p.y * x / p.x;                 // the line through P and the origin
+  ctx.save();
+  ctx.strokeStyle = hexA(p.color,.75); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(X(xStart), Y(yAt(xStart))); ctx.lineTo(X(-S.d), Y(yAt(-S.d)));
+  ctx.stroke();
+
+  const yv = virtLanding(p);
+  ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+  ctx.beginPath(); ctx.arc(X(S.d), Y(yv), 4, 0, 7); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.beginPath(); ctx.arc(X(-S.d), Y(-yv), 4, 0, 7);
+  ctx.strokeStyle = p.color; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.restore();
+}
+
+function drawLens(){
+  const a = GLASS_R, R = lensR(), sag = lensSag(), x0 = X(0), N = 48;
+  const surf = (yy, sign) => sign*(Math.sqrt(R*R - yy*yy) - (R - sag));
+  ctx.save();
+
+  ctx.beginPath();
+  for (let i=0;i<=N;i++){ const yy = -a + 2*a*i/N; ctx.lineTo(X(surf(yy, 1)), Y(yy)); }
+  for (let i=N;i>=0;i--){ const yy = -a + 2*a*i/N; ctx.lineTo(X(surf(yy,-1)), Y(yy)); }
+  ctx.closePath();
+  const g = ctx.createLinearGradient(x0 - sag*VIEW.s, 0, x0 + sag*VIEW.s, 0);
+  g.addColorStop(0,'rgba(120,195,255,.26)');
+  g.addColorStop(.5,'rgba(175,220,255,.09)');
+  g.addColorStop(1,'rgba(120,195,255,.26)');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = 'rgba(170,218,255,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // the single plane our thin-lens maths pretends all the bending happens on
+  ctx.strokeStyle = 'rgba(255,180,84,.55)'; ctx.setLineDash([4,4]); ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(x0, Y(a+7)); ctx.lineTo(x0, Y(-a-7)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // the iris: blades closing over fixed glass. Only tab 3 ever moves it.
+  if (S.ap < GLASS_R - 0.5){
+    ctx.fillStyle = 'rgba(12,19,27,.93)'; ctx.strokeStyle = '#51708f'; ctx.lineWidth = 1.2;
+    [1,-1].forEach(sg=>{
+      ctx.beginPath();
+      ctx.rect(x0 - 3*VIEW.s, Y(sg*(GLASS_R+9)),
+               6*VIEW.s, (GLASS_R + 9 - S.ap)*VIEW.s);
+      if (sg < 0) { ctx.beginPath();
+        ctx.rect(x0 - 3*VIEW.s, Y(-S.ap), 6*VIEW.s, (GLASS_R + 9 - S.ap)*VIEW.s); }
+      ctx.fill(); ctx.stroke();
+    });
+  }
+  ctx.setLineDash([]);
+
+  if (S.showF){
+    [[S.f,'F'],[-S.f,"F\u2032"]].forEach(([fx,lab])=>{
+      ctx.fillStyle = 'rgba(255,180,84,.9)';
+      ctx.beginPath(); ctx.arc(X(fx), Y(0), 3.2, 0, 7); ctx.fill();
+      ctx.font = '11px ui-monospace,Menlo,monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(7,11,16,.85)'; ctx.fillRect(X(fx)-9, Y(0)+7, 18, 13);
+      ctx.fillStyle = 'rgba(255,180,84,.95)'; ctx.fillText(lab, X(fx), Y(0)+17);
+    });
+  }
+  ctx.restore();
+}
+
+function drawSensor(){
+  const x = X(-S.d), h = SENSOR_HALF*VIEW.s;
+  ctx.save();
+  ctx.fillStyle = '#16212d'; ctx.strokeStyle = '#4e6f8e'; ctx.lineWidth = 1.4;
+  roundRect(x-5, Y(0)-h, 10, h*2, 3); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,170,210,.28)'; ctx.lineWidth = .8;
+  ctx.beginPath();
+  for (let yy=-SENSOR_HALF+6; yy<SENSOR_HALF; yy+=9){ ctx.moveTo(x-4, Y(yy)); ctx.lineTo(x+4, Y(yy)); }
+  ctx.stroke();
+  ctx.font = '11px ui-monospace,Menlo,monospace'; ctx.fillStyle = '#7f9bb5';
+  ctx.textAlign = 'center';
+  ctx.fillText('sensor', x, Y(0)-h-9);
+  ctx.restore();
+}
+
+function drawObjects(){
+  S.objects.forEach(o=>{
+    const x = X(o.x);
+    ctx.save();
+    ctx.strokeStyle = o.color; ctx.fillStyle = o.color; ctx.lineWidth = 2.4; ctx.lineCap='round';
+    ctx.globalAlpha = o.trace ? 1 : .42;
+    ctx.beginPath(); ctx.moveTo(x, Y(0)); ctx.lineTo(x, Y(o.h)); ctx.stroke();
+    const t = Y(o.h), w = 6;
+    ctx.beginPath(); ctx.moveTo(x, t-9); ctx.lineTo(x-w, t+3); ctx.lineTo(x+w, t+3); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, Y(0), 2.6, 0, 7); ctx.fill();
+    ctx.font = '12px ui-monospace,Menlo,monospace'; ctx.textAlign = 'center';
+    ctx.fillText(o.id, x, Y(0)+18);
+    ctx.restore();
+  });
+  if (S.free){
+    const x = X(S.free.x), y = Y(S.free.y);
+    ctx.save();
+    ctx.strokeStyle = COL.F; ctx.lineWidth = 1.6; ctx.globalAlpha = S.traceFree?1:.4;
+    ctx.beginPath(); ctx.moveTo(x-7,y); ctx.lineTo(x+7,y); ctx.moveTo(x,y-7); ctx.lineTo(x,y+7); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+const WALL_Y = SENSOR_HALF + 18;             // inner face of the box walls
+// t at which a ray leaving (x0,y0) along v runs into a wall, or Infinity
+function tToWall(y0, v){
+  if (!S.body || Math.abs(v.y) < 1e-9) return Infinity;
+  const t = ((v.y > 0 ? WALL_Y : -WALL_Y) - y0)/v.y;
+  return t > 0 ? t : Infinity;
+}
+
+function drawRayBundle(p){
+  const im = imageOf(p);
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = 1.15;
+  rayHeights().forEach(h=>{
+    const v = outDir(p,h);
+    // incoming
+    ctx.strokeStyle = hexA(p.color, .30);
+    ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(0), Y(h)); ctx.stroke();
+    // outgoing — stops at the sensor, or sooner if it runs into a wall
+    const t = Math.min((-S.d)/v.x, tToWall(h, v));
+    ctx.strokeStyle = hexA(p.color, .62);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(h)); ctx.lineTo(X(t*v.x), Y(h + t*v.y)); ctx.stroke();
+  });
+  ctx.restore();
+
+  // image forms behind the sensor. Only meaningful with the box hidden —
+  // inside a real box the back wall is in the way.
+  if (!S.body && im.real && isFinite(im.si) && im.si > S.d && im.si < -WORLD.left - 12){
+    ctx.save();
+    ctx.setLineDash([3,4]); ctx.lineWidth = .9; ctx.strokeStyle = hexA(p.color,.28);
+    rayHeights().forEach(h=>{
+      const v = outDir(p,h), t1 = (-S.d)/v.x, t2 = (-im.si)/v.x;
+      if (tToWall(h, v) < t1) return;            // already absorbed by a wall
+      ctx.beginPath();
+      ctx.moveTo(X(-S.d), Y(h + t1*v.y));
+      ctx.lineTo(X(-im.si), Y(h + t2*v.y));
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  // where the cone actually crosses
+  if (S.showImg && im.real && isFinite(im.si) && im.si < -WORLD.left - 12
+      && !(S.body && im.si > S.d + 2)){   // behind the back wall: nothing to see
+    ctx.save();
+    ctx.fillStyle = hexA(p.color,.95);
+    ctx.beginPath(); ctx.arc(X(-im.si), Y(im.yi), 3.4, 0, 7); ctx.fill();
+    ctx.strokeStyle = hexA(p.color,.35); ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.arc(X(-im.si), Y(im.yi), 8, 0, 7); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawPrincipalRays(p){
+  const f = S.f, x0 = p.x, y0 = p.y;
+  const rays = [];
+  rays.push({h:y0, dir:norm(-f, -y0)});                       // parallel in -> through F′
+  rays.push({h:0,  dir:norm(-x0, -y0)});                      // through the centre
+  if (Math.abs(x0-f) > 1e-6){
+    const h3 = -y0*f/(x0-f);
+    rays.push({h:h3, dir:{x:-1,y:0}});                        // through F -> parallel out
+  }
+  ctx.save();
+  ctx.setLineDash([5,5]); ctx.lineWidth = 1.3; ctx.strokeStyle = 'rgba(255,255,255,.55)';
+  rays.forEach(r=>{
+    ctx.beginPath(); ctx.moveTo(X(x0), Y(y0)); ctx.lineTo(X(0), Y(r.h));
+    const t = (WORLD.left)/r.dir.x;
+    ctx.lineTo(X(WORLD.left), Y(r.h + t*r.dir.y));
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawLanding(p, mode){
+  const pin = mode === 'pinhole';
+  const r  = pin ? pinBlur(p)   : blurRadius(p);
+  const yc = pin ? pinLanding(p): centerLanding(p);   // chief ray is undeviated either way
+  const rs = Math.max(1.2, r*VIEW.s), x = X(-S.d);
+
+  // A long focal length magnifies past the edge of the sensor: the light is
+  // perfectly focused, it just lands on the wall instead of the chip.
+  if (Math.abs(yc) - r > SENSOR_HALF){
+    const sg = Math.sign(yc), ey = Y(sg*SENSOR_HALF);
+    ctx.save();
+    ctx.fillStyle = hexA(p.color,.8);
+    ctx.beginPath();
+    ctx.moveTo(x, ey + sg*11); ctx.lineTo(x-5, ey + sg*3); ctx.lineTo(x+5, ey + sg*3);
+    ctx.closePath(); ctx.fill();
+    ctx.font = '10px ui-monospace,Menlo,monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = hexA(p.color,.75);
+    ctx.fillText('off sensor', x + 9, ey + sg*12);
+    ctx.restore();
+    return;
+  }
+
+  ctx.save();
+  if (S.showBlur && rs > 2){
+    const sh = SENSOR_HALF*VIEW.s;
+    ctx.save();
+    ctx.beginPath(); roundRectPath(x-5, Y(0)-sh, 10, sh*2, 3); ctx.clip();
+    const g = ctx.createRadialGradient(x, Y(yc), 0, x, Y(yc), rs);
+    g.addColorStop(0, hexA(p.color,.62)); g.addColorStop(1, hexA(p.color,0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x, Y(yc), 9, rs, 0, 0, 7); ctx.fill();
+    ctx.restore();
+    // extent ticks, but only where the sensor actually is
+    ctx.strokeStyle = hexA(p.color,.5); ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath();
+    [yc-r, yc+r].forEach(yy=>{
+      if (Math.abs(yy) <= SENSOR_HALF){ ctx.moveTo(x-9, Y(yy)); ctx.lineTo(x+9, Y(yy)); }
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  } else {
+    ctx.shadowColor = p.color; ctx.shadowBlur = 14;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(x, Y(yc), 3.6, 0, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 10.5px ui-monospace,Menlo,monospace';
+    const lw = ctx.measureText('in focus').width, right = x > 150;
+    const lx = right ? x - 20 - lw : x + 20;
+    ctx.fillStyle = 'rgba(7,11,16,.8)';
+    ctx.fillRect(lx-5, Y(yc)-8, lw+10, 16);
+    ctx.fillStyle = p.color; ctx.textAlign = 'left';
+    ctx.fillText(pin ? 'sharp' : 'in focus', lx, Y(yc)+3.5);
+  }
+  ctx.restore();
+}
+function centerLanding(p){ return hitSensor(p,0).y; }
+
+function drawInset(pts){
+  const bw = 112, bh = 196, m = 14;
+  const bx = VIEW.W - bw - m, by = m, MAG = 3;
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,13,19,.9)';
+  ctx.strokeStyle = '#243546'; ctx.lineWidth = 1;
+  roundRect(bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
+  ctx.font = '10px ui-monospace,Menlo,monospace'; ctx.fillStyle = '#7f9bb5'; ctx.textAlign='center';
+  ctx.fillText('sensor · 3× zoom', bx+bw/2, by+15);
+
+  const cx = bx+bw/2, cy = by+bh/2+8, halfPix = (bh/2-26);
+  ctx.fillStyle = '#121b25'; ctx.strokeStyle = '#3f5c78';
+  roundRect(cx-13, cy-halfPix, 26, halfPix*2, 3); ctx.fill(); ctx.stroke();
+
+  ctx.save();
+  ctx.beginPath(); roundRectPath(cx-13, cy-halfPix, 26, halfPix*2, 3); ctx.clip();
+  ctx.globalCompositeOperation = 'lighter';
+  pts.forEach(p=>{
+    const r = Math.max(1, blurRadius(p)*VIEW.s*MAG);
+    const yy = cy - centerLanding(p)*VIEW.s*MAG;
+    const g = ctx.createRadialGradient(cx, yy, 0, cx, yy, r+1);
+    g.addColorStop(0, hexA(p.color,.95)); g.addColorStop(.55, hexA(p.color,.4)); g.addColorStop(1, hexA(p.color,0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(cx, yy, Math.min(r+1,13), r+1, 0, 0, 7); ctx.fill();
+  });
+  ctx.restore();
+  ctx.restore();
+}
+
+function drawLabels(mode){
+  ctx.save();
+  ctx.font = '11.5px ui-monospace,Menlo,monospace';
+  ctx.fillStyle = '#62788d'; ctx.textAlign = 'center';
+  const two = S.tab !== 1;
+  // d measure
+  const yb = !two ? VIEW.H - 54 : VIEW.oy + (S.tab === 3 ? 150 : 170);
+  ctx.strokeStyle = '#2b3d50'; ctx.lineWidth = 1;
+  const dx0 = mode === 'virtual' ? 0 : -S.d, dx1 = mode === 'virtual' ? S.d : 0;
+  ctx.beginPath(); ctx.moveTo(X(dx0), yb); ctx.lineTo(X(dx1), yb); ctx.stroke();
+  tick(X(dx0), yb); tick(X(dx1), yb);
+  ctx.fillText((mode === 'real'    ? 'sensor to equivalent lens = '
+              : mode === 'virtual' ? 'd, in front = ' : 'd = ')
+               + S.d.toFixed(1), (X(dx0)+X(dx1))/2, yb-7);
+  // s0 of selected
+  const p = selectedPoint();
+  if (p && !two){
+    const yb2 = VIEW.H - 26;
+    ctx.beginPath(); ctx.moveTo(X(0), yb2); ctx.lineTo(X(p.x), yb2); ctx.stroke();
+    tick(X(0), yb2); tick(X(p.x), yb2);
+    ctx.fillText('s₀ = '+p.x.toFixed(0)+'  ('+p.id+')', (X(0)+X(p.x))/2, yb2-7);
+  }
+  ctx.restore();
+}
+function tick(x,y){ ctx.beginPath(); ctx.moveTo(x,y-4); ctx.lineTo(x,y+4); ctx.stroke(); }
+
+function roundRectPath(x,y,w,h,r){
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function roundRect(x,y,w,h,r){ ctx.beginPath(); roundRectPath(x,y,w,h,r); }
+function norm(x,y){ const n=Math.hypot(x,y); return {x:x/n,y:y/n}; }
+function hexA(hex,a){
+  const n = parseInt(hex.slice(1),16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+
+// ---------------------------------------------------------------- readouts
+function updatePanel(pts){
+  const tb = document.querySelector('#tbl tbody');
+  tb.innerHTML = '';
+  pts.forEach(p=>{
+    const im = imageOf(p), r = blurRadius(p);
+    const tr = document.createElement('tr');
+    let state, si, mag;
+    if (im.atInfinity){ state='<span class="tag virt">image at ∞</span>'; si='∞'; mag='∞'; }
+    else if (!im.real){ state='<span class="tag virt">virtual image</span>'; si=im.si.toFixed(1); mag=(-im.si/p.x).toFixed(2)+'×'; }
+    else {
+      si = im.si.toFixed(1); mag = (-im.si/p.x).toFixed(2)+'×';
+      state = (2*r < 1.5) ? '<span class="tag ok">in focus</span>'
+            : (S.d < im.si ? '<span class="tag no">sensor too close</span>'
+                           : '<span class="tag no">sensor too far</span>');
+    }
+    tr.innerHTML = `<td><span class="swatch" style="background:${p.color};margin-right:7px"></span>${p.id}</td>`
+      + `<td class="mono">${p.x.toFixed(0)}</td><td class="mono">${si}</td>`
+      + `<td class="mono">${mag}</td><td class="mono">${(2*r).toFixed(2)}</td><td>${state}</td>`;
+    tb.appendChild(tr);
+  });
+
+  const p = selectedPoint();
+  const eq = document.getElementById('eq');
+  if (p){
+    const im = imageOf(p);
+    const si = isFinite(im.si) ? im.si.toFixed(2) : '∞';
+    eq.innerHTML = `thin lens &nbsp; <b>1/s₀ + 1/sᵢ = 1/f</b> &nbsp;→&nbsp; `
+      + `1/${p.x.toFixed(0)} + 1/<b>${si}</b> = 1/${S.f}`
+      + ` &nbsp;&nbsp;·&nbsp;&nbsp; sensor sits at d = <b>${S.d.toFixed(1)}</b>`
+      + ` &nbsp;→&nbsp; spot on sensor <b>${(2*blurRadius(p)).toFixed(2)}</b> wide`
+      + (Math.abs(S.d - (isFinite(im.si)?im.si:1e9)) < 0.8 ? ' &nbsp;(d = sᵢ, sharp)' : '');
+    if (S.tab === 3){
+      eq.innerHTML = `lens spot &nbsp; opening × |1 − d/sᵢ| = <b>${(2*blurRadius(p)).toFixed(2)}</b>`
+        + ` &nbsp;·&nbsp; pinhole spot &nbsp; opening × (1 + d/s₀) = <b>${(2*pinBlur(p)).toFixed(2)}</b>`
+        + ` &nbsp;·&nbsp; real sensor, behind: <b>−d·y/s₀ = ${pinLanding(p).toFixed(2)}</b> (inverted)`
+        + ` &nbsp;·&nbsp; virtual plane, in front: <b>+d·y/s₀ = ${virtLanding(p).toFixed(2)}</b> (upright)`;
+    }
+  } else eq.textContent = '—';
+
+  document.getElementById('dv').textContent = S.d.toFixed(1);
+}
+
+// ---------------------------------------------------------------- controls
+let anim = null;
+function stopAnim(){ if (anim){ cancelAnimationFrame(anim); anim = null; } }
+// Focusing physically racks the lens; jumping there instantly hides that.
+function animateD(target, ms){
+  stopAnim();
+  target = clampD(target);
+  const from = S.d, t0 = performance.now(), de = document.getElementById('d');
+  const step = now => {
+    const k = Math.min(1, (now - t0)/(ms || 460));
+    const e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;   // ease in-out
+    S.d = from + (target - from)*e;
+    de.value = S.d;
+    draw();
+    anim = (k < 1) ? requestAnimationFrame(step) : null;
+  };
+  anim = requestAnimationFrame(step);
+}
+
+function bindRange(id, key, fmt, after){
+  const el = document.getElementById(id), out = document.getElementById(id+'v');
+  el.value = S[key];
+  const sync = ()=>{ S[key] = parseFloat(el.value); if(out) out.textContent = fmt(S[key]); if(after) after(); draw(); };
+  el.addEventListener('input', sync); sync();
+}
+bindRange('f','f', v=>v.toFixed(0));
+bindRange('nr','nr', v=>v.toFixed(0));
+bindRange('ap','ap', v=>(2*v).toFixed(1));
+bindRange('d','d', v=>v.toFixed(1), stopAnim);
+
+function bindChk(id, key){
+  const el = document.getElementById(id);
+  el.checked = S[key];
+  el.addEventListener('change', ()=>{ S[key]=el.checked; draw(); });
+}
+bindChk('body','body'); bindChk('showF','showF');
+bindChk('principal','principal'); bindChk('showImg','showImg');
+bindChk('showBlur','showBlur'); bindChk('showInset','showInset');
+bindChk('autofocus','autofocus'); bindChk('trcFree','traceFree');
+
+document.querySelectorAll('.trc').forEach(el=>{
+  el.addEventListener('change', ()=>{ S.objects[+el.dataset.i].trace = el.checked; draw(); });
+});
+
+document.querySelectorAll('[data-focus]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const k = b.dataset.focus;
+    S.selected = (k==='free') ? 'free' : +k;
+    const p = selectedPoint(); if (!p) return;
+    const im = imageOf(p);
+    if (im.real && isFinite(im.si)) animateD(im.si); else draw();
+  });
+});
+
+document.getElementById('clearFree').addEventListener('click', ()=>{
+  S.free = null; if (S.selected==='free') S.selected = 1; draw();
+});
+
+document.getElementById('reset').addEventListener('click', ()=>{
+  stopAnim();
+  S.ap = DEFAULTS.ap; S.nr = DEFAULTS.nr; S.f = DEFAULTS.f; S.d = DEFAULTS.d;
+  S.objects = DEFAULTS.objects.map(o=>({...o})); S.free = null; S.selected = 1;
+  S.autofocus = false; S.principal = false;
+  document.getElementById('f').value = S.f;
+  document.getElementById('d').value = S.d;
+  document.getElementById('nr').value = S.nr;
+  document.getElementById('autofocus').checked = false;
+  document.getElementById('principal').checked = false;
+  document.querySelectorAll('.trc').forEach((el,i)=>{ el.checked = true; S.objects[i].trace = true; });
+  document.getElementById('fv').textContent = S.f;
+  document.getElementById('nrv').textContent = S.nr;
+  draw();
+});
+
+// ---------------------------------------------------------------- pointer
+let drag = null;
+cv.addEventListener('pointerdown', e=>{
+  stopAnim();
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX-r.left, py = e.clientY-r.top;
+  const wx = invX(px), wy = invY(py);
+
+  if (S.tab === 2) VIEW.oy = py < VIEW.H*0.5 ? VIEW.H*0.265 : VIEW.H*0.74;
+  const wy2 = invY(py);
+  if (Math.abs(px - X(-S.d)) < 11){ drag = {type:'sensor'}; cv.setPointerCapture(e.pointerId); return; }
+  for (let i=0;i<S.objects.length;i++){
+    const o = S.objects[i];
+    if (Math.abs(px - X(o.x)) < 13 && py > Y(o.h)-14 && py < Y(0)+6){
+      drag = {type:'obj', i}; S.selected = i; cv.setPointerCapture(e.pointerId); draw(); return;
+    }
+  }
+  if (wx > 14 && Math.abs(wy2) < WORLD.halfH){
+    S.free = {x:wx, y:wy2}; S.selected = 'free';
+    document.getElementById('trcFree').checked = true; S.traceFree = true;
+    drag = {type:'free'}; cv.setPointerCapture(e.pointerId); draw();
+  }
+});
+cv.addEventListener('pointermove', e=>{
+  if (!drag) return;
+  const r = cv.getBoundingClientRect();
+  const wx = invX(e.clientX-r.left), wy = invY(e.clientY-r.top);
+  if (drag.type==='sensor'){
+    S.d = clampD(-wx);
+    document.getElementById('d').value = S.d;
+  } else if (drag.type==='obj'){
+    S.objects[drag.i].x = Math.min(480, Math.max(S.f*1.06, wx));
+  } else {
+    S.free = {x: Math.min(490, Math.max(14, wx)), y: Math.max(-WORLD.halfH, Math.min(WORLD.halfH, wy))};
+  }
+  draw();
+});
+cv.addEventListener('pointerup', ()=>{ drag = null; });
+cv.addEventListener('pointercancel', ()=>{ drag = null; });
+
+document.querySelectorAll('[data-tab]').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    S.tab = +el.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(t=>t.classList.toggle('active', t===el));
+    cv.style.height = S.tab === 1 ? '460px' : S.tab === 3 ? '1080px' : '760px';
+    document.getElementById('insetRow').style.display = S.tab === 1 ? '' : 'none';
+    const ap3 = S.tab === 3;
+    document.getElementById('apRow').style.display  = ap3 ? '' : 'none';
+    document.getElementById('apNote').style.display = ap3 ? '' : 'none';
+    if (!ap3){ S.ap = DEFAULTS.ap; document.getElementById('ap').value = S.ap;
+               document.getElementById('apv').textContent = (2*S.ap).toFixed(1); }
+    document.getElementById('cap').textContent =
+        S.tab === 1 ? 'Click anywhere in the scene to trace a point · drag the arrows to change depth · drag the sensor to refocus'
+      : S.tab === 2 ? 'Same two dials, same rays, same landing on the sensor. Only the hardware differs.'
+      :               'Close the opening and watch the two pictures become one.';
+    resize();
+  });
+});
+
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>
